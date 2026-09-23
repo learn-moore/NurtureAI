@@ -1,5 +1,6 @@
 import streamlit as st
-from calculs import estimer_prochaines_regles
+from datetime import date
+from calculs import estimer_prochaines_regles, calculer_jour_cycle
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'ionformation sur la conception et la grossesse.")
@@ -29,6 +30,12 @@ if parcours == "Projet de conception":
         help = "28 jours est une valeur proposée. Adaptez-la à votre cycle.",
     )
     if dernieres_regles is not None:
+        jour_cycle = calculer_jour_cycle(
+            dernieres_regles,
+            date.today(),
+        )
+        st.metric("Jour du cycle", jour_cycle)
+
         prochaines_regles = estimer_prochaines_regles(
             dernieres_regles, duree_cycle
         )
