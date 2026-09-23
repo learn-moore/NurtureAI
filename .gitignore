@@ -1,0 +1,21 @@
+# Environnement Python
+.venv/
+
+# Fichiers temporaires Python et pytest
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets et réglages locaux
+.env
+.streamlit/secrets.toml
+
+# Fichiers macOS
+.DS_Store
+
+# Dossier de cadrage
+CADRAGE_FONCTIONNEL_MVP.md
+
+# Skills pour agents
+.agents/skills/nurtureai-project/SKILL.md
+.agents/skills/developing-with-streamlit
