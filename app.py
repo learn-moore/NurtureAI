@@ -1,9 +1,10 @@
 import streamlit as st
 from datetime import date
 
-from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception
-from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle
-from calculs import calculer_age_depuis_dernieres_regles
+from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
+from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse
+from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles
+from modeles import ConceptionJourney, PregnancyJourney
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -15,8 +16,9 @@ st.info(
 initialiser_session()
 
 parcours = st.radio(
-    "Quel suivi souhaitez-vous commencer ?",
-    ["Projet de conception", "Grossesse en cours"]
+    "Quel écran souhaitez-vous consulter ?",
+    ["Projet de conception", "Grossesse en cours"],
+    key = "ecran_consulte",
 )
 
 if parcours == "Projet de conception":
@@ -107,14 +109,68 @@ if parcours == "Projet de conception":
                 "La date estimée des prochaines règles est donc à interpréter avec davantage de prudence."
             )
 
-    with st.expander("Effacer mes repères conception"):
+    profil = st.session_state["profil"]
+
+    parcours_actif = next(
+        (
+            journey
+            for journey in profil.journeys
+            if journey.id == profil.active_journey_id
+        ),
+        None,
+    )
+
+    if (
+        suivi is not None
+        and parcours_actif is not None
+        and parcours_actif.type == "conception"
+    ):
+        if st.button(
+            "Enregistrer les repères validés dans le parcours actif",
+            key="enregistrer_reperes_conception",
+        ):
+            regularites = {
+                "Régulier": "regular",
+                "Irrégulier": "irregular",
+                "Je ne sais pas": "unknown",
+            }
+
+            try:
+                reperes = ConceptionJourney(
+                    last_period_date=suivi["dernieres_regles"],
+                    average_cycle_length=suivi["duree_cycle"],
+                    period_length=suivi["duree_regles"],
+                    cycle_regularity=regularites[suivi["regularite_cycle"]], # type: ignore
+                )
+
+                nouveau_profil = profil.renseigner_reperes_actifs(reperes)
+
+            except ValueError as erreur:
+                st.error(str(erreur))
+            else:
+                st.session_state["profil"] = nouveau_profil
+                st.success("Repères enregistrés dans le parcours actif.")
+
+    if (
+        parcours_actif is not None
+        and isinstance(parcours_actif.details, ConceptionJourney)
+    ):
+        st.button(
+            "Reprendre les repères enregistrés",
+            key="reprendre_reperes_conception",
+            on_click=reprendre_reperes_conception,
+        )
+
+        st.caption("Cette action remplace les champs du formulaire par les repères du parcours actif.")
+
+    with st.expander("Réinitialiser la saisie conception"):
         confirmation_effacement = st.checkbox(
-            "Je confirme vouloir effacer les repères conception enregistrés dans cette session.",
+            "Je confirme vouloir vider la saisie temporaire. Les repères enregistrés dans les parcours seront conservés.",
             key="confirmer_effacement_conception",
         )
 
         st.button(
-            "Effacer les repères conception",
+            "Réinitialiser la saisie conception",
             disabled=not confirmation_effacement,
             key="effacer_reperes_conception",
             on_click=effacer_reperes_conception,
@@ -205,15 +261,193 @@ else:
         else:
             st.info("Le calcul à parti d'un DPA sera ajouté après définition de la convention de datation.")
 
-        with st.expander("Effacer mes repères grossesse"):
+        with st.expander("Réinitialiser la saisie grossesse"):
             confirmation_effacement = st.checkbox(
-                "Je confirme vouloir effacer les repères grossesse enregistrés dans cette session.",
+                "Je confirme vouloir vider la saisie temporaire. Les repères enregistrés dans les parcours seront conservés.",
                 key = "confirmer_effacement_grossesse",
             )
 
             st.button(
-                "Effacer les repères",
+                "Réinitialiser la saisie grossesse",
                 disabled = not confirmation_effacement,
                 key = "effacer_reperes_grossesse",
                 on_click = effacer_reperes_grossesse,
             )
+
+    profil = st.session_state["profil"]
+
+    parcours_actif = next(
+        (
+            journey
+            for journey in profil.journeys
+            if journey.id == profil.active_journey_id
+        ),
+        None,
+    )
+
+    if (
+        suivi_grossesse is not None
+        and parcours_actif is not None
+        and parcours_actif.type == "pregnancy"
+    ):
+        if st.button(
+            "Enregistrer les repères validés dans le parcours actif",
+            key="enregistrer_reperes_grossesse",
+        ):
+            try:
+                if suivi_grossesse["methode_datation"] == "dernieres_regles":
+                    reperes = PregnancyJourney(
+                        dating_method="last_period",
+                        last_period_date=suivi_grossesse["date_reference"],
+                    )
+                else:
+                    reperes = PregnancyJourney(
+                        dating_method="due_date",
+                        estimated_due_date=suivi_grossesse["date_reference"],
+                    )
+
+                nouveau_profil = profil.renseigner_reperes_actifs(reperes)
+            except ValueError as erreur:
+                st.error(str(erreur))
+            else:
+                st.session_state["profil"] = nouveau_profil
+                st.success("Repères enregistrés dans le parcours actif.")
+
+    if (
+        parcours_actif is not None
+        and isinstance(parcours_actif.details, PregnancyJourney)
+    ):
+        st.button(
+            "Reprendre les repères grossesse enregistrés",
+            key="reprendre_reperes_grossesse",
+            on_click=reprendre_reperes_grossesse,
+        )
+
+        st.caption(
+            "Cette action remplace la méthode et les champs du formulaire "
+            "par les repères du parcours actif."
+        )
+
+st.subheader("Mon parcours actif")
+
+profil = st.session_state["profil"]
+
+types_parcours = {
+    "Projet de conception": "conception",
+    "Grossesse en cours": "pregnancy",
+}
+
+if profil.active_journey_id is None:
+    st.write("Aucun parcours actif.")
+
+    if st.button(
+        f"Démarrer le parcours : {parcours}",
+        key="demarrer_parcours",
+    ):
+        st.session_state["profil"] = profil.demarrer_parcours(
+            types_parcours[parcours],
+            date.today(),
+        )
+        st.rerun()
+else:
+    for journey in profil.journeys:
+        if journey.id == profil.active_journey_id:
+            libelle = (
+                "Projet de conception"
+                if journey.type == "conception"
+                else "Grossesse en cours"
+            )
+
+            st.write("Parcours actif :", libelle)
+            st.write(
+                "Suivi commencé le :",
+                journey.start_date.strftime("%d/%m/%Y"),
+            )
+
+            with st.expander("Terminer ce parcours"):
+                confirmation_fin = st.checkbox(
+                    "Je confirme vouloir terminer ce parcours. Il restera dans mon historique.",
+                    key="confirmer_fin_parcours",
+                )
+
+                st.button(
+                    "Terminer mon parcours",
+                    disabled=not confirmation_fin,
+                    key="terminer_parcours_actif",
+                    on_click=terminer_parcours_actif,
+                )
+
+            destination = (
+                "grossesse"
+                if journey.type == "conception"
+                else "conception"
+            )
+
+            with st.expander("Changer de parcours"):
+                confirmation_changement = st.checkbox(
+                    f"Je confirme vouloir terminer le parcours actuel et démarrer un parcours {destination}. L’ancien parcours restera dans mon historique.",
+                    key="confirmer_changement_parcours",
+                )
+
+                st.button(
+                    f"Passer au parcours {destination}",
+                    disabled=not confirmation_changement,
+                    key="changer_parcours_actif",
+                    on_click=changer_parcours_actif,
+                )
+
+st.subheader("Historique des parcours")
+
+profil = st.session_state["profil"]
+
+libelles_parcours = {
+    "conception": "Projet de conception",
+    "pregnancy": "Grossesse",
+}
+
+if not profil.journeys:
+    st.write("Aucun parcours enregistré.")
+else:
+    for numero, journey in enumerate(profil.journeys, start=1):
+        with st.expander(
+            f"Parcours {numero} : {libelles_parcours[journey.type]}"
+        ):
+            st.write(
+                "Début du suivi :",
+                journey.start_date.strftime("%d/%m/%Y"),
+            )
+
+            if journey.status == "active":
+                st.write("Statut : en cours")
+            else:
+                st.write("Statut : terminé")
+                st.write(
+                    "Fin du suivi :",
+                    journey.end_date.strftime("%d/%m/%Y"),
+                )
+
+            if isinstance(journey.details, ConceptionJourney):
+                if journey.details.last_period_date is not None:
+                    st.write(
+                        "Dernières règles renseignées :",
+                        journey.details.last_period_date.strftime("%d/%m/%Y"),
+                    )
+
+                st.write(
+                    "Durée moyenne du cycle :",
+                    journey.details.average_cycle_length,
+                    "jours",
+                )
+            elif isinstance(journey.details, PregnancyJourney):
+                if journey.details.dating_method == "last_period":
+                    st.write(
+                        "Dernières règles renseignées :",
+                        journey.details.last_period_date.strftime("%d/%m/%Y"), # type: ignore
+                    )
+                else:
+                    st.write(
+                        "DPA renseignée :",
+                        journey.details.estimated_due_date.strftime("%d/%m/%Y"), # type: ignore
+                    )
+
+

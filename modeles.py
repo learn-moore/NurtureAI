@@ -3,6 +3,53 @@ from datetime import date
 from typing import Literal
 from uuid import uuid4
 
+from calculs import valider_durees_cycle
+
+@dataclass(frozen=True)
+class ConceptionJourney:
+    last_period_date: date | None = None
+    average_cycle_length: int = 28
+    period_length: int = 5
+    cycle_regularity: Literal["regular", "irregular", "unknown"] = "unknown"
+
+    def __post_init__(self):
+        valider_durees_cycle(
+            self.average_cycle_length,
+            self.period_length,
+        )
+
+        if self.cycle_regularity not in (
+            "regular",
+            "irregular",
+            "unknown",
+        ):
+            raise ValueError("Régularité du cycle inconnue.")
+
+@dataclass(frozen=True)
+class PregnancyJourney:
+    dating_method: Literal["last_period", "due_date"]
+    last_period_date: date | None = None
+    estimated_due_date: date | None = None
+
+    def __post_init__(self):
+        if self.dating_method not in ("last_period", "due_date"):
+            raise ValueError("Méthode de datation inconnue.")
+
+        if (
+            self.dating_method == "last_period"
+            and self.last_period_date is None
+        ):
+            raise ValueError(
+                "La date des dernières règles est requise."
+            )
+
+        if (
+            self.dating_method == "due_date"
+            and self.estimated_due_date is None
+        ):
+            raise ValueError(
+                "La date prévue d’accouchement est requise."
+            )
 
 @dataclass(frozen=True)
 class Journey:
@@ -11,6 +58,7 @@ class Journey:
     id: str = field(default_factory=lambda: str(uuid4()))
     status: Literal["active", "completed"] = "active"
     end_date: date | None = None
+    details: ConceptionJourney | PregnancyJourney | None = None
 
     def __post_init__(self):
         if self.type not in ("conception", "pregnancy"):
@@ -34,6 +82,18 @@ class Journey:
                 "La date de fin ne peut pas précéder la date de début."
             )
 
+        if self.details is not None:
+            if self.type == "conception":
+                if not isinstance(self.details, ConceptionJourney):
+                    raise ValueError(
+                        "Un parcours conception nécessite des repères conception."
+                    )
+            else:
+                if not isinstance(self.details, PregnancyJourney):
+                    raise ValueError(
+                        "Un parcours grossesse nécessite des repères grossesse."
+                    )
+
     def terminer(self, end_date: date) -> "Journey":
         if self.status != "active":
             raise ValueError("Ce parcours est déjà terminé.")
@@ -43,6 +103,17 @@ class Journey:
             status="completed",
             end_date=end_date,
         )
+
+    def renseigner_reperes(self, details: ConceptionJourney | PregnancyJourney,) -> "Journey":
+        if self.status != "active":
+            raise ValueError(
+                "Les repères d’un parcours terminé ne sont pas modifiables."
+            )
+
+        if details is None:
+            raise ValueError("Les repères sont requis.")
+
+        return replace(self, details=details)
 
 @dataclass(frozen=True)
 class UserProfile:
@@ -109,4 +180,20 @@ class UserProfile:
         return profil_sans_parcours_actif.demarrer_parcours(
             nouveau_type,
             date_transition,
+        )
+
+    def renseigner_reperes_actifs(self, details: ConceptionJourney | PregnancyJourney,) -> "UserProfile":
+        if self.active_journey_id is None:
+            raise ValueError("Aucun parcours actif à renseigner.")
+
+        parcours_mis_a_jour = tuple(
+            parcours.renseigner_reperes(details)
+            if parcours.id == self.active_journey_id
+            else parcours
+            for parcours in self.journeys
+        )
+
+        return replace(
+            self,
+            journeys=parcours_mis_a_jour,
         )
