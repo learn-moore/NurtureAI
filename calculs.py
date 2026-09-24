@@ -33,3 +33,16 @@ def valider_durees_cycle(
         raise ValueError(
             "La durée des règles ne peut pas dépasser la durée du cycle."
         )
+
+def calculer_age_depuis_dernieres_regles(
+    dernieres_regles: date,
+    date_reference: date,
+) -> tuple[int, int]:
+    if dernieres_regles > date_reference:
+        raise ValueError(
+            "La date des dernières règles ne peut pas être postérieure à la date de référence."
+        )
+
+    jours_ecoules = (date_reference - dernieres_regles).days
+
+    return divmod(jours_ecoules, 7)

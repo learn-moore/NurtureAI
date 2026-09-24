@@ -1,6 +1,7 @@
 import pytest
 from datetime import date
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle
+from calculs import calculer_age_depuis_dernieres_regles
 
 def test_prochaines_regles_changement_annee():
     resultat = estimer_prochaines_regles(
@@ -81,3 +82,28 @@ def test_jour_cycle_avec_29_fevrier():
     )
 
     assert resultat == 3
+
+@pytest.mark.parametrize(
+    "date_reference, resultat_attendu",
+    [
+        (date(2026, 7, 20), (0, 0)),
+        (date(2026, 7, 26), (0, 6)),
+        (date(2026, 7, 27), (1, 0)),
+        (date(2026, 9, 23), (9, 2)),
+    ],
+)
+def test_age_depuis_dernieres_regles(date_reference, resultat_attendu):
+    resultat = calculer_age_depuis_dernieres_regles(
+        date(2026, 7, 20),
+        date_reference,
+    )
+
+    assert resultat == resultat_attendu
+
+
+def test_age_depuis_dernieres_regles_refuse_date_future():
+    with pytest.raises(ValueError):
+        calculer_age_depuis_dernieres_regles(
+            date(2026, 9, 24),
+            date(2026, 9, 23),
+        )
