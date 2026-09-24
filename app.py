@@ -112,17 +112,16 @@ else:
         "dpa": "Date prévue d'accouchement connue",
     }
 
-    if suivi_grossesse is not None:
-        if "methode_datation_grossesse" not in st.session_state:
-            st.session_state["methode_datation_grossesse"] = suivi_grossesse["methode_datation"]
+    if suivi_grossesse is not None and "methode_datation_grossesse" not in st.session_state:
+
+        st.session_state["methode_datation_grossesse"] = suivi_grossesse["methode_datation"]
 
         if suivi_grossesse["methode_datation"] == "dernieres_regles":
             cle_date = "date_regles_grossesse"
         else:
             cle_date = "date_accouchement_grossesse"
 
-        if cle_date not in st.session_state:
-            st.session_state[cle_date] = suivi_grossesse["date_reference"]
+        st.session_state[cle_date] = suivi_grossesse["date_reference"]
         
 
     methode_datation = st.radio(

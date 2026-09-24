@@ -8,13 +8,24 @@ L’application fournit des informations générales et des estimations. Elle ne
 
 Le prototype permet de :
 
+## État actuel
+
+Le prototype permet de :
+
 * Choisir entre les parcours conception et grossesse.
-* Saisir la date des dernières règles et la durée moyenne du cycle.
-* Calculer une estimation de la date des prochaines règles.
+* Renseigner les dernières règles, la durée moyenne du cycle, la durée des règles et la régularité du cycle.
+* Calculer le jour du cycle et la date estimée des prochaines règles.
+* Saisir une référence de grossesse : dernières règles ou DPA connue.
+* Calculer les semaines d’aménorrhée depuis les dernières règles.
+* Conserver les dernières saisies validées pendant la session et les retrouver après un changement de parcours.
 
-Le parcours grossesse affiche actuellement un message. La persistance des données et l’assistant IA ne sont pas encore implémentés.
+Des tests automatisés vérifient les calculs, les validations et plusieurs interactions avec l’interface.
 
-## Installation sur macOS
+Le calcul depuis une DPA, la sauvegarde durable dans le navigateur, l’historique des parcours et l’assistant IA restent à développer.
+
+Un rechargement de la page peut entraîner la perte des données de session.
+
+## Installation sur Linux / macOS
 
 Prérequis : Python 3.12.
 
@@ -50,7 +61,7 @@ python -m pytest
 
 * `app.py` : interface Streamlit.
 * `calculs.py` : calculs indépendants de l’interface.
-* `tests/` : tests automatisés.
+* `tests/` : tests des calculs et des interactions avec l'interface.
 * `requirements.txt` : dépendances Python.
 
 ## Limites
