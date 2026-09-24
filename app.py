@@ -1,5 +1,7 @@
 import streamlit as st
 from datetime import date
+
+from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle
 from calculs import calculer_age_depuis_dernieres_regles
 
@@ -10,11 +12,7 @@ st.info(
     "NurtureAI fournit des informations générales et des estimations. Il ne remplace pas une professionnel de santé."
 )
 
-if "suivi_conception" not in st.session_state:
-    st.session_state["suivi_conception"] = None
-if "suivi_grossesse" not in st.session_state:
-    st.session_state["suivi_grossesse"] = None
-
+initialiser_session()
 
 parcours = st.radio(
     "Quel suivi souhaitez-vous commencer ?",
@@ -31,6 +29,7 @@ if parcours == "Projet de conception":
             value = suivi["dernieres_regles"] if suivi is not None else None,
             max_value = date.today(),
             format = "DD/MM/YYYY",
+            key="conception_dernieres_regles",
         )
         duree_cycle = st.number_input(
             "Durée moyenne de votre cycle, en jours",
@@ -38,12 +37,14 @@ if parcours == "Projet de conception":
             value = suivi["duree_cycle"] if suivi is not None else 28,
             step = 1,
             help = "28 jours est une valeur proposée. Adaptez-la à votre cycle.",
+            key="conception_duree_cycle",
         )
         duree_regles = st.number_input(
             "Durée moyenne de vos règles, en jours",
             min_value = 1,
             value = suivi.get("duree_regles", 5) if suivi is not None else 5,
             step = 1,
+            key="conception_duree_regles",
         )
         regularite_cycle = st.radio(
             "Votre cycle est-il généralement régulier ?",
@@ -51,6 +52,7 @@ if parcours == "Projet de conception":
             index=(
                 choix_regularite.index(suivi["regularite_cycle"]) if suivi is not None else 0
             ),
+            key="conception_regularite",
         )
 
         formulaire_envoye = st.form_submit_button("Calculer mes repères")
@@ -104,6 +106,19 @@ if parcours == "Projet de conception":
                 "Laa régularité de votre cycle est inconnue ou vous avez indiqué un cycle irrégulier. " \
                 "La date estimée des prochaines règles est donc à interpréter avec davantage de prudence."
             )
+
+    with st.expander("Effacer mes repères conception"):
+        confirmation_effacement = st.checkbox(
+            "Je confirme vouloir effacer les repères conception enregistrés dans cette session.",
+            key="confirmer_effacement_conception",
+        )
+
+        st.button(
+            "Effacer les repères conception",
+            disabled=not confirmation_effacement,
+            key="effacer_reperes_conception",
+            on_click=effacer_reperes_conception,
+        )
 else:
     suivi_grossesse = st.session_state["suivi_grossesse"]
 
@@ -189,3 +204,16 @@ else:
             )
         else:
             st.info("Le calcul à parti d'un DPA sera ajouté après définition de la convention de datation.")
+
+        with st.expander("Effacer mes repères grossesse"):
+            confirmation_effacement = st.checkbox(
+                "Je confirme vouloir effacer les repères grossesse enregistrés dans cette session.",
+                key = "confirmer_effacement_grossesse",
+            )
+
+            st.button(
+                "Effacer les repères",
+                disabled = not confirmation_effacement,
+                key = "effacer_reperes_grossesse",
+                on_click = effacer_reperes_grossesse,
+            )
