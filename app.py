@@ -2,9 +2,10 @@ import streamlit as st
 from datetime import date
 
 from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
-from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse
+from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles
 from modeles import ConceptionJourney, PregnancyJourney
+from persistance import exporter_profil, importer_profil
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -396,6 +397,27 @@ else:
                     on_click=changer_parcours_actif,
                 )
 
+st.subheader("Mes données")
+
+st.write(
+    "L’export contient vos parcours et les repères enregistrés dans chacun. Les saisies temporaires des formulaires ne sont pas incluses."
+)
+
+st.caption(
+    "Le fichier contient des données personnelles non chiffrées. Conservez-le dans un emplacement privé."
+)
+
+contenu_export = exporter_profil(st.session_state["profil"])
+
+st.download_button(
+    label="Exporter mes données",
+    data=contenu_export,
+    file_name="nurtureai-export.json",
+    mime="application/json",
+    key="exporter_profil",
+    on_click="ignore",
+)
+
 st.subheader("Historique des parcours")
 
 profil = st.session_state["profil"]
@@ -450,4 +472,74 @@ else:
                         journey.details.estimated_due_date.strftime("%d/%m/%Y"), # type: ignore
                     )
 
+st.subheader("Prévisualiser un import")
+
+message_import = st.session_state.pop("message_import", None)
+
+if message_import:
+    st.success(message_import)
+
+fichier_import = st.file_uploader(
+    "Choisir un export NurtureAI",
+    type=["json"],
+    max_upload_size=1,
+    key="fichier_import",
+    on_change=annuler_confirmation_import,
+)
+
+if fichier_import is not None:
+    if fichier_import.size > 1_048_576:
+        st.error("Le fichier dépasse la limite de 1 Mio.")
+    else:
+        try:
+            texte = fichier_import.getvalue().decode("utf-8")
+            profil_importe = importer_profil(texte)
+        except UnicodeDecodeError:
+            st.error("Le fichier doit être encodé en UTF-8.")
+        except ValueError as erreur:
+            st.error(str(erreur))
+        except RecursionError:
+            st.error("La structure du fichier est trop complexe.")
+        else:
+            st.success("Le fichier respecte les contrôles d’import actuels.")
+
+            st.write(
+                "Nombre de parcours :",
+                len(profil_importe.journeys),
+            )
+
+            parcours_importe_actif = next(
+                (
+                    journey
+                    for journey in profil_importe.journeys
+                    if journey.id == profil_importe.active_journey_id
+                ),
+                None,
+            )
+
+            if parcours_importe_actif is None:
+                st.write("Parcours actif : aucun")
+            else:
+                st.write(
+                    "Parcours actif :",
+                    libelles_parcours[parcours_importe_actif.type],
+                )
+
+            st.warning(
+                "L’import remplacera entièrement le profil actuel et videra les saisies temporaires. " \
+                "Exportez d’abord votre profil actuel si vous souhaitez le conserver."
+            )
+
+            confirmation_import = st.checkbox(
+                "Je confirme vouloir remplacer mon profil par cet export.",
+                key="confirmer_import",
+            )
+
+            st.button(
+                "Remplacer mon profil",
+                key="appliquer_import",
+                disabled=not confirmation_import,
+                on_click=appliquer_import,
+                args=(profil_importe,),
+            )
 

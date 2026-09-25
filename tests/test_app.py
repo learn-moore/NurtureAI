@@ -3,6 +3,9 @@ import pytest
 from datetime import date, timedelta
 from streamlit.testing.v1 import AppTest
 
+from modeles import UserProfile, PregnancyJourney
+from persistance import exporter_profil
+
 def test_reperes_grossesse_conserves_apres_changement_parcours():
     app = AppTest.from_file("../app.py").run()
     assert not app.exception
@@ -474,4 +477,209 @@ def test_enregistrer_reperes_grossesse(
     assert profil.active_journey_id is None
     assert profil.journeys[0].status == "completed"
     assert profil.journeys[0].details == reperes
+
+@pytest.mark.parametrize(
+    "methode, cle_date, decalage",
+    [
+        ("dernieres_regles", "date_regles_grossesse", -65),
+        ("dpa", "date_accouchement_grossesse", 100),
+    ],
+)
+def test_reprendre_reperes_grossesse(methode, cle_date, decalage):
+    app = AppTest.from_file("../app.py").run()
+
+    # Créer le parcours et enregistrer ses repères.
+    app.radio(key="ecran_consulte").set_value("Grossesse en cours").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    app.radio(key="methode_datation_grossesse").set_value(methode).run()
+
+    date_saisie = date.today() + timedelta(days=decalage)
+    app.date_input(key=cle_date).set_value(date_saisie)
+    app.button[0].click().run()
+
+    app.button(key="enregistrer_reperes_grossesse").click().run()
+
+    assert not app.exception
+    assert not app.error
+
+    profil_enregistre = app.session_state["profil"]
+
+    # Réinitialiser uniquement la saisie temporaire.
+    app.checkbox(key="confirmer_effacement_grossesse").check().run()
+    app.button(key="effacer_reperes_grossesse").click().run()
+
+    assert app.session_state["suivi_grossesse"] is None
+    assert app.date_input(key="date_regles_grossesse").value is None
+
+    # Reprendre les repères du parcours actif.
+    app.button(key="reprendre_reperes_grossesse").click().run()
+
+    assert not app.exception
+    assert app.radio(key="methode_datation_grossesse").value == methode
+    assert app.date_input(key=cle_date).value == date_saisie
+
+    # La reprise ne valide pas automatiquement le formulaire.
+    assert app.session_state["suivi_grossesse"] is None
+    assert len(app.metric) == 0
+
+    # Le profil enregistré reste inchangé.
+    assert app.session_state["profil"] == profil_enregistre
+
+    # La personne peut ensuite valider les champs restaurés.
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert not app.error
+    assert (
+        app.session_state["suivi_grossesse"]["date_reference"]
+        == date_saisie
+    )
+
+def test_import_remplace_profil_apres_confirmation():
+    app = AppTest.from_file("../app.py").run()
+
+    # Créer un profil et une saisie temporaire dans l'application.
+    app.button(key="demarrer_parcours").click().run()
+    app.date_input(key="conception_dernieres_regles").set_value(
+        date.today() - timedelta(days=10)
+    )
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert app.session_state["suivi_conception"] is not None
+
+    profil_initial = app.session_state["profil"]
+
+    # Préparer un autre profil à importer.
+    profil_attendu = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+    profil_attendu = profil_attendu.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method="due_date",
+            estimated_due_date=date.today() + timedelta(days=100),
+        )
+    )
+
+    contenu = exporter_profil(profil_attendu).encode("utf-8")
+
+    # Sélectionner le fichier ne doit rien remplacer.
+    app.file_uploader(key="fichier_import").upload(
+        "profil-test.json",
+        contenu,
+        "application/json",
+    ).run()
+
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == profil_initial
+    assert app.button(key="appliquer_import").disabled
+
+    # Cocher la confirmation ne suffit pas non plus.
+    app.checkbox(key="confirmer_import").check().run()
+
+    assert app.session_state["profil"] == profil_initial
+    assert not app.button(key="appliquer_import").disabled
+
+    # Seul le clic applique le remplacement.
+    app.button(key="appliquer_import").click().run()
+
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == profil_attendu
+
+    assert app.session_state["suivi_conception"] is None
+    assert app.session_state["suivi_grossesse"] is None
+    assert app.radio(key="ecran_consulte").value == "Grossesse en cours"
+    assert app.date_input(key="date_regles_grossesse").value is None
+
+    assert not app.checkbox(key="confirmer_import").value
+    assert app.button(key="appliquer_import").disabled
+
+def test_changer_fichier_annule_confirmation_import():
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    profil_initial = app.session_state["profil"]
+
+    premier_profil = UserProfile().demarrer_parcours(
+        "conception",
+        date.today(),
+    )
+    second_profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+
+    # Sélectionner un premier fichier et confirmer.
+    app.file_uploader(key="fichier_import").set_value(
+        (
+            "premier.json",
+            exporter_profil(premier_profil).encode("utf-8"),
+            "application/json",
+        )
+    ).run()
+
+    assert not app.exception
+    assert not app.error
+
+    app.checkbox(key="confirmer_import").check().run()
+
+    assert not app.button(key="appliquer_import").disabled
+
+    # Remplacer le fichier sélectionné par un autre.
+    app.file_uploader(key="fichier_import").set_value(
+        (
+            "second.json",
+            exporter_profil(second_profil).encode("utf-8"),
+            "application/json",
+        )
+    ).run()
+
+    assert not app.exception
+    assert not app.error
+    assert not app.checkbox(key="confirmer_import").value
+    assert app.button(key="appliquer_import").disabled
+    assert app.session_state["profil"] == profil_initial
+
+    # Confirmer à nouveau, puis importer le second fichier.
+    app.checkbox(key="confirmer_import").check().run()
+    app.button(key="appliquer_import").click().run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == second_profil
+
+@pytest.mark.parametrize(
+    "contenu",
+    [
+        b"ceci n'est pas du JSON",
+        b'{"schema_version": 2, "profil": {}}',
+        b'{"schema_version": 1, "profil": {}}',
+        b"\xff\xfe",
+    ],
+)
+def test_import_invalide_preserve_profil(contenu):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    profil_initial = app.session_state["profil"]
+
+    app.file_uploader(key="fichier_import").set_value(
+        (
+            "export-invalide.json",
+            contenu,
+            "application/json",
+        )
+    ).run()
+
+    assert not app.exception
+    assert len(app.error) == 1
+    assert app.session_state["profil"] == profil_initial
+
+    assert all(
+        bouton.key != "appliquer_import"
+        for bouton in app.button
+    )
 

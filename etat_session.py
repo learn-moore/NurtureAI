@@ -138,3 +138,36 @@ def reprendre_reperes_grossesse():
 
     st.session_state["suivi_grossesse"] = None
 
+def annuler_confirmation_import():
+    st.session_state["confirmer_import"] = False
+    st.session_state["message_import"] = None
+
+
+def appliquer_import(profil_importe: UserProfile):
+    if not st.session_state.get("confirmer_import", False):
+        return
+
+    effacer_reperes_conception()
+    effacer_reperes_grossesse()
+
+    st.session_state["profil"] = profil_importe
+    st.session_state["confirmer_fin_parcours"] = False
+    st.session_state["confirmer_changement_parcours"] = False
+    st.session_state["confirmer_import"] = False
+    st.session_state["message_import"] = "Le profil a été remplacé."
+
+    parcours_actif = next(
+        (
+            journey
+            for journey in profil_importe.journeys
+            if journey.id == profil_importe.active_journey_id
+        ),
+        None,
+    )
+
+    st.session_state["ecran_consulte"] = (
+        "Grossesse en cours"
+        if parcours_actif is not None and parcours_actif.type == "pregnancy"
+        else "Projet de conception"
+    )
+
