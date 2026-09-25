@@ -1,6 +1,6 @@
 import pytest
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 
 from modeles import UserProfile, ConceptionJourney, PregnancyJourney, Journey
 from persistance import exporter_profil, importer_profil, lire_export, lire_date, lire_reperes_conception, lire_reperes_grossesse, lire_parcours
@@ -273,3 +273,41 @@ def test_import_refuse_parcours_dupliques():
 
     with pytest.raises(ValueError):
         importer_profil(json.dumps(donnees))
+
+def test_export_contient_horodatage_utc():
+    avant = datetime.now(timezone.utc)
+
+    donnees = json.loads(exporter_profil(UserProfile()))
+
+    apres = datetime.now(timezone.utc)
+    date_export = datetime.fromisoformat(donnees["exported_at"])
+
+    assert avant <= date_export <= apres
+    assert date_export.utcoffset().total_seconds() == 0 # type: ignore
+
+
+@pytest.mark.parametrize(
+    "horodatage",
+    [
+        123,
+        "date-invalide",
+        "2026-09-25T12:00:00",
+    ],
+)
+def test_import_refuse_horodatage_invalide(horodatage):
+    donnees = json.loads(exporter_profil(UserProfile()))
+    donnees["exported_at"] = horodatage
+
+    with pytest.raises(ValueError):
+        importer_profil(json.dumps(donnees))
+
+
+def test_import_accepte_ancien_export_sans_horodatage():
+    profil = UserProfile()
+    donnees = json.loads(exporter_profil(profil))
+    del donnees["exported_at"]
+
+    profil_restaure = importer_profil(json.dumps(donnees))
+
+    assert profil_restaure == profil
+

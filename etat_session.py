@@ -58,6 +58,9 @@ def changer_parcours_actif():
         date.today(),
     )
 
+    effacer_reperes_conception()
+    effacer_reperes_grossesse()
+
     st.session_state["confirmer_changement_parcours"] = False
     st.session_state["confirmer_fin_parcours"] = False
 
@@ -170,4 +173,30 @@ def appliquer_import(profil_importe: UserProfile):
         if parcours_actif is not None and parcours_actif.type == "pregnancy"
         else "Projet de conception"
     )
+
+def effacer_profil_complet():
+    if not st.session_state.get("confirmer_effacement_total", False):
+        return
+
+    st.session_state.clear()
+    initialiser_session()
+
+    st.session_state["message_effacement"] = (
+        "Le profil et les saisies de cette session ont été effacés."
+    )
+
+def demarrer_nouveau_parcours(type_parcours: str):
+    profil = st.session_state["profil"]
+
+    nouveau_profil = profil.demarrer_parcours(
+        type_parcours,
+        date.today(),
+    )
+
+    effacer_reperes_conception()
+    effacer_reperes_grossesse()
+
+    st.session_state["profil"] = nouveau_profil
+    st.session_state["confirmer_fin_parcours"] = False
+    st.session_state["confirmer_changement_parcours"] = False
 

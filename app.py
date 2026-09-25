@@ -1,11 +1,12 @@
 import streamlit as st
-from datetime import date
+from datetime import date, datetime, timezone
 
 from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
-from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import
+from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
+from etat_session import demarrer_nouveau_parcours 
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles
 from modeles import ConceptionJourney, PregnancyJourney
-from persistance import exporter_profil, importer_profil
+from persistance import exporter_profil, importer_profil, lire_export
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -16,11 +17,21 @@ st.info(
 
 initialiser_session()
 
+message_effacement = st.session_state.pop("message_effacement", None)
+
+if message_effacement:
+    st.success(message_effacement)
+
 parcours = st.radio(
     "Quel écran souhaitez-vous consulter ?",
     ["Projet de conception", "Grossesse en cours"],
     key = "ecran_consulte",
 )
+
+libelles_parcours = {
+    "conception": "Projet de conception",
+    "pregnancy": "Grossesse",
+}
 
 if parcours == "Projet de conception":
     suivi = st.session_state["suivi_conception"]
@@ -341,15 +352,16 @@ types_parcours = {
 if profil.active_journey_id is None:
     st.write("Aucun parcours actif.")
 
-    if st.button(
+    st.caption(
+        "Le démarrage réinitialise les saisies temporaires des formulaires. Les parcours déjà enregistrés restent dans l’historique."
+    )
+
+    st.button(
         f"Démarrer le parcours : {parcours}",
         key="demarrer_parcours",
-    ):
-        st.session_state["profil"] = profil.demarrer_parcours(
-            types_parcours[parcours],
-            date.today(),
-        )
-        st.rerun()
+        on_click=demarrer_nouveau_parcours,
+        args=(types_parcours[parcours],),
+    )
 else:
     for journey in profil.journeys:
         if journey.id == profil.active_journey_id:
@@ -385,6 +397,9 @@ else:
             )
 
             with st.expander("Changer de parcours"):
+                st.caption(
+                    "Les saisies temporaires seront réinitialisées. Enregistrez les repères à conserver dans le parcours actuel avant de confirmer."
+                )
                 confirmation_changement = st.checkbox(
                     f"Je confirme vouloir terminer le parcours actuel et démarrer un parcours {destination}. L’ancien parcours restera dans mon historique.",
                     key="confirmer_changement_parcours",
@@ -397,35 +412,9 @@ else:
                     on_click=changer_parcours_actif,
                 )
 
-st.subheader("Mes données")
-
-st.write(
-    "L’export contient vos parcours et les repères enregistrés dans chacun. Les saisies temporaires des formulaires ne sont pas incluses."
-)
-
-st.caption(
-    "Le fichier contient des données personnelles non chiffrées. Conservez-le dans un emplacement privé."
-)
-
-contenu_export = exporter_profil(st.session_state["profil"])
-
-st.download_button(
-    label="Exporter mes données",
-    data=contenu_export,
-    file_name="nurtureai-export.json",
-    mime="application/json",
-    key="exporter_profil",
-    on_click="ignore",
-)
-
 st.subheader("Historique des parcours")
 
 profil = st.session_state["profil"]
-
-libelles_parcours = {
-    "conception": "Projet de conception",
-    "pregnancy": "Grossesse",
-}
 
 if not profil.journeys:
     st.write("Aucun parcours enregistré.")
@@ -472,74 +461,132 @@ else:
                         journey.details.estimated_due_date.strftime("%d/%m/%Y"), # type: ignore
                     )
 
-st.subheader("Prévisualiser un import")
+st.subheader("Mes données")
 
-message_import = st.session_state.pop("message_import", None)
+with st.expander("Exporter mes données"):
+    # Textes explicatifs et bouton de téléchargement existants.
+    st.write(
+        "L’export contient vos parcours et les repères enregistrés dans chacun. Les saisies temporaires des formulaires ne sont pas incluses."
+    )
 
-if message_import:
-    st.success(message_import)
+    st.caption(
+        "Le fichier contient des données personnelles non chiffrées. Conservez-le dans un emplacement privé."
+    )
 
-fichier_import = st.file_uploader(
-    "Choisir un export NurtureAI",
-    type=["json"],
-    max_upload_size=1,
-    key="fichier_import",
-    on_change=annuler_confirmation_import,
-)
+    contenu_export = exporter_profil(st.session_state["profil"])
 
-if fichier_import is not None:
-    if fichier_import.size > 1_048_576:
-        st.error("Le fichier dépasse la limite de 1 Mio.")
-    else:
-        try:
-            texte = fichier_import.getvalue().decode("utf-8")
-            profil_importe = importer_profil(texte)
-        except UnicodeDecodeError:
-            st.error("Le fichier doit être encodé en UTF-8.")
-        except ValueError as erreur:
-            st.error(str(erreur))
-        except RecursionError:
-            st.error("La structure du fichier est trop complexe.")
+    st.download_button(
+        label="Exporter mes données",
+        data=contenu_export,
+        file_name="nurtureai-export.json",
+        mime="application/json",
+        key="exporter_profil",
+        on_click="ignore",
+    )
+
+with st.expander("Importer mes données"):
+    # Sélection du fichier, aperçu et confirmation existants.
+    message_import = st.session_state.pop("message_import", None)
+
+    if message_import:
+        st.success(message_import)
+
+    fichier_import = st.file_uploader(
+        "Choisir un export NurtureAI",
+        type=["json"],
+        max_upload_size=1,
+        key="fichier_import",
+        on_change=annuler_confirmation_import,
+    )
+
+    if fichier_import is not None:
+        if fichier_import.size > 1_048_576:
+            st.error("Le fichier dépasse la limite de 1 Mio.")
         else:
-            st.success("Le fichier respecte les contrôles d’import actuels.")
-
-            st.write(
-                "Nombre de parcours :",
-                len(profil_importe.journeys),
-            )
-
-            parcours_importe_actif = next(
-                (
-                    journey
-                    for journey in profil_importe.journeys
-                    if journey.id == profil_importe.active_journey_id
-                ),
-                None,
-            )
-
-            if parcours_importe_actif is None:
-                st.write("Parcours actif : aucun")
+            try:
+                texte = fichier_import.getvalue().decode("utf-8")
+                profil_importe = importer_profil(texte)
+                donnees_export = lire_export(texte)
+            except UnicodeDecodeError:
+                st.error("Le fichier doit être encodé en UTF-8.")
+            except ValueError as erreur:
+                st.error(str(erreur))
+            except RecursionError:
+                st.error("La structure du fichier est trop complexe.")
             else:
+                st.success("Le fichier respecte les contrôles d’import actuels.")
+
+                horodatage = donnees_export.get("exported_at")
+
+                if horodatage is None:
+                    st.write("Date d’export : non disponible dans ce fichier.")
+                else:
+                    date_export = datetime.fromisoformat(horodatage)
+                    date_export_utc = date_export.astimezone(timezone.utc)
+
+                    st.write(
+                        "Export créé le :",
+                        date_export_utc.strftime("%d/%m/%Y à %H:%M:%S UTC"),
+                    )
+
                 st.write(
-                    "Parcours actif :",
-                    libelles_parcours[parcours_importe_actif.type],
+                    "Nombre de parcours :",
+                    len(profil_importe.journeys),
                 )
 
-            st.warning(
-                "L’import remplacera entièrement le profil actuel et videra les saisies temporaires. " \
-                "Exportez d’abord votre profil actuel si vous souhaitez le conserver."
-            )
+                parcours_importe_actif = next(
+                    (
+                        journey
+                        for journey in profil_importe.journeys
+                        if journey.id == profil_importe.active_journey_id
+                    ),
+                    None,
+                )
 
-            confirmation_import = st.checkbox(
-                "Je confirme vouloir remplacer mon profil par cet export.",
-                key="confirmer_import",
-            )
+                if parcours_importe_actif is None:
+                    st.write("Parcours actif : aucun")
+                else:
+                    st.write(
+                        "Parcours actif :",
+                        libelles_parcours[parcours_importe_actif.type],
+                    )
 
-            st.button(
-                "Remplacer mon profil",
-                key="appliquer_import",
-                disabled=not confirmation_import,
-                on_click=appliquer_import,
-                args=(profil_importe,),
-            )
+                st.warning(
+                    "L’import remplacera entièrement le profil actuel et videra les saisies temporaires. " \
+                    "Exportez d’abord votre profil actuel si vous souhaitez le conserver."
+                )
+
+                confirmation_import = st.checkbox(
+                    "Je confirme vouloir remplacer mon profil par cet export.",
+                    key="confirmer_import",
+                )
+
+                st.button(
+                    "Remplacer mon profil",
+                    key="appliquer_import",
+                    disabled=not confirmation_import,
+                    on_click=appliquer_import,
+                    args=(profil_importe,),
+                )
+
+with st.expander("Effacer toutes mes données de session"):
+    # Avertissement, confirmation et bouton existants.
+    st.warning(
+        "Cette action supprime le profil actuel, tous ses parcours, leurs repères et les saisies temporaires. " \
+        "Exportez d’abord vos données si vous souhaitez les conserver."
+    )
+
+    st.caption("Les fichiers JSON déjà téléchargés sur votre appareil ne seront pas supprimés.")
+
+    confirmation_totale = st.checkbox(
+        "Je confirme vouloir effacer toutes les données de cette session.",
+        key="confirmer_effacement_total",
+    )
+
+    st.button(
+        "Effacer toutes mes données de session",
+        key="effacer_profil_complet",
+        disabled=not confirmation_totale,
+        on_click=effacer_profil_complet,
+    )
 

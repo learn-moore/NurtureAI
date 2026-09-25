@@ -683,3 +683,107 @@ def test_import_invalide_preserve_profil(contenu):
         for bouton in app.button
     )
 
+def test_effacement_complet_apres_import():
+    app = AppTest.from_file("../app.py").run()
+
+    profil_importe = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+
+    # Importer un profil.
+    app.file_uploader(key="fichier_import").upload(
+        "profil-test.json",
+        exporter_profil(profil_importe).encode("utf-8"),
+        "application/json",
+    ).run()
+
+    app.checkbox(key="confirmer_import").check().run()
+    app.button(key="appliquer_import").click().run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == profil_importe
+
+    # L'effacement nécessite sa propre confirmation.
+    assert app.button(key="effacer_profil_complet").disabled
+
+    app.checkbox(key="confirmer_effacement_total").check().run()
+    app.button(key="effacer_profil_complet").click().run()
+
+    assert not app.exception
+
+    profil_vide = app.session_state["profil"]
+
+    assert profil_vide.id != profil_importe.id
+    assert profil_vide.journeys == ()
+    assert profil_vide.active_journey_id is None
+
+    assert app.session_state["suivi_conception"] is None
+    assert app.session_state["suivi_grossesse"] is None
+    assert app.file_uploader(key="fichier_import").value is None
+
+    assert not app.checkbox(key="confirmer_effacement_total").value
+    assert app.button(key="effacer_profil_complet").disabled
+
+    # Une nouvelle exécution ne doit rien restaurer.
+    app.run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == profil_vide
+    assert app.file_uploader(key="fichier_import").value is None
+
+def test_nouveau_parcours_conception_demarre_sans_anciens_reperes():
+    app = AppTest.from_file("../app.py").run()
+
+    # Créer un premier parcours conception et enregistrer ses repères.
+    app.button(key="demarrer_parcours").click().run()
+
+    ancienne_date = date.today() - timedelta(days=12)
+
+    app.date_input(key="conception_dernieres_regles").set_value(
+        ancienne_date
+    )
+    app.number_input(key="conception_duree_cycle").set_value(30)
+    app.number_input(key="conception_duree_regles").set_value(6)
+    app.radio(key="conception_regularite").set_value("Irrégulier")
+    app.button[0].click().run()
+
+    app.button(key="enregistrer_reperes_conception").click().run()
+
+    assert not app.exception
+    assert not app.error
+
+    anciens_reperes = app.session_state["profil"].journeys[0].details
+
+    # Passer en grossesse, puis démarrer un nouveau parcours conception.
+    for _ in range(2):
+        app.checkbox(key="confirmer_changement_parcours").check().run()
+        app.button(key="changer_parcours_actif").click().run()
+
+        assert not app.exception
+
+    profil = app.session_state["profil"]
+
+    assert len(profil.journeys) == 3
+
+    ancien = profil.journeys[0]
+    nouveau = profil.journeys[2]
+
+    # L'ancien parcours conserve ses repères.
+    assert ancien.status == "completed"
+    assert ancien.details == anciens_reperes
+    assert ancien.details.last_period_date == ancienne_date
+
+    # Le nouveau parcours est actif, sans repères hérités.
+    assert nouveau.type == "conception"
+    assert nouveau.status == "active"
+    assert nouveau.details is None
+    assert profil.active_journey_id == nouveau.id
+
+    # Le formulaire est lui aussi réinitialisé.
+    assert app.session_state["suivi_conception"] is None
+    assert app.date_input(key="conception_dernieres_regles").value is None
+    assert app.number_input(key="conception_duree_cycle").value == 28
+    assert app.number_input(key="conception_duree_regles").value == 5
+    assert app.radio(key="conception_regularite").value == "Je ne sais pas"
+

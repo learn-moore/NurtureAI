@@ -54,6 +54,39 @@ Depuis la racine du projet, avec l’environnement activé :
 python -m pytest
 ```
 
+## Sauvegarder et restaurer ses données
+
+Les données restent en mémoire pendant la session.
+Un rechargement de la page ou un redémarrage de l’application
+peut les faire perdre.
+
+Pour conserver son suivi :
+
+1. Valider les repères dans le formulaire.
+2. Les enregistrer dans le parcours actif.
+3. Cliquer sur « Exporter mes données ».
+4. Conserver le fichier JSON dans un emplacement privé.
+
+L’export contient le profil, ses parcours et leurs repères enregistrés.
+Les saisies temporaires des formulaires ne sont pas incluses.
+
+Pour restaurer un export :
+
+1. Sélectionner le fichier JSON dans la section d’import.
+2. Vérifier l’aperçu.
+3. Confirmer le remplacement du profil.
+4. Cliquer sur « Remplacer mon profil ».
+
+L’import remplace entièrement le profil actuel et réinitialise
+les saisies temporaires. Il ne fusionne pas les historiques.
+
+Les fichiers invalides sont refusés sans remplacer le profil actuel.
+
+Le fichier exporté n’est pas chiffré et peut contenir des informations
+sensibles. Il ne doit pas être ajouté au dépôt Git.
+
+La sauvegarde automatique dans le navigateur n’est pas encore implémentée.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -61,6 +94,8 @@ python -m pytest
 * `tests/` : tests des calculs et des interactions avec l'interface.
 * `requirements.txt` : dépendances Python.
 * `etat_session.py` : initialisation et effacement des données de session.
+* `modeles.py` : profils, parcours, repères et règles de cohérence.
+* `persistance.py` : export JSON et validation des données importées.
 
 ## Limites
 

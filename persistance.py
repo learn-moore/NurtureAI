@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 from modeles import UserProfile, ConceptionJourney, PregnancyJourney, Journey
@@ -14,6 +14,7 @@ def convertir_date(valeur):
 def exporter_profil(profil: UserProfile) -> str:
     donnees = {
         "schema_version": 1,
+        "exported_at": datetime.now(timezone.utc).isoformat(),
         "profil": asdict(profil),
     }
 
@@ -75,6 +76,20 @@ def lire_export(texte: str) -> dict:
 
     if not isinstance(donnees.get("profil"), dict):
         raise ValueError("Le profil est absent ou invalide.")
+
+    if "exported_at" in donnees:
+        horodatage = donnees["exported_at"]
+
+        if not isinstance(horodatage, str):
+            raise ValueError("La date d’export doit être du texte.")
+
+        try:
+            date_export = datetime.fromisoformat(horodatage)
+        except ValueError as erreur:
+            raise ValueError("La date d’export est invalide.") from erreur
+
+        if date_export.tzinfo is None:
+            raise ValueError("La date d’export doit préciser son fuseau horaire.")
 
     return donnees
 
