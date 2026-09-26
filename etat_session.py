@@ -216,3 +216,16 @@ def demarrer_nouveau_parcours(type_parcours: str):
     st.session_state["confirmer_fin_parcours"] = False
     st.session_state["confirmer_changement_parcours"] = False
 
+def finaliser_effacement_global():
+    etat_stockage = st.session_state.get("stockage_profil", {})
+
+    if etat_stockage.get("effacement") is not True:
+        return
+
+    st.session_state.clear()
+    initialiser_session()
+
+    st.session_state["message_effacement"] = (
+        "La sauvegarde locale et les données de session ont été effacées."
+    )
+

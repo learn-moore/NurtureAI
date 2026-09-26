@@ -3,11 +3,11 @@ from datetime import date, datetime, timezone
 
 from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
 from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
-from etat_session import demarrer_nouveau_parcours, restaurer_profil_local 
+from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles
 from modeles import ConceptionJourney, PregnancyJourney
-from persistance import exporter_profil, importer_profil, lire_export
-from stockage_navigateur import afficher_stockage_navigateur
+from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
+from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -16,7 +16,54 @@ st.info(
     "NurtureAI fournit des informations générales et des estimations. Il ne remplace pas une professionnel de santé."
 )
 
+if "profil" not in st.session_state:
+    lecture_initiale = lire_sauvegarde_initiale()
+
+    if lecture_initiale is None:
+        st.info("Lecture de votre sauvegarde locale…")
+        st.stop()
+
+    st.session_state["lecture_initiale_stockage"] = (
+        lecture_initiale.copy()
+    )
+
+    probleme_lecture = None
+
+    if lecture_initiale["lecture"] == "erreur":
+        probleme_lecture = "Le stockage du navigateur est inaccessible."
+    elif lecture_initiale["texte"] != "":
+        try:
+            profil_sauvegarde = importer_profil(
+                lecture_initiale["texte"]
+            )
+        except (ValueError, RecursionError):
+            probleme_lecture = (
+                "La sauvegarde locale ne peut pas être restaurée."
+            )
+        else:
+            remplacer_profil_session(profil_sauvegarde)
+
+    if probleme_lecture:
+        st.error(probleme_lecture)
+        st.caption(
+            "Vous pouvez continuer dans une session temporaire. "
+            "La sauvegarde existante ne sera pas supprimée."
+        )
+
+        if not st.button(
+            "Continuer sans restauration",
+            key="continuer_sans_restauration",
+        ):
+            st.stop()
+
+        st.session_state["mode_temporaire"] = True
+
 initialiser_session()
+
+if st.session_state.get("mode_temporaire", False):
+    st.warning(
+        "Session ouverte sans restauration. Exportez votre travail avant de quitter. Un enregistrement manuel remplacera la sauvegarde locale existante."
+    )
 
 message_effacement = st.session_state.pop("message_effacement", None)
 
@@ -478,13 +525,30 @@ with st.expander("Sauvegarde dans ce navigateur"):
     )
 
     st.caption(
-        "La sauvegarde est manuelle et remplace la copie précédente. Elle n’est pas chiffrée par NurtureAI et reste propre à ce navigateur sur cet appareil."
+        "Les modifications enregistrées dans les parcours sont sauvegardées automatiquement lorsque le stockage est disponible et sans conflit. "
+        "Après une erreur ou pour remplacer un autre profil, un enregistrement manuel reste nécessaire."
+    )
+
+    etat_connu = st.session_state.get(
+        "stockage_profil",
+        st.session_state.get("lecture_initiale_stockage", {}),
+    )
+
+    sauvegarde_auto = sauvegarde_automatique_necessaire(
+        st.session_state["profil"],
+        etat_connu,
+        mode_temporaire=st.session_state.get(
+            "mode_temporaire",
+            False,
+        ),
     )
 
     resultat_stockage = afficher_stockage_navigateur(
         exporter_profil(st.session_state["profil"]),
         cle_stockage="nurtureai:profil:v1",
         key="stockage_profil",
+        on_effacement=finaliser_effacement_global,
+        sauvegarde_auto=sauvegarde_auto,
     )
 
     lecture_locale = resultat_stockage.get("lecture")
@@ -510,7 +574,20 @@ with st.expander("Sauvegarde dans ce navigateur"):
         except (ValueError, RecursionError):
             st.error("La sauvegarde locale ne respecte pas le format attendu. Elle n’a pas été appliquée au profil actuel.")
         else:
-            st.success("Une sauvegarde locale valide est disponible.")
+            if erreur_locale:
+                st.warning(
+                    "La dernière opération a échoué. L’état actuel du stockage ne peut pas être confirmé."
+                )
+            elif profil_local == st.session_state["profil"]:
+                st.success(
+                    "Le profil de session correspond à la dernière sauvegarde locale lue ou enregistrée."
+                )
+            else:
+                st.warning(
+                    "Le profil de session diffère de la dernière sauvegarde confirmée. Attendez la confirmation de sauvegarde avant de quitter. "
+                    "En cas d’erreur, exportez vos données."
+                )
+            
             st.write(
                 "Nombre de parcours sauvegardés :",
                 len(profil_local.journeys),
@@ -549,7 +626,7 @@ with st.expander("Sauvegarde dans ce navigateur"):
             )
 
     st.caption(
-        "La sauvegarde et la restauration sont manuelles. Effacer la sauvegarde locale ne supprime pas le profil actuellement ouvert dans la session."
+        "L’effacement confirmé supprime la sauvegarde locale et toutes les données de session. Les fichiers JSON téléchargés restent sur votre appareil."
     )
 
 with st.expander("Exporter mes données"):
@@ -666,8 +743,8 @@ with st.expander("Effacer toutes mes données de session"):
     )
 
     st.caption(
-        "Cette action ne supprime ni les fichiers JSON téléchargés ni la sauvegarde locale du navigateur. " \
-        "Pour supprimer cette dernière, utilisez « Effacer la sauvegarde locale » dans la section de sauvegarde."
+        "Cette action efface uniquement la session. Pour supprimer également la sauvegarde du navigateur, utilisez « Effacer la sauvegarde et la session » " \
+        "dans la section de sauvegarde. Les fichiers JSON téléchargés restent sur votre appareil."
     )
 
     confirmation_totale = st.checkbox(

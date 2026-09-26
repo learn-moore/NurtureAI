@@ -246,3 +246,39 @@ def lire_parcours(donnees: object) -> Journey:
         details=details,
     )
 
+def sauvegarde_automatique_necessaire(
+    profil: UserProfile,
+    etat_stockage: dict,
+    *,
+    mode_temporaire: bool = False,
+) -> bool:
+    """Détermine si une sauvegarde automatique peut être demandée."""
+    if mode_temporaire:
+        return False
+
+    if etat_stockage.get("lecture") != "ok":
+        return False
+
+    if etat_stockage.get("erreur_operation"):
+        return False
+
+    texte = etat_stockage.get("texte")
+
+    if not isinstance(texte, str):
+        return False
+
+    # Ne pas sauvegarder automatiquement un profil initial vide.
+    if texte == "":
+        return bool(profil.journeys)
+
+    try:
+        profil_sauvegarde = importer_profil(texte)
+    except (ValueError, RecursionError):
+        return False
+
+    # Le remplacement par un autre profil reste volontaire.
+    if profil_sauvegarde.id != profil.id:
+        return False
+
+    return profil_sauvegarde != profil
+

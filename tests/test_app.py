@@ -16,13 +16,19 @@ def simuler_stockage_navigateur(monkeypatch):
         "erreur_operation": None,
     }
 
-    def faux_stockage(json_propose, *, cle_stockage, key):
+    def faux_stockage(json_propose, *, cle_stockage, key, on_effacement, sauvegarde_auto=False,):
         return reponse.copy()
 
     monkeypatch.setattr(
         stockage_navigateur,
         "afficher_stockage_navigateur",
         faux_stockage,
+    )
+
+    monkeypatch.setattr(
+        stockage_navigateur,
+        "lire_sauvegarde_initiale",
+        lambda: {"lecture": "ok", "texte": ""},
     )
 
     return reponse
@@ -964,4 +970,138 @@ def test_sauvegarde_inutilisable_preserve_profil(
         bouton.key != "restaurer_profil_local"
         for bouton in app.button
     )
+
+def test_demarrage_attend_puis_restaure_sans_ecraser_la_session(
+    monkeypatch,
+):
+    import stockage_navigateur
+
+    # Le navigateur n'a pas encore répondu.
+    reponse_initiale = {"resultat": None}
+
+    monkeypatch.setattr(
+        stockage_navigateur,
+        "lire_sauvegarde_initiale",
+        lambda: reponse_initiale["resultat"],
+    )
+
+    app = AppTest.from_file("../app.py").run()
+
+    assert not app.exception
+    assert "profil" not in app.session_state
+    assert not app.radio
+
+    # Le navigateur transmet une sauvegarde valide.
+    profil_attendu = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+    profil_attendu = profil_attendu.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method="due_date",
+            estimated_due_date=date.today() + timedelta(days=100),
+        )
+    )
+
+    reponse_initiale["resultat"] = { # type: ignore
+        "lecture": "ok",
+        "texte": exporter_profil(profil_attendu),
+    }
+    app.run()
+
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == profil_attendu
+    assert app.radio(key="ecran_consulte").value == "Grossesse en cours"
+
+    # Modifier le profil restauré en terminant son parcours.
+    app.checkbox(key="confirmer_fin_parcours").check().run()
+    app.button(key="terminer_parcours_actif").click().run()
+
+    assert not app.exception
+
+    profil_modifie = app.session_state["profil"]
+
+    assert profil_modifie.active_journey_id is None
+    assert profil_modifie.journeys[0].status == "completed"
+
+    # Une réexécution ne doit pas réappliquer l'ancienne sauvegarde.
+    app.run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == profil_modifie
+
+def test_sauvegarde_auto_attend_confirmation_et_sarrete_sur_erreur(
+    monkeypatch,
+    simuler_stockage_navigateur,
+):
+    import stockage_navigateur
+
+    demandes = []
+    reponse = simuler_stockage_navigateur
+
+    def observer_stockage(
+        json_propose,
+        *,
+        cle_stockage,
+        key,
+        on_effacement,
+        sauvegarde_auto=False,
+    ):
+        demandes.append(sauvegarde_auto)
+        return reponse.copy()
+
+    monkeypatch.setattr(
+        stockage_navigateur,
+        "afficher_stockage_navigateur",
+        observer_stockage,
+    )
+
+    # Un profil initial vide ne déclenche pas de sauvegarde.
+    app = AppTest.from_file("../app.py").run()
+
+    assert not app.exception
+    assert demandes[-1] is False
+
+    # La création d'un parcours demande une sauvegarde.
+    app.button(key="demarrer_parcours").click().run()
+
+    assert not app.exception
+    assert demandes[-1] is True
+
+    profil_cree = app.session_state["profil"]
+
+    # Simuler la confirmation du navigateur.
+    reponse["texte"] = exporter_profil(profil_cree)
+    app.session_state["stockage_profil"] = reponse.copy()
+    app.run()
+
+    assert not app.exception
+    assert demandes[-1] is False
+
+    # Une nouvelle modification demande un nouvel enregistrement.
+    app.checkbox(key="confirmer_fin_parcours").check().run()
+    app.button(key="terminer_parcours_actif").click().run()
+
+    assert not app.exception
+    assert demandes[-1] is True
+
+    profil_modifie = app.session_state["profil"]
+    assert profil_modifie.active_journey_id is None
+
+    # Simuler un échec, sans actualiser la copie sauvegardée.
+    reponse["erreur_operation"] = "Conflit de sauvegarde simulé."
+    app.session_state["stockage_profil"] = reponse.copy()
+    app.run()
+
+    assert not app.exception
+    assert app.error
+    assert demandes[-1] is False
+    assert app.session_state["profil"] == profil_modifie
+
+    # L'erreur persistante empêche une nouvelle tentative automatique.
+    app.run()
+
+    assert not app.exception
+    assert demandes[-1] is False
 
