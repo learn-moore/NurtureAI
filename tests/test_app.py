@@ -6,6 +6,27 @@ from streamlit.testing.v1 import AppTest
 from modeles import UserProfile, PregnancyJourney
 from persistance import exporter_profil
 
+@pytest.fixture(autouse=True)
+def simuler_stockage_navigateur(monkeypatch):
+    import stockage_navigateur
+
+    reponse = {
+        "lecture": "ok",
+        "texte": "",
+        "erreur_operation": None,
+    }
+
+    def faux_stockage(json_propose, *, cle_stockage, key):
+        return reponse.copy()
+
+    monkeypatch.setattr(
+        stockage_navigateur,
+        "afficher_stockage_navigateur",
+        faux_stockage,
+    )
+
+    return reponse
+
 def test_reperes_grossesse_conserves_apres_changement_parcours():
     app = AppTest.from_file("../app.py").run()
     assert not app.exception
@@ -786,4 +807,161 @@ def test_nouveau_parcours_conception_demarre_sans_anciens_reperes():
     assert app.number_input(key="conception_duree_cycle").value == 28
     assert app.number_input(key="conception_duree_regles").value == 5
     assert app.radio(key="conception_regularite").value == "Je ne sais pas"
+
+def test_restauration_locale_remplace_profil_apres_confirmation(simuler_stockage_navigateur,):
+    app = AppTest.from_file("../app.py").run()
+
+    # Préparer un profil actuel avec une saisie temporaire.
+    app.button(key="demarrer_parcours").click().run()
+    app.date_input(key="conception_dernieres_regles").set_value(
+        date.today() - timedelta(days=10)
+    )
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert app.session_state["suivi_conception"] is not None
+
+    profil_initial = app.session_state["profil"]
+
+    # Préparer une sauvegarde différente du profil actuel.
+    profil_attendu = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+    profil_attendu = profil_attendu.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method="due_date",
+            estimated_due_date=date.today() + timedelta(days=100),
+        )
+    )
+
+    simuler_stockage_navigateur["texte"] = exporter_profil(
+        profil_attendu
+    )
+    app.run()
+
+    # La présence d'une sauvegarde ne remplace rien.
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == profil_initial
+    assert app.button(key="restaurer_profil_local").disabled
+
+    # La confirmation seule ne remplace rien non plus.
+    app.checkbox(key="confirmer_restauration_locale").check().run()
+
+    assert app.session_state["profil"] == profil_initial
+    assert not app.button(key="restaurer_profil_local").disabled
+
+    # Le clic déclenche la restauration.
+    app.button(key="restaurer_profil_local").click().run()
+
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == profil_attendu
+
+    assert app.session_state["suivi_conception"] is None
+    assert app.session_state["suivi_grossesse"] is None
+    assert app.radio(key="ecran_consulte").value == "Grossesse en cours"
+    assert app.date_input(key="date_regles_grossesse").value is None
+
+    assert not app.checkbox(key="confirmer_restauration_locale").value
+    assert app.button(key="restaurer_profil_local").disabled
+
+def test_changer_sauvegarde_annule_confirmation_locale(simuler_stockage_navigateur,):
+    premier_profil = UserProfile().demarrer_parcours(
+        "conception",
+        date.today(),
+    )
+    second_profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+
+    # Présenter une première sauvegarde.
+    simuler_stockage_navigateur["texte"] = exporter_profil(
+        premier_profil
+    )
+    app = AppTest.from_file("../app.py").run()
+
+    assert not app.exception
+    profil_initial = app.session_state["profil"]
+
+    # Confirmer sa restauration, sans encore cliquer.
+    app.checkbox(key="confirmer_restauration_locale").check().run()
+
+    assert not app.exception
+    assert not app.button(key="restaurer_profil_local").disabled
+
+    # Le composant transmet maintenant une autre sauvegarde.
+    simuler_stockage_navigateur["texte"] = exporter_profil(
+        second_profil
+    )
+    app.run()
+
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == profil_initial
+    assert not app.checkbox(key="confirmer_restauration_locale").value
+    assert app.button(key="restaurer_profil_local").disabled
+
+    # Une nouvelle confirmation permet de restaurer le second profil.
+    app.checkbox(key="confirmer_restauration_locale").check().run()
+    app.button(key="restaurer_profil_local").click().run()
+
+    assert not app.exception
+    assert not app.error
+    assert app.session_state["profil"] == second_profil
+
+@pytest.mark.parametrize(
+    "lecture, texte, erreur_attendue",
+    [
+        ("ok", "", False),
+        ("ok", "ceci n'est pas du JSON", True),
+        ("ok", '{"schema_version": 2, "profil": {}}', True),
+        ("erreur", None, True),
+    ],
+    ids=[
+        "absente",
+        "json_invalide",
+        "version_inconnue",
+        "lecture_refusee",
+    ],
+)
+def test_sauvegarde_inutilisable_preserve_profil(
+    simuler_stockage_navigateur,
+    lecture,
+    texte,
+    erreur_attendue,
+):
+    app = AppTest.from_file("../app.py").run()
+
+    # Préparer un profil et une saisie temporaire.
+    app.button(key="demarrer_parcours").click().run()
+    app.date_input(key="conception_dernieres_regles").set_value(
+        date.today() - timedelta(days=10)
+    )
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    profil_initial = app.session_state["profil"]
+    saisie_initiale = app.session_state["suivi_conception"].copy()
+
+    # Simuler la réponse du navigateur.
+    simuler_stockage_navigateur.update(
+        lecture=lecture,
+        texte=texte,
+    )
+    app.run()
+
+    # Aucun remplacement ni effacement des données actuelles.
+    assert not app.exception
+    assert app.session_state["profil"] == profil_initial
+    assert app.session_state["suivi_conception"] == saisie_initiale
+
+    assert bool(app.error) == erreur_attendue
+    assert all(
+        bouton.key != "restaurer_profil_local"
+        for bouton in app.button
+    )
 

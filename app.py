@@ -3,10 +3,11 @@ from datetime import date, datetime, timezone
 
 from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
 from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
-from etat_session import demarrer_nouveau_parcours 
+from etat_session import demarrer_nouveau_parcours, restaurer_profil_local 
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles
 from modeles import ConceptionJourney, PregnancyJourney
 from persistance import exporter_profil, importer_profil, lire_export
+from stockage_navigateur import afficher_stockage_navigateur
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -463,6 +464,94 @@ else:
 
 st.subheader("Mes données")
 
+with st.expander("Sauvegarde dans ce navigateur"):
+    message_restauration = st.session_state.pop(
+        "message_restauration_locale",
+        None,
+    )
+
+    if message_restauration:
+        st.success(message_restauration)
+
+    st.write(
+        "Enregistrez une copie de votre profil, de ses parcours et de leurs repères dans ce navigateur. Les saisies temporaires des formulaires ne sont pas incluses."
+    )
+
+    st.caption(
+        "La sauvegarde est manuelle et remplace la copie précédente. Elle n’est pas chiffrée par NurtureAI et reste propre à ce navigateur sur cet appareil."
+    )
+
+    resultat_stockage = afficher_stockage_navigateur(
+        exporter_profil(st.session_state["profil"]),
+        cle_stockage="nurtureai:profil:v1",
+        key="stockage_profil",
+    )
+
+    lecture_locale = resultat_stockage.get("lecture")
+    texte_local = resultat_stockage.get("texte")
+    erreur_locale = resultat_stockage.get("erreur_operation")
+
+    if texte_local != st.session_state.get("sauvegarde_locale_previsualisee"):
+        st.session_state["sauvegarde_locale_previsualisee"] = texte_local
+        st.session_state["confirmer_restauration_locale"] = False
+
+    if erreur_locale:
+        st.error(erreur_locale)
+
+    if lecture_locale == "erreur":
+        st.error("Impossible de lire la sauvegarde locale. Rechargez la page après avoir rétabli l’accès au stockage.")
+    elif lecture_locale is None or texte_local is None:
+        st.info("Lecture de la sauvegarde locale en cours.")
+    elif texte_local == "":
+        st.info("Aucune sauvegarde locale disponible.")
+    else:
+        try:
+            profil_local = importer_profil(texte_local)
+        except (ValueError, RecursionError):
+            st.error("La sauvegarde locale ne respecte pas le format attendu. Elle n’a pas été appliquée au profil actuel.")
+        else:
+            st.success("Une sauvegarde locale valide est disponible.")
+            st.write(
+                "Nombre de parcours sauvegardés :",
+                len(profil_local.journeys),
+            )
+            parcours_local_actif = next(
+                (
+                    journey
+                    for journey in profil_local.journeys
+                    if journey.id == profil_local.active_journey_id
+                ),
+                None,
+            )
+
+            st.write(
+                "Parcours actif sauvegardé :",
+                libelles_parcours[parcours_local_actif.type]
+                if parcours_local_actif is not None
+                else "Aucun",
+            )
+
+            st.warning(
+                "La restauration remplacera le profil actuel et videra les saisies temporaires. Exportez d’abord votre profil actuel si vous souhaitez le conserver."
+            )
+
+            confirmation_restauration = st.checkbox(
+                "Je confirme vouloir remplacer mon profil par cette sauvegarde.",
+                key="confirmer_restauration_locale",
+            )
+
+            st.button(
+                "Restaurer cette sauvegarde",
+                key="restaurer_profil_local",
+                disabled=not confirmation_restauration,
+                on_click=restaurer_profil_local,
+                args=(profil_local,),
+            )
+
+    st.caption(
+        "La sauvegarde et la restauration sont manuelles. Effacer la sauvegarde locale ne supprime pas le profil actuellement ouvert dans la session."
+    )
+
 with st.expander("Exporter mes données"):
     # Textes explicatifs et bouton de téléchargement existants.
     st.write(
@@ -576,7 +665,10 @@ with st.expander("Effacer toutes mes données de session"):
         "Exportez d’abord vos données si vous souhaitez les conserver."
     )
 
-    st.caption("Les fichiers JSON déjà téléchargés sur votre appareil ne seront pas supprimés.")
+    st.caption(
+        "Cette action ne supprime ni les fichiers JSON téléchargés ni la sauvegarde locale du navigateur. " \
+        "Pour supprimer cette dernière, utilisez « Effacer la sauvegarde locale » dans la section de sauvegarde."
+    )
 
     confirmation_totale = st.checkbox(
         "Je confirme vouloir effacer toutes les données de cette session.",

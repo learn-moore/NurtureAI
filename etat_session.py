@@ -146,24 +146,21 @@ def annuler_confirmation_import():
     st.session_state["message_import"] = None
 
 
-def appliquer_import(profil_importe: UserProfile):
-    if not st.session_state.get("confirmer_import", False):
-        return
-
+def remplacer_profil_session(profil: UserProfile):
     effacer_reperes_conception()
     effacer_reperes_grossesse()
 
-    st.session_state["profil"] = profil_importe
+    st.session_state["profil"] = profil
     st.session_state["confirmer_fin_parcours"] = False
     st.session_state["confirmer_changement_parcours"] = False
     st.session_state["confirmer_import"] = False
-    st.session_state["message_import"] = "Le profil a été remplacé."
+    st.session_state["confirmer_restauration_locale"] = False
 
     parcours_actif = next(
         (
             journey
-            for journey in profil_importe.journeys
-            if journey.id == profil_importe.active_journey_id
+            for journey in profil.journeys
+            if journey.id == profil.active_journey_id
         ),
         None,
     )
@@ -172,6 +169,25 @@ def appliquer_import(profil_importe: UserProfile):
         "Grossesse en cours"
         if parcours_actif is not None and parcours_actif.type == "pregnancy"
         else "Projet de conception"
+    )
+
+
+def appliquer_import(profil_importe: UserProfile):
+    if not st.session_state.get("confirmer_import", False):
+        return
+
+    remplacer_profil_session(profil_importe)
+    st.session_state["message_import"] = "Le profil a été remplacé."
+
+
+def restaurer_profil_local(profil_local: UserProfile):
+    if not st.session_state.get("confirmer_restauration_locale", False):
+        return
+
+    remplacer_profil_session(profil_local)
+    st.session_state["message_import"] = None
+    st.session_state["message_restauration_locale"] = (
+        "La sauvegarde locale a été restaurée."
     )
 
 def effacer_profil_complet():
