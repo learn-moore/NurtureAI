@@ -1236,3 +1236,138 @@ def test_barre_progression_grossesse(methode, terme, decalage, attendu):
 
     assert app.session_state["profil"] == profil_avant
 
+@pytest.mark.parametrize(
+    "terme, attendu",
+    [(None, None), (280, 50), (287, 48)],
+)
+def test_progression_ddr_et_convention_enregistree(terme, attendu):
+    app = AppTest.from_file("../app.py").run()
+    app.radio[0].set_value("Grossesse en cours").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    app.date_input(key="date_regles_grossesse").set_value(
+        date.today() - timedelta(days=140)
+    )
+    app.selectbox(key="terme_reference_grossesse").set_value(terme)
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    barres = app.get("progress")
+    assert len(barres) == (0 if attendu is None else 1)
+
+    if attendu is not None:
+        assert barres[0].proto.value == attendu
+
+    app.button(key="enregistrer_reperes_grossesse").click().run()
+
+    assert not app.exception
+
+    profil = app.session_state["profil"]
+    reperes = next(
+        journey.details
+        for journey in profil.journeys
+        if journey.id == profil.active_journey_id
+    )
+
+    assert reperes.term_reference_days == terme
+    assert reperes.dating_rule_version == (
+        None if terme is None else "sa-reference-v1"
+    )
+
+    app.checkbox(key="confirmer_effacement_grossesse").check().run()
+    app.button(key="effacer_reperes_grossesse").click().run()
+    app.button(key="reprendre_reperes_grossesse").click().run()
+
+    assert not app.exception
+    assert app.selectbox(key="terme_reference_grossesse").value == terme
+
+@pytest.mark.parametrize(
+    "methode, terme",
+    [
+        ("dernieres_regles", 280),
+        ("dernieres_regles", 287),
+        ("dernieres_regles", None),
+        ("dpa", 280),
+        ("dpa", None),
+    ],
+)
+def test_affichage_dpa_estimee_sans_modifier_reperes(methode, terme):
+    app = AppTest.from_file("../app.py").run()
+
+    reference = (
+        date.today() - timedelta(days=140)
+        if methode == "dernieres_regles"
+        else date.today() + timedelta(days=140)
+    )
+
+    suivi = {
+        "methode_datation": methode,
+        "date_reference": reference,
+        "term_reference_days": terme,
+    }
+
+    app.session_state["suivi_grossesse"] = suivi.copy()
+    profil_avant = app.session_state["profil"]
+
+    app.radio[0].set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    estimations = [
+        element.value for element in app.markdown
+        if element.value.startswith("DPA estimée :")
+    ]
+
+    if methode == "dernieres_regles" and terme is not None:
+        attendu = reference + timedelta(days=terme)
+        assert estimations == [
+            f"DPA estimée : {attendu:%d/%m/%Y}"
+        ]
+    else:
+        assert estimations == []
+
+    assert app.session_state["suivi_grossesse"] == suivi
+    assert app.session_state["profil"] == profil_avant
+
+@pytest.mark.parametrize(
+    "methode, terme, decalage, message_attendu",
+    [
+        ("dpa", None, -1, True),
+        ("dpa", 280, -1, True),
+        ("dpa", 280, 0, False),
+        ("dpa", 280, 1, False),
+        ("dernieres_regles", 280, -281, True),
+        ("dernieres_regles", 287, -287, False),
+        ("dernieres_regles", None, -300, False),
+    ],
+)
+def test_dpa_depassee_sans_cloture(
+    methode, terme, decalage, message_attendu
+):
+    app = AppTest.from_file("../app.py").run()
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date.today(),
+    )
+    app.session_state["profil"] = profil
+    app.session_state["suivi_grossesse"] = {
+        "methode_datation": methode,
+        "date_reference": date.today() + timedelta(days=decalage),
+        "term_reference_days": terme,
+    }
+
+    app.radio[0].set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    messages = [
+        element.value for element in app.info
+        if element.value.startswith("La DPA affichée est passée.")
+    ]
+
+    assert len(messages) == int(message_attendu)
+    assert app.session_state["profil"] == profil
+    assert app.session_state["profil"].active_journey_id is not None
+

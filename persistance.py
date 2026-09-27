@@ -3,7 +3,7 @@ from dataclasses import asdict
 from datetime import date, datetime, timezone
 from uuid import UUID
 
-from modeles import UserProfile, ConceptionJourney, PregnancyJourney, Journey
+from modeles import UserProfile, ConceptionJourney, PregnancyJourney, Journey, Appointment
 
 def convertir_date(valeur):
     if isinstance(valeur, date):
@@ -13,7 +13,7 @@ def convertir_date(valeur):
 
 def exporter_profil(profil: UserProfile) -> str:
     donnees = {
-        "schema_version": 2,
+        "schema_version": 3,
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "profil": asdict(profil),
     }
@@ -29,17 +29,23 @@ def importer_profil(texte: str) -> UserProfile:
     export = lire_export(texte)
     donnees = export["profil"]
 
-    champs_attendus = {
-        "id",
-        "journeys",
-        "active_journey_id",
-    }
+    champs_attendus = {"id", "journeys", "active_journey_id"}
+
+    if export["schema_version"] == 3:
+        champs_attendus.add("appointments")
 
     if set(donnees) != champs_attendus:
-        raise ValueError("Les champs du profil sont incomplets ou inconnus.")
+        raise ValueError(
+            "Les champs du profil sont incomplets ou inconnus."
+        )
 
     if not isinstance(donnees["journeys"], list):
         raise ValueError("Les parcours doivent être une liste.")
+
+    fiches = donnees.get("appointments", [])
+
+    if not isinstance(fiches, list):
+        raise ValueError("Les rendez-vous doivent être une liste.")
 
     identifiant_actif = donnees["active_journey_id"]
 
@@ -49,15 +55,17 @@ def importer_profil(texte: str) -> UserProfile:
             "active_journey_id",
         )
 
-    parcours = tuple(
-        lire_parcours(element)
-        for element in donnees["journeys"]
-    )
-
     return UserProfile(
         id=lire_identifiant(donnees["id"], "id"),
-        journeys=parcours,
+        journeys=tuple(
+            lire_parcours(element)
+            for element in donnees["journeys"]
+        ),
         active_journey_id=identifiant_actif,
+        appointments=tuple(
+            lire_rendez_vous(element)
+            for element in fiches
+        ),
     )
 
 def lire_export(texte: str) -> dict:
@@ -71,7 +79,7 @@ def lire_export(texte: str) -> dict:
 
     version = donnees.get("schema_version")
 
-    if type(version) is not int or version not in (1, 2):
+    if type(version) is not int or version not in (1, 2, 3):
         raise ValueError("Version d’export non prise en charge.")
 
     if not isinstance(donnees.get("profil"), dict):
@@ -295,3 +303,61 @@ def sauvegarde_automatique_necessaire(
 
     return profil_sauvegarde != profil
 
+
+def lire_horodatage(valeur: object, nom_champ: str) -> datetime:
+    if not isinstance(valeur, str):
+        raise ValueError(
+            f"Le champ {nom_champ} doit être un horodatage textuel."
+        )
+
+    try:
+        instant = datetime.fromisoformat(valeur)
+    except ValueError as erreur:
+        raise ValueError(
+            f"Horodatage invalide : {nom_champ}."
+        ) from erreur
+
+    if instant.utcoffset() is None:
+        raise ValueError(
+            f"Le champ {nom_champ} doit inclure un fuseau horaire."
+        )
+
+    return instant
+
+
+def lire_rendez_vous(donnees: object) -> Appointment:
+    if not isinstance(donnees, dict):
+        raise ValueError("Un rendez-vous doit être un objet JSON.")
+
+    champs = {
+        "id",
+        "journey_id",
+        "appointment_type",
+        "date",
+        "notes",
+        "questions",
+        "topics",
+        "created_at",
+        "updated_at",
+    }
+
+    if set(donnees) != champs:
+        raise ValueError(
+            "Les champs du rendez-vous sont incomplets ou inconnus."
+        )
+
+    for champ in ("questions", "topics"):
+        if not isinstance(donnees[champ], list):
+            raise ValueError(f"Le champ {champ} doit être une liste.")
+
+    return Appointment(
+        id=lire_identifiant(donnees["id"], "id"),
+        journey_id=lire_identifiant(donnees["journey_id"], "journey_id"),
+        appointment_type=donnees["appointment_type"],
+        date=lire_date(donnees["date"], "date", obligatoire=False),
+        notes=donnees["notes"],
+        questions=tuple(donnees["questions"]),
+        topics=tuple(donnees["topics"]),
+        created_at=lire_horodatage(donnees["created_at"], "created_at"),
+        updated_at=lire_horodatage(donnees["updated_at"], "updated_at"),
+    )

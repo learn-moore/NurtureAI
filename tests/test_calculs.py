@@ -2,7 +2,7 @@ import pytest
 from datetime import date, timedelta
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle
 from calculs import calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse, calculer_age_depuis_dpa
-from calculs import determiner_trimestre, calculer_progression_grossesse
+from calculs import determiner_trimestre, calculer_progression_grossesse, estimer_dpa
 
 def test_prochaines_regles_changement_annee():
     resultat = estimer_prochaines_regles(
@@ -272,4 +272,47 @@ def test_progression_grossesse_refuse_entrees_invalides(jours_sa, terme):
             jours_sa,
             terme_reference_jours=terme,
         )
+
+@pytest.mark.parametrize(
+    "dernieres_regles, terme, attendu",
+    [
+        (date(2026, 1, 1), 280, date(2026, 10, 8)),
+        (date(2026, 1, 1), 287, date(2026, 10, 15)),
+        (date(2027, 12, 1), 280, date(2028, 9, 6)),
+    ],
+)
+def test_estimation_dpa(dernieres_regles, terme, attendu):
+    resultat = estimer_dpa(
+        dernieres_regles,
+        terme_reference_jours=terme,
+    )
+
+    assert resultat == attendu
+
+
+@pytest.mark.parametrize("terme", [0, -1, True, 280.0, "280"])
+def test_estimation_dpa_refuse_duree_invalide(terme):
+    with pytest.raises(ValueError):
+        estimer_dpa(
+            date(2026, 1, 1),
+            terme_reference_jours=terme,
+        )
+
+
+@pytest.mark.parametrize("terme", [280, 287])
+def test_dpa_estimee_et_age_sa_coherents(terme):
+    dernieres_regles = date(2026, 1, 1)
+
+    dpa = estimer_dpa(
+        dernieres_regles,
+        terme_reference_jours=terme,
+    )
+
+    age_sa = calculer_age_depuis_dpa(
+        dpa,
+        date(2026, 3, 7),
+        terme_reference_jours=terme,
+    )
+
+    assert age_sa == (9, 2)
 

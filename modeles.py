@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, replace
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Literal
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from calculs import valider_durees_cycle
 
@@ -137,6 +137,7 @@ class UserProfile:
     id: str = field(default_factory=lambda: str(uuid4()))
     journeys: tuple[Journey, ...] = ()
     active_journey_id: str | None = None
+    appointments: "tuple[Appointment, ...]" = ()
 
     def __post_init__(self):
         identifiants = [parcours.id for parcours in self.journeys]
@@ -158,6 +159,35 @@ class UserProfile:
             raise ValueError(
                 "L'identifiant actif doit désigner le parcours actif."
             )
+        
+        if not isinstance(self.appointments, tuple) or any(
+            not isinstance(fiche, Appointment)
+            for fiche in self.appointments
+        ):
+            raise ValueError(
+                "Les rendez-vous doivent être un tuple de fiches."
+            )
+
+        ids_rendez_vous = [fiche.id for fiche in self.appointments]
+
+        if len(ids_rendez_vous) != len(set(ids_rendez_vous)):
+            raise ValueError(
+                "Les identifiants des rendez-vous doivent être uniques."
+            )
+
+        if any(
+            fiche.journey_id not in identifiants
+            for fiche in self.appointments
+        ):
+            raise ValueError(
+                "Chaque rendez-vous doit référencer un parcours existant."
+            )
+
+    def ajouter_rendez_vous(self, fiche: "Appointment") -> "UserProfile":
+        return replace(
+            self,
+            appointments=self.appointments + (fiche,),
+        )
 
     def demarrer_parcours(self, type_parcours: Literal["conception", "pregnancy"], start_date: date,) -> "UserProfile":
         if self.active_journey_id is not None:
@@ -215,3 +245,105 @@ class UserProfile:
             journeys=parcours_mis_a_jour,
         )
 
+THEMES_RENDEZ_VOUS = (
+    "nutrition",
+    "physical_activity",
+    "symptoms",
+    "medications",
+    "tests",
+    "work",
+    "travel",
+    "childbirth",
+    "other",
+)
+
+@dataclass(frozen=True)
+class Appointment:
+    journey_id: str
+    appointment_type: Literal[
+        "preconception",
+        "follow_up",
+        "ultrasound",
+        "birth_preparation",
+        "other",
+    ] = "other"
+    date: "date | None" = None
+    id: str = field(default_factory=lambda: str(uuid4()))
+    notes: str = ""
+    questions: tuple[str, ...] = ()
+    topics: tuple[str, ...] = ()
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime | None = None
+
+    def __post_init__(self):
+        if self.appointment_type not in (
+            "preconception",
+            "follow_up",
+            "ultrasound",
+            "birth_preparation",
+            "other",
+        ):
+            raise ValueError("Type de rendez-vous inconnu.")
+
+        if self.date is not None and type(self.date) is not date:
+            raise ValueError("La date du rendez-vous doit être une date ou None.")
+
+        for identifiant in (self.id, self.journey_id):
+            if not isinstance(identifiant, str):
+                raise ValueError("Les identifiants doivent être des UUID textuels.")
+
+            try:
+                valide = str(UUID(identifiant)) == identifiant
+            except ValueError:
+                valide = False
+
+            if not valide:
+                raise ValueError("Les identifiants doivent être des UUID canoniques.")
+
+        if not isinstance(self.notes, str) or len(self.notes) > 5000:
+            raise ValueError(
+                "Les notes doivent être un texte de 5 000 caractères maximum."
+            )
+
+        if not isinstance(self.questions, tuple) or len(self.questions) > 30:
+            raise ValueError(
+                "Les questions doivent être un tuple de 30 éléments maximum."
+            )
+
+        for question in self.questions:
+            if (
+                not isinstance(question, str)
+                or not question.strip()
+                or len(question) > 500
+            ):
+                raise ValueError(
+                    "Chaque question doit être un texte non vide de 500 caractères maximum."
+                )
+
+        if not isinstance(self.topics, tuple):
+            raise ValueError("Les thèmes doivent être un tuple.")
+
+        if any(
+            not isinstance(theme, str) or theme not in THEMES_RENDEZ_VOUS
+            for theme in self.topics
+        ):
+            raise ValueError("Thème de rendez-vous inconnu.")
+
+        if len(set(self.topics)) != len(self.topics):
+            raise ValueError("Un thème ne peut être sélectionné qu’une seule fois.")
+
+        if self.updated_at is None:
+            object.__setattr__(self, "updated_at", self.created_at)
+
+        for instant in (self.created_at, self.updated_at):
+            if not isinstance(instant, datetime) or instant.utcoffset() is None:
+                raise ValueError(
+                    "Les horodatages doivent inclure un fuseau horaire."
+                )
+
+        if self.updated_at < self.created_at: # type: ignore
+            raise ValueError(
+                "La modification ne peut pas précéder la création."
+            )
+
+        

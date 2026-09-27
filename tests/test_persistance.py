@@ -1,9 +1,10 @@
 import pytest
 import json
 from datetime import date, datetime, timezone
+from dataclasses import asdict, replace
 
-from modeles import UserProfile, ConceptionJourney, PregnancyJourney, Journey
-from persistance import exporter_profil, importer_profil, lire_export, lire_date, lire_reperes_conception, lire_reperes_grossesse, lire_parcours
+from modeles import UserProfile, ConceptionJourney, PregnancyJourney, Journey, Appointment
+from persistance import exporter_profil, importer_profil, lire_export, lire_date, lire_reperes_conception, lire_reperes_grossesse, lire_parcours, convertir_date, lire_rendez_vous
 
 
 def test_export_contient_parcours_et_reperes():
@@ -21,7 +22,7 @@ def test_export_contient_parcours_et_reperes():
     texte = exporter_profil(profil)
     donnees = json.loads(texte)
 
-    assert donnees["schema_version"] == 2
+    assert donnees["schema_version"] == 3
     assert donnees["profil"]["id"] == profil.id
     assert donnees["profil"]["active_journey_id"] == profil.active_journey_id
 
@@ -39,7 +40,7 @@ def test_lire_export_reconnait_un_export_du_projet():
 
     donnees = lire_export(texte)
 
-    assert donnees["schema_version"] == 2
+    assert donnees["schema_version"] == 3
     assert donnees["profil"]["id"] == profil.id
 
 
@@ -348,7 +349,7 @@ def test_import_version_1_preserve_grossesse():
 
     nouvel_export = exporter_profil(profil)
 
-    assert json.loads(nouvel_export)["schema_version"] == 2
+    assert json.loads(nouvel_export)["schema_version"] == 3
     assert importer_profil(nouvel_export) == profil
 
 @pytest.mark.parametrize("duree", [None, 280, 287])
@@ -369,4 +370,135 @@ def test_export_import_conserve_convention_grossesse(duree):
     profil = profil.renseigner_reperes_actifs(reperes)
 
     assert importer_profil(exporter_profil(profil)) == profil
+
+
+@pytest.fixture
+def donnees_rendez_vous():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    fiche = Appointment(
+        journey_id=parcours.id,
+        notes="Questions à préparer",
+        questions=("Que dois-je apporter ?",),
+        topics=("nutrition",),
+        created_at=datetime(2026, 9, 27, tzinfo=timezone.utc),
+    )
+
+    return json.loads(
+        json.dumps(asdict(fiche), default=convertir_date)
+    )
+
+
+def test_lecture_rendez_vous_preserve_export(donnees_rendez_vous):
+    fiche = lire_rendez_vous(donnees_rendez_vous)
+
+    assert fiche.questions == ("Que dois-je apporter ?",)
+    assert fiche.topics == ("nutrition",)
+    assert fiche.date is None
+
+    assert json.loads(
+        json.dumps(asdict(fiche), default=convertir_date)
+    ) == donnees_rendez_vous
+
+
+@pytest.mark.parametrize(
+    "champs",
+    [
+        {"questions": "Question ?"},
+        {"topics": "nutrition"},
+        {"created_at": None},
+        {"updated_at": "invalide"},
+        {"created_at": "2026-09-27T00:00:00"},
+        {"updated_at": "2026-09-26T00:00:00+00:00"},
+        {"date": "2026-02-30"},
+        {"champ_inconnu": True},
+    ],
+)
+def test_lecture_rendez_vous_refuse_export_invalide(
+    donnees_rendez_vous, champs
+):
+    with pytest.raises(ValueError):
+        lire_rendez_vous({**donnees_rendez_vous, **champs})
+
+
+def test_lecture_rendez_vous_refuse_champ_manquant(
+    donnees_rendez_vous,
+):
+    del donnees_rendez_vous["updated_at"]
+
+    with pytest.raises(ValueError):
+        lire_rendez_vous(donnees_rendez_vous)
+
+@pytest.fixture
+def profil_avec_rendez_vous():
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 27),
+    )
+    fiche = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        notes="Mes notes",
+        questions=("Que dois-je apporter ?",),
+        topics=("nutrition",),
+    )
+
+    return replace(profil, appointments=(fiche,))
+
+
+def test_export_import_profil_avec_rendez_vous(
+    profil_avec_rendez_vous,
+):
+    texte = exporter_profil(profil_avec_rendez_vous)
+
+    assert json.loads(texte)["schema_version"] == 3
+    assert importer_profil(texte) == profil_avec_rendez_vous
+
+
+@pytest.mark.parametrize("version", [1, 2])
+def test_ancien_export_sans_rendez_vous(version):
+    donnees = json.loads(exporter_profil(UserProfile()))
+    donnees["schema_version"] = version
+    del donnees["profil"]["appointments"]
+
+    assert importer_profil(json.dumps(donnees)).appointments == ()
+
+
+@pytest.mark.parametrize(
+    "anomalie",
+    ["absent", "doublon", "orphelin", "liste_invalide"],
+)
+def test_import_refuse_rendez_vous_incoherents(
+    profil_avec_rendez_vous, anomalie
+):
+    donnees = json.loads(exporter_profil(profil_avec_rendez_vous))
+    profil = donnees["profil"]
+
+    if anomalie == "absent":
+        del profil["appointments"]
+    elif anomalie == "doublon":
+        profil["appointments"] *= 2
+    elif anomalie == "orphelin":
+        profil["appointments"][0]["journey_id"] = (
+            "11111111-1111-4111-8111-111111111111"
+        )
+    else:
+        profil["appointments"] = None
+
+    with pytest.raises(ValueError):
+        importer_profil(json.dumps(donnees))
+
+
+def test_transition_conserve_rendez_vous_archives(
+    profil_avec_rendez_vous,
+):
+    nouveau = profil_avec_rendez_vous.changer_parcours(
+        "conception",
+        date(2026, 9, 28),
+    )
+
+    assert nouveau.appointments == profil_avec_rendez_vous.appointments
+    assert nouveau.appointments[0].journey_id != nouveau.active_journey_id
+    assert importer_profil(exporter_profil(nouveau)) == nouveau
 

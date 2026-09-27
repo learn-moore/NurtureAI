@@ -1,8 +1,8 @@
 import pytest
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from dataclasses import FrozenInstanceError
 
-from modeles import Journey, UserProfile, ConceptionJourney, PregnancyJourney
+from modeles import Journey, UserProfile, ConceptionJourney, PregnancyJourney, Appointment
 
 def test_nouveau_parcours_actif_sans_date_fin():
     parcours = Journey(
@@ -530,4 +530,308 @@ def test_grossesse_refuse_convention_invalide(duree, version):
             dating_rule_version=version,
         )
 
+def test_rendez_vous_en_preparation_sans_date():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+
+    rendez_vous = Appointment(journey_id=parcours.id)
+
+    assert rendez_vous.date is None
+    assert rendez_vous.journey_id == parcours.id
+    assert rendez_vous.appointment_type == "other"
+
+
+def test_rendez_vous_avec_date_passee():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 1, 1),
+    )
+
+    rendez_vous = Appointment(
+        journey_id=parcours.id,
+        appointment_type="follow_up",
+        date=date(2026, 2, 1),
+    )
+
+    assert rendez_vous.date == date(2026, 2, 1)
+
+
+@pytest.mark.parametrize(
+    "champs",
+    [
+        {"appointment_type": "inconnu"},
+        {"date": "2026-10-01"},
+        {"journey_id": ""},
+        {"journey_id": None},
+        {"id": "incorrect"},
+    ],
+)
+def test_rendez_vous_refuse_champs_invalides(champs):
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+
+    donnees = {"journey_id": parcours.id, **champs}
+
+    with pytest.raises(ValueError):
+        Appointment(**donnees)
+
+def test_fiche_rendez_vous_vide():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    fiche = Appointment(journey_id=parcours.id)
+
+    assert fiche.notes == ""
+    assert fiche.questions == ()
+
+
+def test_fiche_rendez_vous_accepte_limites():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    fiche = Appointment(
+        journey_id=parcours.id,
+        notes="n" * 5000,
+        questions=("q" * 500,) * 30,
+    )
+
+    assert len(fiche.notes) == 5000
+    assert len(fiche.questions) == 30
+
+
+def test_fiche_conserve_texte_et_ordre():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    notes = "Mes notes\nDeuxième ligne."
+    questions = (
+        "  Que dois-je apporter ?  ",
+        "Comment préparer la consultation ?",
+    )
+
+    fiche = Appointment(
+        journey_id=parcours.id,
+        notes=notes,
+        questions=questions,
+    )
+
+    assert fiche.notes == notes
+    assert fiche.questions == questions
+
+
+@pytest.mark.parametrize(
+    "champs",
+    [
+        {"notes": None},
+        {"notes": "n" * 5001},
+        {"questions": []},
+        {"questions": None},
+        {"questions": ("Question ?",) * 31},
+        {"questions": ("",)},
+        {"questions": ("   ",)},
+        {"questions": ("q" * 501,)},
+        {"questions": (42,)},
+    ],
+)
+def test_fiche_refuse_contenu_invalide(champs):
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+
+    with pytest.raises(ValueError):
+        Appointment(journey_id=parcours.id, **champs)
+
+def test_rendez_vous_sans_theme():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+
+    assert Appointment(journey_id=parcours.id).topics == ()
+
+
+def test_rendez_vous_conserve_ordre_themes():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    fiche = Appointment(
+        journey_id=parcours.id,
+        topics=("travel", "nutrition"),
+    )
+
+    assert fiche.topics == ("travel", "nutrition")
+
+
+def test_rendez_vous_accepte_tous_les_themes_du_cadrage():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    themes = (
+        "nutrition",
+        "physical_activity",
+        "symptoms",
+        "medications",
+        "tests",
+        "work",
+        "travel",
+        "childbirth",
+        "other",
+    )
+
+    fiche = Appointment(journey_id=parcours.id, topics=themes)
+
+    assert fiche.topics == themes
+
+
+@pytest.mark.parametrize(
+    "themes",
+    [
+        [],
+        None,
+        ("inconnu",),
+        (42,),
+        ({"theme": "nutrition"},),
+        ("nutrition", "nutrition"),
+    ],
+)
+def test_rendez_vous_refuse_themes_invalides(themes):
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+
+    with pytest.raises(ValueError):
+        Appointment(journey_id=parcours.id, topics=themes)
+
+def test_horodatages_initialises_a_la_creation():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+
+    avant = datetime.now(timezone.utc)
+    fiche = Appointment(journey_id=parcours.id)
+    apres = datetime.now(timezone.utc)
+
+    assert avant <= fiche.created_at <= apres
+    assert fiche.created_at.utcoffset() == timedelta(0)
+    assert fiche.updated_at == fiche.created_at
+
+
+def test_horodatages_fournis_conserves():
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    creation = datetime(2026, 9, 27, 10, tzinfo=timezone.utc)
+    modification = datetime(
+        2026, 9, 27, 13,
+        tzinfo=timezone(timedelta(hours=2)),
+    )
+
+    fiche = Appointment(
+        journey_id=parcours.id,
+        created_at=creation,
+        updated_at=modification,
+    )
+
+    assert fiche.created_at == creation
+    assert fiche.updated_at == modification
+
+
+@pytest.mark.parametrize(
+    "champs",
+    [
+        {"created_at": datetime(2026, 9, 27)},
+        {"updated_at": datetime(2026, 9, 27)},
+        {"updated_at": datetime(2026, 9, 26, tzinfo=timezone.utc)},
+        {"created_at": "2026-09-27T00:00:00Z"},
+        {"updated_at": "2026-09-27T00:00:00Z"},
+    ],
+)
+def test_horodatages_invalides_refuses(champs):
+    parcours = Journey(
+        type="pregnancy",
+        start_date=date(2026, 9, 27),
+    )
+    donnees = {
+        "journey_id": parcours.id,
+        "created_at": datetime(2026, 9, 27, tzinfo=timezone.utc),
+        **champs,
+    }
+
+    with pytest.raises(ValueError):
+        Appointment(**donnees)
+
+@pytest.fixture
+def profil_grossesse_pour_rendez_vous():
+    return UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 27),
+    )
+
+
+def test_ajouter_rendez_vous_preserve_profil_initial(
+    profil_grossesse_pour_rendez_vous,
+):
+    profil = profil_grossesse_pour_rendez_vous
+    premiere = Appointment(journey_id=profil.active_journey_id)
+    seconde = Appointment(journey_id=profil.active_journey_id)
+
+    intermediaire = profil.ajouter_rendez_vous(premiere)
+    resultat = intermediaire.ajouter_rendez_vous(seconde)
+
+    assert profil.appointments == ()
+    assert intermediaire.appointments == (premiere,)
+    assert resultat.appointments == (premiere, seconde)
+    assert resultat.journeys == profil.journeys
+    assert resultat.active_journey_id == profil.active_journey_id
+    assert resultat.id == profil.id
+
+
+def test_ajouter_rendez_vous_refuse_doublon(
+    profil_grossesse_pour_rendez_vous,
+):
+    profil = profil_grossesse_pour_rendez_vous
+    fiche = Appointment(journey_id=profil.active_journey_id)
+    profil = profil.ajouter_rendez_vous(fiche)
+
+    with pytest.raises(ValueError):
+        profil.ajouter_rendez_vous(fiche)
+
+    assert profil.appointments == (fiche,)
+
+
+def test_ajouter_rendez_vous_refuse_parcours_absent(
+    profil_grossesse_pour_rendez_vous,
+):
+    profil = profil_grossesse_pour_rendez_vous
+    autre = Journey(
+        type="conception",
+        start_date=date(2026, 9, 27),
+    )
+    fiche = Appointment(journey_id=autre.id)
+
+    with pytest.raises(ValueError):
+        profil.ajouter_rendez_vous(fiche)
+
+    assert profil.appointments == ()
+
+
+@pytest.mark.parametrize("fiche", [None, "fiche"])
+def test_ajouter_rendez_vous_refuse_mauvais_type(
+    profil_grossesse_pour_rendez_vous, fiche
+):
+    with pytest.raises(ValueError):
+        profil_grossesse_pour_rendez_vous.ajouter_rendez_vous(fiche)
 

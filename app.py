@@ -5,7 +5,7 @@ from etat_session import initialiser_session, effacer_reperes_grossesse, effacer
 from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
 from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse
-from calculs import calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse
+from calculs import calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse, estimer_dpa
 from modeles import ConceptionJourney, PregnancyJourney
 from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
@@ -275,34 +275,33 @@ else:
         )
 
     with st.form("formulaire_grossesse"):
-        duree_reference = None
         if methode_datation == "dernieres_regles":
             date_reference = st.date_input(
                 "Premier jour de vos dernières règles",
-                max_value = date.today(),
-                format = "DD/MM/YYYY",
-                key = "date_regles_grossesse",
+                max_value=date.today(),
+                format="DD/MM/YYYY",
+                key="date_regles_grossesse",
             )
         else:
             date_reference = st.date_input(
                 "Date prévue d'accouchement",
-                format = "DD/MM/YYYY",
-                key = "date_accouchement_grossesse",
+                format="DD/MM/YYYY",
+                key="date_accouchement_grossesse",
             )
-            duree_reference = st.selectbox(
-                "Convention utilisée pour votre DPA, si connue",
-                options=[None, 280, 287],
-                format_func=lambda valeur: {
-                    None: "Je ne sais pas",
-                    280: "40 SA",
-                    287: "41 SA",
-                }[valeur],
-                key="terme_reference_grossesse",
-                help=(
-                    "Indiquez la convention utilisée pour établir votre DPA. Si elle est inconnue, conservez « Je ne sais pas » : "
-                    "la DPA restera enregistrable sans calcul des SA."
-                ),
-            )
+
+        duree_reference = st.selectbox(
+            "Durée de référence du terme, si connue",
+            options=[None, 280, 287],
+            format_func=lambda valeur: {
+                None: "Je ne sais pas",
+                280: "40 SA",
+                287: "41 SA",
+            }[valeur],
+            key="terme_reference_grossesse",
+            help=(
+                "Renseignez la convention indiquée pour votre suivi. Si elle est inconnue, conservez « Je ne sais pas » sans choisir au hasard."
+            ),
+        )
 
         grossesse_envoyee = st.form_submit_button("Valider mes repères")
 
@@ -320,6 +319,8 @@ else:
 
     if suivi_grossesse is not None:
         age_sa_jours = None
+        dpa_affichee = None
+
         st.caption("Repères issus de la dernières saisie validée.")
         st.write(
             "Repère choisi :", 
@@ -342,6 +343,24 @@ else:
                 f"{semaines} SA + {jours} jours",
             )
 
+            terme_dpa = suivi_grossesse.get("term_reference_days")
+
+            if terme_dpa is not None:
+                dpa_estimee = estimer_dpa(
+                    suivi_grossesse["date_reference"],
+                    terme_reference_jours=terme_dpa,
+                )
+
+                dpa_affichee = dpa_estimee
+
+                st.write(f"DPA estimée : {dpa_estimee:%d/%m/%Y}")
+
+                st.caption(
+                    f"Estimation depuis les dernières règles avec une durée de {terme_dpa // 7} SA. Elle ne remplace pas une datation médicale."
+                )
+            else:
+                st.info("DPA non estimée : aucune durée de référence renseignée.")
+
             age_sg = estimer_semaines_grossesse(
                 suivi_grossesse["date_reference"],
                 date.today(),
@@ -363,6 +382,7 @@ else:
                 "[Source : Assurance Maladie] (https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/premiers-symptomes-grossesse)"
             )
         else:
+            dpa_affichee = suivi_grossesse["date_reference"]
             duree_validee = suivi_grossesse.get("term_reference_days")
 
             if duree_validee is None:
@@ -401,6 +421,12 @@ else:
                         "Ce calcul ne détermine pas la date réelle de fécondation, ne modifie pas votre DPA et ne remplace pas une datation médicale."
                     )
 
+        if dpa_affichee is not None and dpa_affichee < date.today():
+            st.info(
+                "La DPA affichée est passée. Ce repère de calendrier ne permet pas de conclure à un accouchement ou à un problème de santé. "
+                "Votre parcours reste inchangé."
+            )
+
         if age_sa_jours is not None:
             trimestre = determiner_trimestre(
                 age_sa_jours,
@@ -429,7 +455,7 @@ else:
             )
 
             st.caption(
-                "Cette proportion situe le temps écoulé par rapport à la DPA. Elle ne représente ni un état de santé ni une probabilité d’accouchement. "
+                "Cette proportion compare l’âge estimé à la durée de référence renseignée. Elle ne représente ni un état de santé ni une probabilité d’accouchement. "
                 "Atteindre 100 % ne termine pas votre parcours."
             )
         
@@ -471,6 +497,14 @@ else:
                     reperes = PregnancyJourney(
                         dating_method="last_period",
                         last_period_date=suivi_grossesse["date_reference"],
+                        term_reference_days=suivi_grossesse.get(
+                            "term_reference_days"
+                        ),
+                        dating_rule_version=(
+                            "sa-reference-v1"
+                            if suivi_grossesse.get("term_reference_days") is not None
+                            else None
+                        ),
                     )
                 else:
                     reperes = PregnancyJourney(

@@ -136,3 +136,14 @@ def calculer_progression_grossesse(
 
     return min(jours_sa / terme_reference_jours, 1.0)
 
+def estimer_dpa(
+    dernieres_regles: date,
+    *,
+    terme_reference_jours: int,
+) -> date:
+    """Estime une DPA selon la durée de référence explicitement fournie."""
+    if type(terme_reference_jours) is not int or terme_reference_jours <= 0:
+        raise ValueError("La durée de référence doit être un entier strictement positif.")
+
+    return dernieres_regles + timedelta(days=terme_reference_jours)
+
