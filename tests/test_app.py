@@ -50,15 +50,16 @@ def test_reperes_grossesse_conserves_apres_changement_parcours():
     app.button[0].click().run()
 
     assert not app.exception
-    assert len(app.metric) == 1
+    assert len(app.metric) == 2
     assert app.metric[0].value == "9 SA + 2 jours"
+    assert app.metric[1].value == "7 SG + 2 jours"
 
     # Aller au parcours conception, puis revenir.
     app.radio[0].set_value("Projet de conception").run()
     app.radio[0].set_value("Grossesse en cours").run()
 
     assert not app.exception
-    assert len(app.metric) == 1
+    assert len(app.metric) == 2
     assert app.metric[0].value == "9 SA + 2 jours"
     assert (
         app.date_input(key="date_regles_grossesse").value == dernieres_regles
@@ -923,7 +924,7 @@ def test_changer_sauvegarde_annule_confirmation_locale(simuler_stockage_navigate
     [
         ("ok", "", False),
         ("ok", "ceci n'est pas du JSON", True),
-        ("ok", '{"schema_version": 2, "profil": {}}', True),
+        ("ok", '{"schema_version": 99, "profil": {}}', True),
         ("erreur", None, True),
     ],
     ids=[
@@ -1104,4 +1105,134 @@ def test_sauvegarde_auto_attend_confirmation_et_sarrete_sur_erreur(
 
     assert not app.exception
     assert demandes[-1] is False
+
+@pytest.mark.parametrize(
+    "duree, attendu, attendu_sg",
+    [
+        (280, "25 SA + 5 jours", "23 SG + 5 jours"),
+        (287, "26 SA + 5 jours", "24 SG + 5 jours"),
+    ],
+)
+def test_convention_dpa_conservee_apres_reinitialisation(
+    duree,
+    attendu,
+    attendu_sg,
+):
+    app = AppTest.from_file("../app.py").run()
+
+    app.radio(key="ecran_consulte").set_value(
+        "Grossesse en cours"
+    ).run()
+    app.button(key="demarrer_parcours").click().run()
+    app.radio(key="methode_datation_grossesse").set_value("dpa").run()
+
+    # Valider une DPA et sa convention.
+    dpa = date.today() + timedelta(days=100)
+
+    app.date_input(key="date_accouchement_grossesse").set_value(dpa)
+    app.selectbox(key="terme_reference_grossesse").set_value(duree)
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert app.metric[0].value == attendu
+    assert app.metric[1].value == attendu_sg
+
+    # Enregistrer les repères dans le parcours.
+    app.button(key="enregistrer_reperes_grossesse").click().run()
+
+    assert not app.exception
+
+    profil_enregistre = app.session_state["profil"]
+    reperes = profil_enregistre.journeys[0].details
+
+    assert reperes.estimated_due_date == dpa
+    assert reperes.term_reference_days == duree
+    assert reperes.dating_rule_version == "sa-reference-v1"
+
+    # Vider le formulaire sans modifier le parcours.
+    app.checkbox(key="confirmer_effacement_grossesse").check().run()
+    app.button(key="effacer_reperes_grossesse").click().run()
+
+    assert not app.exception
+    assert app.session_state["suivi_grossesse"] is None
+    assert app.session_state["terme_reference_grossesse"] is None
+    assert app.session_state["profil"] == profil_enregistre
+
+    # Reprendre les repères enregistrés.
+    app.button(key="reprendre_reperes_grossesse").click().run()
+
+    assert not app.exception
+    assert app.radio(key="methode_datation_grossesse").value == "dpa"
+    assert app.date_input(key="date_accouchement_grossesse").value == dpa
+    assert app.selectbox(key="terme_reference_grossesse").value == duree
+
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert app.metric[0].value == attendu
+    assert app.metric[1].value == attendu_sg
+
+@pytest.mark.parametrize("methode, duree, attendu", [
+    ("dernieres_regles", None, "Trimestre estimé : 2"),
+    ("dpa", 280, "Trimestre estimé : 2"),
+    ("dpa", None, None),
+])
+def test_affichage_trimestre_selon_reperes(methode, duree, attendu):
+    app = AppTest.from_file("../app.py").run()
+
+    app.session_state["suivi_grossesse"] = {
+        "methode_datation": methode,
+        "date_reference": (
+            date.today() - timedelta(days=98)
+            if methode == "dernieres_regles"
+            else date.today() + timedelta(days=182)
+        ),
+        "term_reference_days": duree,
+    }
+
+    app.radio[0].set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    trimestres = [
+        element.value for element in app.markdown
+        if element.value.startswith("Trimestre estimé :")
+    ]
+
+    assert trimestres == ([] if attendu is None else [attendu])
+
+@pytest.mark.parametrize(
+    "methode, terme, decalage, attendu",
+    [
+        ("dpa", 280, 140, 50),
+        ("dpa", 287, 147, 48),
+        ("dpa", 280, -10, 100),
+        ("dpa", None, 140, None),
+        ("dpa", 280, 300, None),
+        ("dernieres_regles", None, -140, None),
+    ],
+)
+def test_barre_progression_grossesse(methode, terme, decalage, attendu):
+    app = AppTest.from_file("../app.py").run()
+    profil_avant = app.session_state["profil"]
+
+    app.session_state["suivi_grossesse"] = {
+        "methode_datation": methode,
+        "date_reference": date.today() + timedelta(days=decalage),
+        "term_reference_days": terme,
+    }
+
+    app.radio[0].set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    barres = app.get("progress")
+
+    if attendu is None:
+        assert len(barres) == 0
+    else:
+        assert len(barres) == 1
+        assert barres[0].proto.value == attendu
+
+    assert app.session_state["profil"] == profil_avant
 

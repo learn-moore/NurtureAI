@@ -4,7 +4,8 @@ from datetime import date, datetime, timezone
 from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
 from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
 from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session
-from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles
+from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse
+from calculs import calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse
 from modeles import ConceptionJourney, PregnancyJourney
 from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
@@ -266,7 +267,15 @@ else:
         if cle not in st.session_state:
             st.session_state[cle] = None
 
+    if "terme_reference_grossesse" not in st.session_state:
+        st.session_state["terme_reference_grossesse"] = (
+            suivi_grossesse.get("term_reference_days")
+            if suivi_grossesse is not None
+            else None
+        )
+
     with st.form("formulaire_grossesse"):
+        duree_reference = None
         if methode_datation == "dernieres_regles":
             date_reference = st.date_input(
                 "Premier jour de vos dernières règles",
@@ -280,6 +289,20 @@ else:
                 format = "DD/MM/YYYY",
                 key = "date_accouchement_grossesse",
             )
+            duree_reference = st.selectbox(
+                "Convention utilisée pour votre DPA, si connue",
+                options=[None, 280, 287],
+                format_func=lambda valeur: {
+                    None: "Je ne sais pas",
+                    280: "40 SA",
+                    287: "41 SA",
+                }[valeur],
+                key="terme_reference_grossesse",
+                help=(
+                    "Indiquez la convention utilisée pour établir votre DPA. Si elle est inconnue, conservez « Je ne sais pas » : "
+                    "la DPA restera enregistrable sans calcul des SA."
+                ),
+            )
 
         grossesse_envoyee = st.form_submit_button("Valider mes repères")
 
@@ -290,11 +313,13 @@ else:
             st.session_state["suivi_grossesse"] = {
                 "methode_datation": methode_datation,
                 "date_reference": date_reference,
+                "term_reference_days": duree_reference,
             }
 
     suivi_grossesse = st.session_state["suivi_grossesse"]
 
     if suivi_grossesse is not None:
+        age_sa_jours = None
         st.caption("Repères issus de la dernières saisie validée.")
         st.write(
             "Repère choisi :", 
@@ -310,17 +335,104 @@ else:
                 suivi_grossesse["date_reference"], date.today(),
             )
 
+            age_sa_jours = semaines * 7 + jours
+
             st.metric(
                 "Âge estimé depuis les dernières règles",
                 f"{semaines} SA + {jours} jours",
             )
 
+            age_sg = estimer_semaines_grossesse(
+                suivi_grossesse["date_reference"],
+                date.today(),
+            )
+
+            if age_sg is None:
+                st.info("Estimation en SG non affichable avant 2 SA.")
+            else:
+                semaines_sg, jours_sg = age_sg
+
+                st.metric(
+                    "Semaines de grossesse estimées",
+                    f"{semaines_sg} SG + {jours_sg} jours",
+                )
+
             st.caption(
-                "SA signifie semaines d'aménorrhée. Ce repère est calculé depuis la date renseignée et ne confirme pas la datation médicale."
+                "SA : semaines d’aménorrhée, comptées depuis le premier jour des dernières règles. SG : semaines de grossesse estimées ici en retirant 14 jours. " \
+                "Ce décalage conventionnel peut ne pas correspondre à la date réelle de fécondation et ne remplace pas une datation médicale. "
+                "[Source : Assurance Maladie] (https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/premiers-symptomes-grossesse)"
             )
         else:
-            st.info("Le calcul à parti d'un DPA sera ajouté après définition de la convention de datation.")
+            duree_validee = suivi_grossesse.get("term_reference_days")
 
+            if duree_validee is None:
+                st.info("DPA conservée. Le calcul des SA nécessite une convention renseignée.")
+            else:
+                try:
+                    semaines, jours = calculer_age_depuis_dpa(
+                        suivi_grossesse["date_reference"],
+                        date.today(),
+                        terme_reference_jours=duree_validee,
+                    )
+                except ValueError as erreur:
+                    st.warning(str(erreur))
+                else:
+                    age_sa_jours = semaines * 7 + jours
+
+                    st.metric(
+                        "Âge estimé à partir de la DPA",
+                        f"{semaines} SA + {jours} jours",
+                    )
+
+                    age_sg = convertir_sa_en_sg(semaines, jours)
+
+                    if age_sg is None:
+                        st.info("Estimation en SG non affichable avant 2 SA.")
+                    else:
+                        semaines_sg, jours_sg = age_sg
+
+                        st.metric(
+                            "Semaines de grossesse estimées",
+                            f"{semaines_sg} SG + {jours_sg} jours",
+                        )
+
+                    st.caption(
+                        f"Convention renseignée : {duree_validee // 7} SA. Les SG sont estimées en retirant 14 jours aux SA. "
+                        "Ce calcul ne détermine pas la date réelle de fécondation, ne modifie pas votre DPA et ne remplace pas une datation médicale."
+                    )
+
+        if age_sa_jours is not None:
+            trimestre = determiner_trimestre(
+                age_sa_jours,
+                debut_deuxieme=14 * 7,
+                debut_troisieme=28 * 7,
+            )
+
+            st.write(f"Trimestre estimé : {trimestre}")
+
+            st.caption(
+                "Repère pédagogique : deuxième trimestre à 14 SA, troisième à 28 SA. Ces seuils ne définissent pas le calendrier de vos examens. "
+                "[Source : ACOG](https://www.acog.org/womens-health/faqs/how-your-fetus-grows-during-pregnancy)"
+            )
+
+        duree_progression = suivi_grossesse.get("term_reference_days")
+
+        if age_sa_jours is not None and duree_progression is not None:
+            progression = calculer_progression_grossesse(
+                age_sa_jours,
+                terme_reference_jours=duree_progression,
+            )
+
+            st.progress(
+                progression,
+                text=f"Progression chronologique indicative : {progression:.0%}",
+            )
+
+            st.caption(
+                "Cette proportion situe le temps écoulé par rapport à la DPA. Elle ne représente ni un état de santé ni une probabilité d’accouchement. "
+                "Atteindre 100 % ne termine pas votre parcours."
+            )
+        
         with st.expander("Réinitialiser la saisie grossesse"):
             confirmation_effacement = st.checkbox(
                 "Je confirme vouloir vider la saisie temporaire. Les repères enregistrés dans les parcours seront conservés.",
@@ -364,6 +476,15 @@ else:
                     reperes = PregnancyJourney(
                         dating_method="due_date",
                         estimated_due_date=suivi_grossesse["date_reference"],
+                        term_reference_days=suivi_grossesse.get(
+                            "term_reference_days"
+                        ),
+                        dating_rule_version=(
+                            "sa-reference-v1"
+                            if suivi_grossesse.get("term_reference_days")
+                            is not None
+                            else None
+                        ),
                     )
 
                 nouveau_profil = profil.renseigner_reperes_actifs(reperes)

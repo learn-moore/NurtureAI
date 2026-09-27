@@ -13,7 +13,7 @@ def convertir_date(valeur):
 
 def exporter_profil(profil: UserProfile) -> str:
     donnees = {
-        "schema_version": 1,
+        "schema_version": 2,
         "exported_at": datetime.now(timezone.utc).isoformat(),
         "profil": asdict(profil),
     }
@@ -71,7 +71,7 @@ def lire_export(texte: str) -> dict:
 
     version = donnees.get("schema_version")
 
-    if type(version) is not int or version != 1:
+    if type(version) is not int or version not in (1, 2):
         raise ValueError("Version d’export non prise en charge.")
 
     if not isinstance(donnees.get("profil"), dict):
@@ -162,7 +162,18 @@ def lire_reperes_grossesse(donnees: object) -> PregnancyJourney:
         "estimated_due_date",
     }
 
-    if set(donnees) != champs_attendus:
+    champs_optionnels = {
+        "term_reference_days",
+        "dating_rule_version",
+    }
+    champs_presents = set(donnees)
+
+    if (
+        not champs_attendus.issubset(champs_presents)
+        or not champs_presents.issubset(
+            champs_attendus | champs_optionnels
+        )
+    ):
         raise ValueError(
             "Les champs des repères grossesse sont incomplets ou inconnus."
         )
@@ -182,6 +193,8 @@ def lire_reperes_grossesse(donnees: object) -> PregnancyJourney:
             "estimated_due_date",
             obligatoire=False,
         ),
+        term_reference_days=donnees.get("term_reference_days"),
+        dating_rule_version=donnees.get("dating_rule_version"),
     )
 
 def lire_identifiant(valeur: object, nom_champ: str) -> str:

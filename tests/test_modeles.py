@@ -510,3 +510,24 @@ def test_renseigner_reperes_actifs_refuse_mauvais_type():
 
     assert profil.journeys[0].details is None
 
+@pytest.mark.parametrize(
+    "duree, version",
+    [
+        (0, "sa-reference-v1"),
+        (True, "sa-reference-v1"),
+        (280.0, "sa-reference-v1"),
+        (287, None),
+        (None, "sa-reference-v1"),
+        (287, "inconnue"),
+    ],
+)
+def test_grossesse_refuse_convention_invalide(duree, version):
+    with pytest.raises(ValueError):
+        PregnancyJourney(
+            dating_method="due_date",
+            estimated_due_date=date(2027, 4, 1),
+            term_reference_days=duree,
+            dating_rule_version=version,
+        )
+
+

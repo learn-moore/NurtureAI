@@ -30,6 +30,8 @@ class PregnancyJourney:
     dating_method: Literal["last_period", "due_date"]
     last_period_date: date | None = None
     estimated_due_date: date | None = None
+    term_reference_days: int | None = None
+    dating_rule_version: str | None = None
 
     def __post_init__(self):
         if self.dating_method not in ("last_period", "due_date"):
@@ -50,6 +52,21 @@ class PregnancyJourney:
             raise ValueError(
                 "La date prévue d’accouchement est requise."
             )
+
+        if self.term_reference_days is None:
+            if self.dating_rule_version is not None:
+                raise ValueError("Une version de règle nécessite une durée de référence.")
+        else:
+            if (
+                type(self.term_reference_days) is not int
+                or self.term_reference_days not in (280, 287)
+            ):
+                raise ValueError("La durée de référence doit être 280 ou 287 jours.")
+
+            if self.dating_rule_version != "sa-reference-v1":
+                raise ValueError(
+                    "Version de convention de datation non prise en charge."
+                )
 
 @dataclass(frozen=True)
 class Journey:
@@ -197,3 +214,4 @@ class UserProfile:
             self,
             journeys=parcours_mis_a_jour,
         )
+

@@ -21,7 +21,7 @@ def test_export_contient_parcours_et_reperes():
     texte = exporter_profil(profil)
     donnees = json.loads(texte)
 
-    assert donnees["schema_version"] == 1
+    assert donnees["schema_version"] == 2
     assert donnees["profil"]["id"] == profil.id
     assert donnees["profil"]["active_journey_id"] == profil.active_journey_id
 
@@ -39,7 +39,7 @@ def test_lire_export_reconnait_un_export_du_projet():
 
     donnees = lire_export(texte)
 
-    assert donnees["schema_version"] == 1
+    assert donnees["schema_version"] == 2
     assert donnees["profil"]["id"] == profil.id
 
 
@@ -48,7 +48,7 @@ def test_lire_export_reconnait_un_export_du_projet():
     [
         "ceci n’est pas du JSON",
         "[]",
-        '{"schema_version": 2, "profil": {}}',
+        '{"schema_version": 99, "profil": {}}',
         '{"schema_version": true, "profil": {}}',
         '{"schema_version": 1}',
         '{"schema_version": 1, "profil": []}',
@@ -310,4 +310,63 @@ def test_import_accepte_ancien_export_sans_horodatage():
     profil_restaure = importer_profil(json.dumps(donnees))
 
     assert profil_restaure == profil
+
+def test_import_version_1_preserve_grossesse():
+    ancien_export = {
+        "schema_version": 1,
+        "profil": {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "active_journey_id": "22222222-2222-4222-8222-222222222222",
+            "journeys": [
+                {
+                    "id": "22222222-2222-4222-8222-222222222222",
+                    "type": "pregnancy",
+                    "status": "active",
+                    "start_date": "2026-09-25",
+                    "end_date": None,
+                    "details": {
+                        "dating_method": "due_date",
+                        "last_period_date": None,
+                        "estimated_due_date": "2027-04-01",
+                    },
+                }
+            ],
+        },
+    }
+
+    profil = importer_profil(json.dumps(ancien_export))
+
+    assert profil.id == ancien_export["profil"]["id"]
+    assert (
+        profil.active_journey_id
+        == ancien_export["profil"]["active_journey_id"]
+    )
+    assert profil.journeys[0].details == PregnancyJourney(
+        dating_method="due_date",
+        estimated_due_date=date(2027, 4, 1),
+    )
+
+    nouvel_export = exporter_profil(profil)
+
+    assert json.loads(nouvel_export)["schema_version"] == 2
+    assert importer_profil(nouvel_export) == profil
+
+@pytest.mark.parametrize("duree", [None, 280, 287])
+def test_export_import_conserve_convention_grossesse(duree):
+    reperes = PregnancyJourney(
+        dating_method="due_date",
+        estimated_due_date=date(2027, 4, 1),
+        term_reference_days=duree,
+        dating_rule_version=(
+            "sa-reference-v1" if duree is not None else None
+        ),
+    )
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 27),
+    )
+    profil = profil.renseigner_reperes_actifs(reperes)
+
+    assert importer_profil(exporter_profil(profil)) == profil
 

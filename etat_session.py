@@ -28,6 +28,7 @@ def effacer_reperes_grossesse():
     st.session_state["date_regles_grossesse"] = None
     st.session_state["date_accouchement_grossesse"] = None
     st.session_state["confirmer_effacement_grossesse"] = False
+    st.session_state["terme_reference_grossesse"] = None
 
 def terminer_parcours_actif():
     profil = st.session_state["profil"]
@@ -125,6 +126,10 @@ def reprendre_reperes_grossesse():
 
     if not isinstance(reperes, PregnancyJourney):
         return
+
+    st.session_state["terme_reference_grossesse"] = (
+        reperes.term_reference_days
+    )
 
     # Vider les deux champs avant de restaurer la référence enregistrée.
     st.session_state["date_regles_grossesse"] = None
