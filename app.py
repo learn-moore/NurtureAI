@@ -6,9 +6,10 @@ from etat_session import reprendre_reperes_conception, reprendre_reperes_grosses
 from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse
 from calculs import calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse, estimer_dpa
-from modeles import ConceptionJourney, PregnancyJourney
+from modeles import ConceptionJourney, PregnancyJourney, Appointment, THEMES_RENDEZ_VOUS
 from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
+from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -663,6 +664,155 @@ else:
                         "DPA renseignée :",
                         journey.details.estimated_due_date.strftime("%d/%m/%Y"), # type: ignore
                     )
+
+st.subheader("Mes rendez-vous")
+
+profil = st.session_state["profil"]
+parcours_rdv = next(
+    (
+        journey for journey in profil.journeys
+        if journey.id == profil.active_journey_id
+    ),
+    None,
+)
+
+if parcours_rdv is None:
+    st.info("Démarrez un parcours pour créer une fiche de rendez-vous.")
+else:
+    st.caption(f"Nouvelle fiche pour le parcours actif : {libelles_parcours[parcours_rdv.type]}.")
+
+    if st.session_state.pop(f"vider_rdv_{parcours_rdv.id}", False):
+        st.session_state[f"type_rdv_{parcours_rdv.id}"] = "other"
+        st.session_state[f"date_rdv_{parcours_rdv.id}"] = None
+        st.session_state[f"themes_rdv_{parcours_rdv.id}"] = []
+        st.session_state[f"notes_rdv_{parcours_rdv.id}"] = ""
+        st.session_state[f"questions_rdv_{parcours_rdv.id}"] = ""
+        st.success("Fiche ajoutée au profil.")
+
+    with st.form(f"nouveau_rdv_{parcours_rdv.id}"):
+        type_rdv = st.selectbox(
+            "Type de rendez-vous",
+            options=list(types_rdv),
+            index=4,
+            format_func=lambda valeur: types_rdv[valeur],
+            key=f"type_rdv_{parcours_rdv.id}",
+        )
+
+        date_rdv = st.date_input(
+            "Date du rendez-vous, si connue",
+            value=None,
+            format="DD/MM/YYYY",
+            key=f"date_rdv_{parcours_rdv.id}",
+        )
+
+        themes_rdv = st.multiselect(
+            "Thèmes à aborder",
+            options=THEMES_RENDEZ_VOUS,
+            format_func=lambda valeur: libelles_themes_rdv[valeur],
+            help="Facultatif. Vous pouvez sélectionner plusieurs thèmes.",
+            key=f"themes_rdv_{parcours_rdv.id}",
+        )
+
+        notes_rdv = st.text_area(
+            "Notes pour le rendez-vous",
+            max_chars=5000,
+            help=("Facultatif, 5 000 caractères maximum. Ces notes restent telles que vous les saisissez."),
+            key=f"notes_rdv_{parcours_rdv.id}",
+        )
+
+        questions_rdv = st.text_area(
+            "Questions à poser",
+            help=("Facultatif. Une question par ligne, 30 questions maximum et 500 caractères par question. Les lignes vides sont ignorées."),
+            key=f"questions_rdv_{parcours_rdv.id}",
+        )        
+
+        creer_rdv = st.form_submit_button(
+            "Créer la fiche",
+            key="creer_rendez_vous",
+        )
+
+    if creer_rdv:
+        try:
+            fiche = Appointment(
+                journey_id=parcours_rdv.id,
+                appointment_type=type_rdv, # type: ignore
+                date=date_rdv,
+                notes=notes_rdv,
+                topics=tuple(themes_rdv),
+                questions=tuple(
+                    ligne for ligne in questions_rdv.splitlines()
+                    if ligne.strip()
+                ),
+            )
+            profil = profil.ajouter_rendez_vous(fiche)
+        except ValueError as erreur:
+            st.error(str(erreur))
+        else:
+            st.session_state["profil"] = profil
+            st.session_state[f"vider_rdv_{parcours_rdv.id}"] = True
+            st.rerun()
+
+    fiches_parcours = sorted(
+        (
+            fiche for fiche in profil.appointments
+            if fiche.journey_id == parcours_rdv.id
+        ),
+        key=lambda fiche: (
+            fiche.date is None,
+            fiche.date or date.max,
+        ),
+    )
+
+    st.write(f"Fiches du parcours actif : {len(fiches_parcours)}")
+
+    if not fiches_parcours:
+        st.info("Aucune fiche de rendez-vous pour ce parcours.")
+
+    for numero, fiche in enumerate(fiches_parcours, start=1):
+        date_affichee = (
+            fiche.date.strftime("%d/%m/%Y")
+            if fiche.date is not None
+            else "Date à définir"
+        )
+
+        with st.expander(
+            f"Fiche {numero} : "
+            f"{types_rdv[fiche.appointment_type]} ({date_affichee})"
+        ):
+            st.write(f"Type : {types_rdv[fiche.appointment_type]}")
+            st.write(f"Date : {date_affichee}")
+            if fiche.topics:
+                themes_affiches = ", ".join(
+                    libelles_themes_rdv[theme]
+                    for theme in fiche.topics
+                )
+                st.write(f"Thèmes : {themes_affiches}")
+            else:
+                st.caption("Aucun thème sélectionné.")
+            
+            st.write("Notes")
+            if fiche.notes:
+                st.text(fiche.notes)
+            else:
+                st.caption("Aucune note renseignée.")
+            
+            st.write("Questions")
+            if fiche.questions:
+                for numero_question, question in enumerate(
+                    fiche.questions, start=1
+                ):
+                    st.text(f"{numero_question}. {question}")
+            else:
+                st.caption("Aucune question renseignée.")
+            
+            st.download_button(
+                label="Télécharger la fiche (.txt)",
+                data=exporter_fiche_texte(fiche).encode("utf-8"),
+                file_name=f"nurtureai-rendez-vous-{fiche.id}.txt",
+                mime="text/plain; charset=utf-8",
+                key=f"telecharger_rdv_{fiche.id}",
+                on_click="ignore",
+            )
 
 st.subheader("Mes données")
 

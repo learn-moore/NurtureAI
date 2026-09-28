@@ -3,8 +3,8 @@ import pytest
 from datetime import date, timedelta
 from streamlit.testing.v1 import AppTest
 
-from modeles import UserProfile, PregnancyJourney
-from persistance import exporter_profil
+from modeles import UserProfile, PregnancyJourney, Appointment
+from persistance import exporter_profil, importer_profil
 
 @pytest.fixture(autouse=True)
 def simuler_stockage_navigateur(monkeypatch):
@@ -1370,4 +1370,323 @@ def test_dpa_depassee_sans_cloture(
     assert len(messages) == int(message_attendu)
     assert app.session_state["profil"] == profil
     assert app.session_state["profil"].active_journey_id is not None
+
+@pytest.mark.parametrize(
+    "date_rdv",
+    [None, date(2026, 10, 15)],
+)
+def test_creer_et_afficher_fiche_rendez_vous(date_rdv):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    identifiant = app.session_state["profil"].active_journey_id
+
+    app.selectbox(
+        key=f"type_rdv_{identifiant}"
+    ).set_value("follow_up")
+    app.date_input(
+        key=f"date_rdv_{identifiant}"
+    ).set_value(date_rdv)
+    app.button(key="creer_rendez_vous").click().run()
+
+    assert not app.exception
+
+    profil = app.session_state["profil"]
+    assert len(profil.appointments) == 1
+
+    fiche = profil.appointments[0]
+    assert fiche.journey_id == identifiant
+    assert fiche.appointment_type == "follow_up"
+    assert fiche.date == date_rdv
+
+    attendu = (
+        date_rdv.strftime("%d/%m/%Y")
+        if date_rdv else "Date à définir"
+    )
+    titres = [
+        element.label for element in app.expander
+        if element.label.startswith("Fiche ")
+    ]
+    assert titres == [
+        f"Fiche 1 : Consultation de suivi ({attendu})"
+    ]
+    assert importer_profil(exporter_profil(profil)) == profil
+
+    app.run()
+
+    assert not app.exception
+    assert app.session_state["profil"].appointments == (fiche,)
+
+
+def test_creation_rendez_vous_absente_sans_parcours():
+    app = AppTest.from_file("../app.py").run()
+
+    assert not app.exception
+    assert all(
+        bouton.key != "creer_rendez_vous"
+        for bouton in app.button
+    )
+
+
+def test_liste_rendez_vous_filtre_et_trie():
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    ancienne = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        appointment_type="preconception",
+    )
+    profil = profil.ajouter_rendez_vous(ancienne)
+    profil = profil.changer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+
+    sans_date = Appointment(journey_id=profil.active_journey_id) # type: ignore
+    datee = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        appointment_type="follow_up",
+        date=date(2026, 10, 15),
+    )
+    profil = profil.ajouter_rendez_vous(sans_date)
+    profil = profil.ajouter_rendez_vous(datee)
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    assert not app.exception
+
+    titres = [
+        element.label for element in app.expander
+        if element.label.startswith("Fiche ")
+    ]
+    assert titres == [
+        "Fiche 1 : Consultation de suivi (15/10/2026)",
+        "Fiche 2 : Autre (Date à définir)",
+    ]
+    assert app.session_state["profil"] == profil
+
+@pytest.mark.parametrize(
+    "notes",
+    [
+        "",
+        "Première ligne\n**À conserver tel quel**",
+        "n" * 5000,
+    ],
+)
+def test_notes_rendez_vous_saisies_et_affichees(notes):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    identifiant = app.session_state["profil"].active_journey_id
+    champ = app.text_area(key=f"notes_rdv_{identifiant}")
+
+    assert champ.proto.max_chars == 5000
+
+    champ.set_value(notes)
+    app.button(key="creer_rendez_vous").click().run()
+
+    assert not app.exception
+
+    profil = app.session_state["profil"]
+    assert profil.appointments[0].notes == notes
+    assert importer_profil(exporter_profil(profil)) == profil
+
+    fiche_affichee = next(
+        element for element in app.expander
+        if element.label.startswith("Fiche 1 :")
+    )
+
+    if notes:
+        assert notes in [
+            element.value for element in fiche_affichee.text
+        ]
+    else:
+        assert "Aucune note renseignée." in [
+            element.value for element in fiche_affichee.caption
+        ]
+
+@pytest.mark.parametrize(
+    "themes, libelle",
+    [
+        ([], None),
+        (["travel", "nutrition"], "Thèmes : Voyage, Alimentation"),
+    ],
+)
+def test_themes_rendez_vous_saisis_et_affiches(themes, libelle):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    identifiant = app.session_state["profil"].active_journey_id
+    champ = app.multiselect(key=f"themes_rdv_{identifiant}")
+
+    assert champ.options == [
+        "Alimentation",
+        "Activité physique",
+        "Symptômes",
+        "Médicaments",
+        "Examens",
+        "Travail",
+        "Voyage",
+        "Accouchement",
+        "Autre",
+    ]
+
+    champ.set_value(themes)
+    app.button(key="creer_rendez_vous").click().run()
+
+    assert not app.exception
+
+    profil = app.session_state["profil"]
+    assert profil.appointments[0].topics == tuple(themes)
+    assert importer_profil(exporter_profil(profil)) == profil
+
+    fiche = next(
+        element for element in app.expander
+        if element.label.startswith("Fiche 1 :")
+    )
+
+    if libelle is None:
+        assert "Aucun thème sélectionné." in [
+            element.value for element in fiche.caption
+        ]
+    else:
+        assert libelle in [
+            element.value for element in fiche.markdown
+        ]
+
+@pytest.mark.parametrize(
+    "texte, attendu",
+    [
+        ("", ()),
+        (
+            "  Première question ?  \n\nDeuxième question ?",
+            ("  Première question ?  ", "Deuxième question ?"),
+        ),
+    ],
+)
+def test_questions_rendez_vous_et_reinitialisation(texte, attendu):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+    identifiant = app.session_state["profil"].active_journey_id
+
+    app.text_area(
+        key=f"questions_rdv_{identifiant}"
+    ).set_value(texte)
+    app.button(key="creer_rendez_vous").click().run()
+
+    assert not app.exception
+
+    profil = app.session_state["profil"]
+    assert len(profil.appointments) == 1
+    assert profil.appointments[0].questions == attendu
+    assert importer_profil(exporter_profil(profil)) == profil
+    assert app.text_area(
+        key=f"questions_rdv_{identifiant}"
+    ).value == ""
+
+    fiche = next(
+        element for element in app.expander
+        if element.label.startswith("Fiche 1 :")
+    )
+
+    if attendu:
+        assert [element.value for element in fiche.text] == [
+            f"{numero}. {question}".rstrip()
+            for numero, question in enumerate(attendu, start=1)
+        ]
+    else:
+        assert "Aucune question renseignée." in [
+            element.value for element in fiche.caption
+        ]
+
+
+@pytest.mark.parametrize(
+    "texte",
+    ["q" * 501, "\n".join(["Question ?"] * 31)],
+)
+def test_questions_invalides_conservent_saisie(texte):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+    identifiant = app.session_state["profil"].active_journey_id
+
+    app.text_area(
+        key=f"questions_rdv_{identifiant}"
+    ).set_value(texte)
+    app.text_area(
+        key=f"notes_rdv_{identifiant}"
+    ).set_value("Notes à garder")
+    app.button(key="creer_rendez_vous").click().run()
+
+    assert not app.exception
+    assert len(app.error) == 1
+    assert app.session_state["profil"].appointments == ()
+    assert app.text_area(
+        key=f"questions_rdv_{identifiant}"
+    ).value == texte
+    assert app.text_area(
+        key=f"notes_rdv_{identifiant}"
+    ).value == "Notes à garder"
+
+    app.text_area(
+        key=f"questions_rdv_{identifiant}"
+    ).set_value("Question corrigée ?")
+    app.button(key="creer_rendez_vous").click().run()
+
+    assert not app.exception
+    assert len(app.error) == 0
+    assert len(app.session_state["profil"].appointments) == 1
+
+def test_telechargements_correspondent_aux_fiches(monkeypatch):
+    import streamlit as st
+    from fiches_rendez_vous import exporter_fiche_texte
+
+    appels = []
+    bouton_original = st.download_button
+
+    def observer_telechargement(*args, **kwargs):
+        if kwargs.get("label") == "Télécharger la fiche (.txt)":
+            appels.append(kwargs.copy())
+        return bouton_original(*args, **kwargs)
+
+    monkeypatch.setattr(
+        st,
+        "download_button",
+        observer_telechargement,
+    )
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+    premiere = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        notes="Première fiche",
+    )
+    seconde = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        notes="Deuxième fiche",
+    )
+    profil = profil.ajouter_rendez_vous(premiere)
+    profil = profil.ajouter_rendez_vous(seconde)
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    assert not app.exception
+    assert len(appels) == 2
+
+    for appel, fiche in zip(appels, (premiere, seconde)):
+        assert appel["data"] == exporter_fiche_texte(fiche).encode("utf-8")
+        assert appel["file_name"] == (
+            f"nurtureai-rendez-vous-{fiche.id}.txt"
+        )
+        assert appel["mime"] == "text/plain; charset=utf-8"
+        assert appel["key"] == f"telecharger_rdv_{fiche.id}"
+        assert appel["on_click"] == "ignore"
+
+    assert app.session_state["profil"] == profil
 
