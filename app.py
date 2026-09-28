@@ -667,6 +667,14 @@ else:
 
 st.subheader("Mes rendez-vous")
 
+message_suppression = st.session_state.pop(
+    "message_suppression_rdv",
+    None,
+)
+
+if message_suppression:
+    st.success(message_suppression)
+
 profil = st.session_state["profil"]
 parcours_rdv = next(
     (
@@ -813,6 +821,29 @@ else:
                 key=f"telecharger_rdv_{fiche.id}",
                 on_click="ignore",
             )
+
+            confirmation_suppression = st.checkbox(
+                "Je confirme vouloir supprimer cette fiche et son contenu.",
+                key=f"confirmer_suppression_rdv_{fiche.id}",
+            )
+
+            if st.button(
+                "Supprimer cette fiche",
+                key=f"supprimer_rdv_{fiche.id}",
+                disabled=not confirmation_suppression,
+            ) and confirmation_suppression:
+                try:
+                    profil = st.session_state["profil"].supprimer_rendez_vous(
+                        fiche.id
+                    )
+                except ValueError as erreur:
+                    st.error(str(erreur))
+                else:
+                    st.session_state["profil"] = profil
+                    st.session_state["message_suppression_rdv"] = (
+                        "Fiche supprimée du profil."
+                    )
+                    st.rerun()
 
 st.subheader("Mes données")
 

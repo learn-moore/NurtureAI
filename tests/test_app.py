@@ -1690,3 +1690,65 @@ def test_telechargements_correspondent_aux_fiches(monkeypatch):
 
     assert app.session_state["profil"] == profil
 
+@pytest.mark.parametrize("nombre_fiches", [1, 2])
+def test_suppression_fiche_confirmee(nombre_fiches):
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+    fiches = tuple(
+        Appointment(journey_id=profil.active_journey_id) # type: ignore
+        for _ in range(nombre_fiches)
+    )
+
+    for fiche in fiches:
+        profil = profil.ajouter_rendez_vous(fiche)
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    cible = fiches[0]
+    cle_confirmation = f"confirmer_suppression_rdv_{cible.id}"
+    cle_bouton = f"supprimer_rdv_{cible.id}"
+
+    assert app.button(key=cle_bouton).disabled
+
+    app.checkbox(key=cle_confirmation).check().run()
+
+    assert not app.button(key=cle_bouton).disabled
+    assert app.session_state["profil"] == profil
+
+    app.checkbox(key=cle_confirmation).uncheck().run()
+
+    assert app.button(key=cle_bouton).disabled
+    assert app.session_state["profil"] == profil
+
+    app.checkbox(key=cle_confirmation).check().run()
+    app.button(key=cle_bouton).click().run()
+
+    assert not app.exception
+
+    resultat = app.session_state["profil"]
+    assert resultat.appointments == fiches[1:]
+    assert resultat.journeys == profil.journeys
+    assert resultat.active_journey_id == profil.active_journey_id
+    assert importer_profil(exporter_profil(resultat)) == resultat
+
+    assert all(
+        bouton.key != cle_bouton
+        for bouton in app.button
+    )
+    assert "Fiche supprimée du profil." in [
+        element.value for element in app.success
+    ]
+
+    if nombre_fiches == 2:
+        assert app.button(
+            key=f"supprimer_rdv_{fiches[1].id}"
+        ).disabled
+    else:
+        assert "Aucune fiche de rendez-vous pour ce parcours." in [
+            element.value for element in app.info
+        ]
+

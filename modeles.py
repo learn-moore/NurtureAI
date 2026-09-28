@@ -189,6 +189,72 @@ class UserProfile:
             appointments=self.appointments + (fiche,),
         )
 
+    def supprimer_rendez_vous(self, identifiant: str) -> "UserProfile":
+        if not any(
+            fiche.id == identifiant
+            for fiche in self.appointments
+        ):
+            raise ValueError("Rendez-vous introuvable.")
+
+        return replace(
+            self,
+            appointments=tuple(
+                fiche for fiche in self.appointments
+                if fiche.id != identifiant
+            ),
+        )
+
+    def modifier_rendez_vous(
+        self,
+        identifiant: str,
+        *,
+        appointment_type: str,
+        date: "date | None",
+        notes: str,
+        questions: tuple[str, ...],
+        topics: tuple[str, ...],
+        modifie_le: datetime,
+    ) -> "UserProfile":
+        ancienne = next(
+            (
+                fiche for fiche in self.appointments
+                if fiche.id == identifiant
+            ),
+            None,
+        )
+
+        if ancienne is None:
+            raise ValueError("Rendez-vous introuvable.")
+
+        if (
+            not isinstance(modifie_le, datetime)
+            or modifie_le.utcoffset() is None
+        ):
+            raise ValueError("La modification doit préciser un horodatage avec fuseau.")
+
+        if modifie_le < ancienne.updated_at: # type: ignore
+            raise ValueError(
+                "La modification ne peut pas précéder la précédente."
+            )
+
+        nouvelle = replace(
+            ancienne,
+            appointment_type=appointment_type,
+            date=date,
+            notes=notes,
+            questions=questions,
+            topics=topics,
+            updated_at=modifie_le,
+        )
+
+        return replace(
+            self,
+            appointments=tuple(
+                nouvelle if fiche.id == identifiant else fiche
+                for fiche in self.appointments
+            ),
+        )
+
     def demarrer_parcours(self, type_parcours: Literal["conception", "pregnancy"], start_date: date,) -> "UserProfile":
         if self.active_journey_id is not None:
             raise ValueError("Un parcours est déjà actif.")

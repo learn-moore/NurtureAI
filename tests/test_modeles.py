@@ -835,3 +835,153 @@ def test_ajouter_rendez_vous_refuse_mauvais_type(
     with pytest.raises(ValueError):
         profil_grossesse_pour_rendez_vous.ajouter_rendez_vous(fiche)
 
+def test_supprimer_rendez_vous_preserve_autres_donnees(
+    profil_grossesse_pour_rendez_vous,
+):
+    profil = profil_grossesse_pour_rendez_vous
+    premiere = Appointment(journey_id=profil.active_journey_id)
+    seconde = Appointment(journey_id=profil.active_journey_id)
+    profil = profil.ajouter_rendez_vous(premiere)
+    profil = profil.ajouter_rendez_vous(seconde)
+
+    resultat = profil.supprimer_rendez_vous(premiere.id)
+
+    assert resultat.appointments == (seconde,)
+    assert profil.appointments == (premiere, seconde)
+    assert resultat.journeys == profil.journeys
+    assert resultat.active_journey_id == profil.active_journey_id
+    assert resultat.id == profil.id
+
+
+def test_supprimer_derniere_fiche_conserve_parcours(
+    profil_grossesse_pour_rendez_vous,
+):
+    profil = profil_grossesse_pour_rendez_vous
+    fiche = Appointment(journey_id=profil.active_journey_id)
+    profil = profil.ajouter_rendez_vous(fiche)
+
+    resultat = profil.supprimer_rendez_vous(fiche.id)
+
+    assert resultat.appointments == ()
+    assert resultat.journeys == profil.journeys
+    assert resultat.active_journey_id == profil.active_journey_id
+
+
+@pytest.mark.parametrize(
+    "identifiant",
+    [
+        "",
+        None,
+        "11111111-1111-4111-8111-111111111111",
+    ],
+)
+def test_supprimer_rendez_vous_absent_refuse(
+    profil_grossesse_pour_rendez_vous, identifiant
+):
+    profil = profil_grossesse_pour_rendez_vous
+    fiche = Appointment(journey_id=profil.active_journey_id)
+    profil = profil.ajouter_rendez_vous(fiche)
+
+    with pytest.raises(ValueError, match="Rendez-vous introuvable"):
+        profil.supprimer_rendez_vous(identifiant)
+
+    assert profil.appointments == (fiche,)
+
+@pytest.fixture
+def modification_rendez_vous():
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+    creation = datetime(2026, 9, 28, 10, tzinfo=timezone.utc)
+
+    fiche = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        created_at=creation,
+    )
+    autre = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        created_at=creation,
+    )
+    profil = profil.ajouter_rendez_vous(fiche)
+    profil = profil.ajouter_rendez_vous(autre)
+
+    changements = {
+        "appointment_type": "follow_up",
+        "date": date(2026, 10, 15),
+        "notes": "Notes modifiées",
+        "questions": ("Nouvelle question ?",),
+        "topics": ("travel",),
+        "modifie_le": datetime(2026, 9, 28, 11, tzinfo=timezone.utc),
+    }
+
+    return profil, fiche, autre, changements
+
+
+def test_modifier_rendez_vous_preserve_identite(
+    modification_rendez_vous,
+):
+    profil, fiche, autre, changements = modification_rendez_vous
+
+    resultat = profil.modifier_rendez_vous(fiche.id, **changements)
+    modifiee = resultat.appointments[0]
+
+    assert modifiee.id == fiche.id
+    assert modifiee.journey_id == fiche.journey_id
+    assert modifiee.created_at == fiche.created_at
+    assert modifiee.updated_at == changements["modifie_le"]
+
+    for champ in ("appointment_type", "date", "notes", "questions", "topics"):
+        assert getattr(modifiee, champ) == changements[champ]
+
+    assert resultat.appointments[1] == autre
+    assert resultat.journeys == profil.journeys
+    assert resultat.id == profil.id
+    assert resultat.active_journey_id == profil.active_journey_id
+    assert profil.appointments == (fiche, autre)
+
+
+@pytest.mark.parametrize(
+    "invalide",
+    [
+        {"notes": "n" * 5001},
+        {"questions": ("",)},
+        {"topics": ("inconnu",)},
+        {"modifie_le": None},
+        {"modifie_le": datetime(2026, 9, 28, 11)},
+    ],
+)
+def test_modifier_rendez_vous_refuse_donnees_invalides(
+    modification_rendez_vous, invalide
+):
+    profil, fiche, autre, changements = modification_rendez_vous
+
+    with pytest.raises(ValueError):
+        profil.modifier_rendez_vous(
+            fiche.id,
+            **{**changements, **invalide},
+        )
+
+    assert profil.appointments == (fiche, autre)
+
+
+def test_modifier_rendez_vous_refuse_retour_en_arriere(
+    modification_rendez_vous,
+):
+    profil, fiche, _, changements = modification_rendez_vous
+    profil = profil.modifier_rendez_vous(fiche.id, **changements)
+
+    changements["modifie_le"] = datetime(
+        2026, 9, 28, 10, 30, tzinfo=timezone.utc
+    )
+
+    with pytest.raises(ValueError, match="précédente"):
+        profil.modifier_rendez_vous(fiche.id, **changements)
+
+
+def test_modifier_rendez_vous_absent(modification_rendez_vous):
+    profil, _, _, changements = modification_rendez_vous
+
+    with pytest.raises(ValueError, match="introuvable"):
+        profil.modifier_rendez_vous("absent", **changements)
+
