@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import date
 
 from modeles import UserProfile, ConceptionJourney, PregnancyJourney
+from calendrier import decaler_mois
 
 
 def initialiser_session():
@@ -260,4 +261,17 @@ def finaliser_effacement_global():
     st.session_state["message_effacement"] = (
         "La sauvegarde locale et les données de session ont été effacées."
     )
+
+def changer_mois_calendrier(decalage: int):
+    reference = st.session_state.get("calendrier_mois")
+
+    if reference is None:
+        return
+
+    try:
+        nouveau_mois = decaler_mois(reference, decalage)
+    except ValueError:
+        return
+
+    st.session_state["calendrier_mois"] = nouveau_mois
 

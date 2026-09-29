@@ -3,13 +3,14 @@ from datetime import date, datetime, timezone
 
 from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
 from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
-from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session
+from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session, changer_mois_calendrier
 from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse
 from calculs import calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse, estimer_dpa
 from modeles import ConceptionJourney, PregnancyJourney, Appointment, THEMES_RENDEZ_VOUS
 from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
+from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -967,6 +968,167 @@ else:
                         "Fiche supprimée du profil."
                     )
                     st.rerun()
+
+st.subheader("Calendrier du parcours")
+
+profil_calendrier = st.session_state["profil"]
+
+if not profil_calendrier.journeys:
+    st.info("Aucun parcours disponible pour le calendrier.")
+else:
+    parcours_calendrier = {
+        journey.id: journey
+        for journey in profil_calendrier.journeys
+    }
+    ids_calendrier = list(parcours_calendrier)
+
+    choix_initial = (
+        ids_calendrier.index(profil_calendrier.active_journey_id)
+        if profil_calendrier.active_journey_id is not None
+        else len(ids_calendrier) - 1
+    )
+
+    id_consulte = st.selectbox(
+        "Parcours à consulter",
+        options=ids_calendrier,
+        index=choix_initial,
+        format_func=lambda identifiant: (
+            f"{libelles_parcours[parcours_calendrier[identifiant].type]} "
+            f"du {parcours_calendrier[identifiant].start_date:%d/%m/%Y} "
+            f"({'En cours' if parcours_calendrier[identifiant].status == 'active' else 'Terminé'})"
+        ),
+        key="calendrier_parcours",
+    )
+
+    mois_consulte = st.date_input(
+        "Date du mois à consulter",
+        value=date.today(),
+        min_value=date.min,
+        max_value=date.max,
+        format="DD/MM/YYYY",
+        help="Tous les rendez-vous du mois choisi sont affichés.",
+        key="calendrier_mois",
+    )
+
+    precedent, suivant = st.columns(2)
+
+    with precedent:
+        st.button(
+            "Mois précédent",
+            key="calendrier_precedent",
+            disabled=(
+                mois_consulte is None
+                or (mois_consulte.year, mois_consulte.month) == (1, 1)
+            ),
+            on_click=changer_mois_calendrier,
+            args=(-1,),
+        )
+
+    with suivant:
+        st.button(
+            "Mois suivant",
+            key="calendrier_suivant",
+            disabled=(
+                mois_consulte is None
+                or (mois_consulte.year, mois_consulte.month) == (9999, 12)
+            ),
+            on_click=changer_mois_calendrier,
+            args=(1,),
+        )
+
+    st.caption(
+        "Rendez-vous saisis et repères de conception. Les fiches sans date restent dans Mes rendez-vous ou dans l’historique. "
+        "Consulter un parcours ne le réactive pas."
+    )
+
+    if mois_consulte is None:
+        st.info("Choisissez une date pour consulter son mois.")
+    else:
+        fiches_mois = rendez_vous_du_mois(
+            profil_calendrier,
+            id_consulte, # type: ignore
+            annee=mois_consulte.year,
+            mois=mois_consulte.month,
+        )
+
+        parcours_consulte = parcours_calendrier[id_consulte]
+        evenements_regles = ()
+
+        if isinstance(parcours_consulte.details, ConceptionJourney):
+            evenements_regles = regles_du_mois(
+                parcours_consulte.details,
+                annee=mois_consulte.year,
+                mois=mois_consulte.month,
+            )
+
+        regles_par_jour = {
+            evenement.jour: evenement
+            for evenement in evenements_regles
+        }
+
+        noms_mois = (
+            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+        )
+
+        st.write(
+            f"**{noms_mois[mois_consulte.month - 1]} "
+            f"{mois_consulte.year}**"
+        )
+
+        rendez_vous_par_jour = {}
+
+        for fiche_mois in fiches_mois:
+            jour = fiche_mois.date
+            rendez_vous_par_jour[jour] = (
+                rendez_vous_par_jour.get(jour, 0) + 1
+            )
+
+        jours_semaine = (
+            "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"
+        )
+        lignes_grille = []
+
+        for semaine in construire_grille_mois(
+            mois_consulte.year,
+            mois_consulte.month,
+        ):
+            ligne = {}
+
+            for libelle, jour in zip(jours_semaine, semaine):
+                if jour is None:
+                    ligne[libelle] = ""
+                else:
+                    nombre = rendez_vous_par_jour.get(jour, 0)
+                    ligne[libelle] = (
+                        f"{jour.day} ({nombre} RDV)"
+                        if nombre
+                        else str(jour.day)
+                    )
+
+                    evenement = regles_par_jour.get(jour)
+                    if evenement is not None:
+                        ligne[libelle] += f" ; {evenement.libelle}"
+
+            lignes_grille.append(ligne)
+
+        st.table(lignes_grille)
+
+        st.caption("RDV : rendez-vous saisis. Le nombre entre parenthèses indique combien de rendez-vous sont prévus ce jour-là.")
+        if isinstance(parcours_consulte.details, ConceptionJourney):
+            st.caption(
+                "Seul le début des règles est déclaré. Les jours suivants sont estimés à partir de la durée renseignée et ne constituent pas des observations."
+            )
+        st.write("Détail des rendez-vous du mois")
+
+        if not fiches_mois:
+            st.info("Aucun rendez-vous daté pour ce mois et ce parcours.")
+
+        for fiche_mois in fiches_mois:
+            st.write(
+                f"{fiche_mois.date:%d/%m/%Y} : "
+                f"{types_rdv[fiche_mois.appointment_type]}"
+            )
 
 st.subheader("Mes données")
 

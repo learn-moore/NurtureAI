@@ -3,7 +3,7 @@ import pytest
 from datetime import date, timedelta, datetime, timezone
 from streamlit.testing.v1 import AppTest
 
-from modeles import UserProfile, PregnancyJourney, Appointment
+from modeles import UserProfile, PregnancyJourney, Appointment, ConceptionJourney
 from persistance import exporter_profil, importer_profil
 
 @pytest.fixture(autouse=True)
@@ -2040,4 +2040,249 @@ def test_restauration_meme_profil_efface_brouillons_rdv(
     assert app.text_area(
         key=f"notes_{cle_edition}"
     ).value == fiche.notes
+
+def test_calendrier_sans_parcours():
+    app = AppTest.from_file("../app.py").run()
+
+    assert not app.exception
+    assert "Aucun parcours disponible pour le calendrier." in [
+        element.value for element in app.info
+    ]
+    assert all(
+        element.key != "calendrier_parcours"
+        for element in app.selectbox
+    )
+
+
+def test_calendrier_consulte_archive_sans_changer_actif():
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    ancien_id = profil.active_journey_id
+    profil = profil.ajouter_rendez_vous(
+        Appointment(
+            journey_id=ancien_id, # type: ignore
+            date=date(2026, 10, 12),
+            appointment_type="follow_up",
+        )
+    )
+    profil = profil.changer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+    profil = profil.ajouter_rendez_vous(
+        Appointment(
+            journey_id=profil.active_journey_id, # type: ignore
+            date=date(2026, 10, 16),
+            appointment_type="ultrasound",
+        )
+    )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    assert app.selectbox(
+        key="calendrier_parcours"
+    ).value == profil.active_journey_id
+
+    app.selectbox(
+        key="calendrier_parcours"
+    ).set_value(ancien_id)
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 10, 1)).run()
+
+    assert not app.exception
+
+    textes = [element.value for element in app.markdown]
+    assert "12/10/2026 : Consultation de suivi" in textes
+    assert "16/10/2026 : Échographie" not in textes
+    assert app.session_state["profil"] == profil
+
+
+@pytest.mark.parametrize("mois", [None, date(2027, 1, 1)])
+def test_calendrier_date_absente_ou_mois_vide(mois):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+    app.date_input(key="calendrier_mois").set_value(mois).run()
+
+    assert not app.exception
+
+    attendu = (
+        "Choisissez une date pour consulter son mois."
+        if mois is None
+        else "Aucun rendez-vous daté pour ce mois et ce parcours."
+    )
+    assert attendu in [element.value for element in app.info]
+
+@pytest.mark.parametrize(
+    "depart, bouton, attendu",
+    [
+        (date(2026, 12, 31), "calendrier_suivant", date(2027, 1, 1)),
+        (date(2027, 1, 31), "calendrier_precedent", date(2026, 12, 1)),
+    ],
+)
+def test_navigation_mois_change_annee(depart, bouton, attendu):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    profil = app.session_state["profil"]
+    fiche = Appointment(
+        journey_id=profil.active_journey_id,
+        date=attendu,
+        appointment_type="follow_up",
+    )
+    profil = profil.ajouter_rendez_vous(fiche)
+    app.session_state["profil"] = profil
+
+    app.date_input(key="calendrier_mois").set_value(depart).run()
+    app.button(key=bouton).click().run()
+
+    assert not app.exception
+    assert app.date_input(key="calendrier_mois").value == attendu
+    assert f"{attendu:%d/%m/%Y} : Consultation de suivi" in [
+        element.value for element in app.markdown
+    ]
+    assert app.session_state["profil"] == profil
+
+@pytest.mark.parametrize(
+    "limite, bouton",
+    [
+        (date.min, "calendrier_precedent"),
+        (date.max, "calendrier_suivant"),
+    ],
+)
+def test_navigation_mois_limites(limite, bouton):
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+    app.date_input(key="calendrier_mois").set_value(limite).run()
+
+    assert not app.exception
+    assert app.button(key=bouton).disabled
+
+
+def test_navigation_mois_desactivee_sans_date():
+    app = AppTest.from_file("../app.py").run()
+    app.button(key="demarrer_parcours").click().run()
+    app.date_input(key="calendrier_mois").set_value(None).run()
+
+    assert not app.exception
+    assert app.button(key="calendrier_precedent").disabled
+    assert app.button(key="calendrier_suivant").disabled
+
+@pytest.mark.parametrize("nombre_fiches", [0, 2])
+def test_grille_calendrier_affiche_nombre_rendez_vous(nombre_fiches):
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+
+    for _ in range(nombre_fiches):
+        profil = profil.ajouter_rendez_vous(
+            Appointment(
+                journey_id=profil.active_journey_id, # type: ignore
+                date=date(2026, 10, 12),
+            )
+        )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 10, 1)).run()
+
+    assert not app.exception
+    assert len(app.table) == 1
+
+    grille = app.table[0].value
+
+    assert list(grille.columns) == [
+        "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"
+    ]
+    assert grille.shape == (5, 7)
+    assert grille.iloc[0]["Lun"] == ""
+    assert grille.iloc[0]["Jeu"] == "1"
+    assert grille.iloc[2]["Lun"] == "12 (2 RDV)" if nombre_fiches else "12"
+    assert grille.iloc[4]["Sam"] == "31"
+    assert grille.iloc[4]["Dim"] == ""
+    assert app.session_state["profil"] == profil
+
+@pytest.mark.parametrize("archive", [False, True])
+def test_calendrier_regles_et_rendez_vous_meme_jour(archive):
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    identifiant = profil.active_journey_id
+
+    profil = profil.renseigner_reperes_actifs(
+        ConceptionJourney(
+            last_period_date=date(2026, 9, 28),
+            period_length=5,
+        )
+    )
+    profil = profil.ajouter_rendez_vous(
+        Appointment(
+            journey_id=identifiant, # type: ignore
+            date=date(2026, 9, 28),
+        )
+    )
+
+    if archive:
+        profil = profil.changer_parcours(
+            "pregnancy",
+            date(2026, 9, 29),
+        )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    app.selectbox(
+        key="calendrier_parcours"
+    ).set_value(identifiant)
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 9, 1)).run()
+
+    assert not app.exception
+
+    grille = app.table[0].value
+    assert grille.iloc[4]["Lun"] == (
+        "28 (1 RDV) ; Début des règles déclaré"
+    )
+    assert grille.iloc[4]["Mar"] == "29 ; Jour de règles estimé"
+
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 10, 1)).run()
+
+    assert not app.exception
+
+    grille = app.table[0].value
+    assert grille.iloc[0]["Jeu"] == "1 ; Jour de règles estimé"
+    assert grille.iloc[0]["Ven"] == "2 ; Jour de règles estimé"
+    assert grille.iloc[0]["Sam"] == "3"
+    assert app.session_state["profil"] == profil
+
+
+def test_calendrier_conception_sans_date_ne_projette_pas_regles():
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    profil = profil.renseigner_reperes_actifs(ConceptionJourney())
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    assert not app.exception
+
+    cellules = app.table[0].value.to_numpy().flatten()
+    assert all("règles" not in cellule for cellule in cellules)
 
