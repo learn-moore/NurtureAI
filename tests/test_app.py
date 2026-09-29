@@ -1,6 +1,6 @@
 import pytest
 
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
 from streamlit.testing.v1 import AppTest
 
 from modeles import UserProfile, PregnancyJourney, Appointment
@@ -1751,4 +1751,293 @@ def test_suppression_fiche_confirmee(nombre_fiches):
         assert "Aucune fiche de rendez-vous pour ce parcours." in [
             element.value for element in app.info
         ]
+
+@pytest.fixture
+def fiche_pour_edition():
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 9, 28),
+    )
+    fiche = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        appointment_type="follow_up",
+        notes="Notes initiales",
+        questions=("Question initiale ?",),
+        topics=("nutrition",),
+        created_at=datetime(2026, 9, 28, tzinfo=timezone.utc),
+    )
+
+    return profil.ajouter_rendez_vous(fiche), fiche
+
+
+def test_modifier_fiche_depuis_interface(fiche_pour_edition):
+    profil, fiche = fiche_pour_edition
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    cle = f"edition_rdv_{fiche.id}_{fiche.updated_at.isoformat()}"
+    app.checkbox(key=cle).check().run()
+
+    assert app.text_area(key=f"notes_{cle}").value == fiche.notes
+    assert app.text_area(
+        key=f"questions_{cle}"
+    ).value == "Question initiale ?"
+
+    app.selectbox(key=f"type_{cle}").set_value("other")
+    app.date_input(key=f"date_{cle}").set_value(date(2026, 10, 20))
+    app.multiselect(key=f"themes_{cle}").set_value(["travel"])
+    app.text_area(key=f"notes_{cle}").set_value("Notes corrigées")
+    app.text_area(
+        key=f"questions_{cle}"
+    ).set_value("Nouvelle question ?")
+    app.button(key=f"enregistrer_{cle}").click().run()
+
+    assert not app.exception
+
+    resultat = app.session_state["profil"]
+    assert len(resultat.appointments) == 1
+
+    modifiee = resultat.appointments[0]
+    assert modifiee.id == fiche.id
+    assert modifiee.journey_id == fiche.journey_id
+    assert modifiee.created_at == fiche.created_at
+    assert modifiee.updated_at > fiche.updated_at
+    assert modifiee.appointment_type == "other"
+    assert modifiee.date == date(2026, 10, 20)
+    assert modifiee.topics == ("travel",)
+    assert modifiee.notes == "Notes corrigées"
+    assert modifiee.questions == ("Nouvelle question ?",)
+    assert importer_profil(exporter_profil(resultat)) == resultat
+
+    assert "Fiche modifiée dans le profil." in [
+        element.value for element in app.success
+    ]
+
+
+def test_edition_invalide_et_abandon(fiche_pour_edition):
+    profil, fiche = fiche_pour_edition
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    cle = f"edition_rdv_{fiche.id}_{fiche.updated_at.isoformat()}"
+    app.checkbox(key=cle).check().run()
+    app.text_area(key=f"notes_{cle}").set_value("Brouillon")
+    app.text_area(key=f"questions_{cle}").set_value("q" * 501)
+    app.button(key=f"enregistrer_{cle}").click().run()
+
+    assert not app.exception
+    assert len(app.error) == 1
+    assert app.session_state["profil"] == profil
+    assert app.text_area(key=f"notes_{cle}").value == "Brouillon"
+    assert app.text_area(key=f"questions_{cle}").value == "q" * 501
+
+    app.checkbox(key=cle).uncheck().run()
+    app.checkbox(key=cle).check().run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == profil
+    assert app.text_area(key=f"notes_{cle}").value == fiche.notes
+    assert app.text_area(
+        key=f"questions_{cle}"
+    ).value == "Question initiale ?"
+
+@pytest.mark.parametrize("nouveau_parcours", [False, True])
+def test_fiche_archivee_consultable_sans_modification(nouveau_parcours):
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    fiche = Appointment(
+        journey_id=profil.active_journey_id, # type: ignore
+        notes="Notes du parcours terminé",
+        date=date(2026, 12, 1),
+    )
+    profil = profil.ajouter_rendez_vous(fiche)
+    profil = profil.terminer_parcours_actif(date(2026, 9, 28))
+
+    if nouveau_parcours:
+        profil = profil.demarrer_parcours(
+            "pregnancy",
+            date(2026, 9, 28),
+        )
+        profil = profil.ajouter_rendez_vous(
+            Appointment(
+                journey_id=profil.active_journey_id, # type: ignore
+                notes="Notes du nouveau parcours",
+            )
+        )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    assert not app.exception
+
+    archive = next(
+        element for element in app.expander
+        if element.label.startswith("Parcours 1 :")
+    )
+    textes = "\n".join(element.value for element in archive.text)
+
+    assert "Notes du parcours terminé" in textes
+    assert "01/12/2026" in textes
+    assert "Notes du nouveau parcours" not in textes
+    assert len(archive.get("download_button")) == 1
+    assert len(archive.button) == 0
+    assert len(archive.checkbox) == 0
+    assert app.session_state["profil"] == profil
+
+
+def test_archive_sans_fiche():
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    profil = profil.terminer_parcours_actif(date(2026, 9, 28))
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    assert not app.exception
+
+    archive = next(
+        element for element in app.expander
+        if element.label.startswith("Parcours 1 :")
+    )
+
+    assert "Aucune fiche de rendez-vous pour ce parcours." in [
+        element.value for element in archive.caption
+    ]
+    assert len(archive.get("download_button")) == 0
+
+@pytest.mark.parametrize("origine", ["fichier", "navigateur"])
+@pytest.mark.parametrize("nombre_fiches", [0, 2])
+def test_apercu_compte_rendez_vous_avant_confirmation(
+    origine, nombre_fiches, simuler_stockage_navigateur
+):
+    sauvegarde = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+
+    if nombre_fiches:
+        sauvegarde = sauvegarde.ajouter_rendez_vous(
+            Appointment(journey_id=sauvegarde.active_journey_id) # type: ignore
+        )
+        sauvegarde = sauvegarde.changer_parcours(
+            "pregnancy",
+            date(2026, 9, 28),
+        )
+        sauvegarde = sauvegarde.ajouter_rendez_vous(
+            Appointment(journey_id=sauvegarde.active_journey_id) # type: ignore
+        )
+
+    app = AppTest.from_file("../app.py").run()
+    profil_initial = app.session_state["profil"]
+
+    if origine == "fichier":
+        app.file_uploader(key="fichier_import").upload(
+            "profil.json",
+            exporter_profil(sauvegarde).encode("utf-8"),
+            "application/json",
+        ).run()
+
+        libelle = f"Nombre de rendez-vous : {nombre_fiches}"
+        confirmation = "confirmer_import"
+        bouton = "appliquer_import"
+    else:
+        simuler_stockage_navigateur.update(
+            lecture="ok",
+            texte=exporter_profil(sauvegarde),
+        )
+        app.run()
+
+        libelle = (
+            f"Nombre de rendez-vous sauvegardés : {nombre_fiches}"
+        )
+        confirmation = "confirmer_restauration_locale"
+        bouton = "restaurer_profil_local"
+
+    assert not app.exception
+    assert libelle in [
+        element.value for element in app.markdown
+    ]
+    assert app.session_state["profil"] == profil_initial
+    assert app.button(key=bouton).disabled
+
+    app.checkbox(key=confirmation).check().run()
+    app.button(key=bouton).click().run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == sauvegarde
+
+@pytest.mark.parametrize("origine", ["fichier", "navigateur"])
+def test_restauration_meme_profil_efface_brouillons_rdv(
+    fiche_pour_edition, origine, simuler_stockage_navigateur
+):
+    profil, fiche = fiche_pour_edition
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    cle_creation = f"notes_rdv_{profil.active_journey_id}"
+    cle_edition = f"edition_rdv_{fiche.id}_{fiche.updated_at.isoformat()}"
+    cle_suppression = f"confirmer_suppression_rdv_{fiche.id}"
+
+    app.text_area(
+        key=cle_creation
+    ).set_value("Brouillon de création")
+    app.checkbox(key=cle_edition).check().run()
+    app.text_area(
+        key=f"notes_{cle_edition}"
+    ).set_value("Brouillon de modification")
+    app.checkbox(key=cle_suppression).check().run()
+
+    if origine == "fichier":
+        app.file_uploader(key="fichier_import").upload(
+            "profil.json",
+            exporter_profil(profil).encode("utf-8"),
+            "application/json",
+        ).run()
+
+        confirmation = "confirmer_import"
+        bouton = "appliquer_import"
+    else:
+        simuler_stockage_navigateur.update(
+            lecture="ok",
+            texte=exporter_profil(profil),
+        )
+        app.run()
+
+        confirmation = "confirmer_restauration_locale"
+        bouton = "restaurer_profil_local"
+
+    assert app.text_area(
+        key=cle_creation
+    ).value == "Brouillon de création"
+    assert app.text_area(
+        key=f"notes_{cle_edition}"
+    ).value == "Brouillon de modification"
+    assert app.checkbox(key=cle_suppression).value
+
+    app.checkbox(key=confirmation).check().run()
+    app.button(key=bouton).click().run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == profil
+    assert app.text_area(key=cle_creation).value == ""
+    assert not app.checkbox(key=cle_edition).value
+    assert not app.checkbox(key=cle_suppression).value
+    assert app.button(
+        key=f"supprimer_rdv_{fiche.id}"
+    ).disabled
+
+    app.checkbox(key=cle_edition).check().run()
+
+    assert app.text_area(
+        key=f"notes_{cle_edition}"
+    ).value == fiche.notes
 

@@ -150,10 +150,37 @@ def annuler_confirmation_import():
     st.session_state["confirmer_import"] = False
     st.session_state["message_import"] = None
 
+def effacer_saisies_rendez_vous():
+    prefixes = (
+        "type_rdv_",
+        "date_rdv_",
+        "themes_rdv_",
+        "notes_rdv_",
+        "questions_rdv_",
+        "vider_rdv_",
+        "edition_rdv_",
+        "type_edition_rdv_",
+        "date_edition_rdv_",
+        "themes_edition_rdv_",
+        "notes_edition_rdv_",
+        "questions_edition_rdv_",
+        "enregistrer_edition_rdv_",
+        "confirmer_suppression_rdv_",
+        "supprimer_rdv_",
+    )
+    messages = {
+        "message_modification_rdv",
+        "message_suppression_rdv",
+    }
+
+    for cle in list(st.session_state):
+        if cle.startswith(prefixes) or cle in messages: # type: ignore
+            del st.session_state[cle]
 
 def remplacer_profil_session(profil: UserProfile):
     effacer_reperes_conception()
     effacer_reperes_grossesse()
+    effacer_saisies_rendez_vous()
 
     st.session_state["profil"] = profil
     st.session_state["confirmer_fin_parcours"] = False

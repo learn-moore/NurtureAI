@@ -183,18 +183,45 @@ class UserProfile:
                 "Chaque rendez-vous doit référencer un parcours existant."
             )
 
+    def _verifier_parcours_modifiable(self, journey_id: str) -> None:
+        parcours = next(
+            (
+                journey for journey in self.journeys
+                if journey.id == journey_id
+            ),
+            None,
+        )
+
+        if parcours is None:
+            raise ValueError("Parcours introuvable.")
+
+        if parcours.status != "active":
+            raise ValueError("Les fiches d’un parcours archivé sont en lecture seule.")
+
     def ajouter_rendez_vous(self, fiche: "Appointment") -> "UserProfile":
+        if not isinstance(fiche, Appointment):
+            raise ValueError("Une fiche de rendez-vous est requise.")
+
+        self._verifier_parcours_modifiable(fiche.journey_id)
+
         return replace(
             self,
             appointments=self.appointments + (fiche,),
         )
 
     def supprimer_rendez_vous(self, identifiant: str) -> "UserProfile":
-        if not any(
-            fiche.id == identifiant
-            for fiche in self.appointments
-        ):
+        fiche_cible = next(
+            (
+                fiche for fiche in self.appointments
+                if fiche.id == identifiant
+            ),
+            None,
+        )
+
+        if fiche_cible is None:
             raise ValueError("Rendez-vous introuvable.")
+
+        self._verifier_parcours_modifiable(fiche_cible.journey_id)
 
         return replace(
             self,
@@ -225,6 +252,8 @@ class UserProfile:
 
         if ancienne is None:
             raise ValueError("Rendez-vous introuvable.")
+
+        self._verifier_parcours_modifiable(ancienne.journey_id)
 
         if (
             not isinstance(modifie_le, datetime)

@@ -665,7 +665,51 @@ else:
                         journey.details.estimated_due_date.strftime("%d/%m/%Y"), # type: ignore
                     )
 
+            if journey.status == "completed":
+                st.write("Rendez-vous de ce parcours")
+                st.caption("Fiches archivées en lecture seule.")
+
+                fiches_archivees = sorted(
+                    (
+                        fiche for fiche in profil.appointments
+                        if fiche.journey_id == journey.id
+                    ),
+                    key=lambda fiche: (
+                        fiche.date is None,
+                        fiche.date or date.max,
+                    ),
+                )
+
+                if not fiches_archivees:
+                    st.caption(
+                        "Aucune fiche de rendez-vous pour ce parcours."
+                    )
+
+                for fiche_archivee in fiches_archivees:
+                    st.text(exporter_fiche_texte(fiche_archivee))
+
+                    st.download_button(
+                        label="Télécharger cette fiche archivée (.txt)",
+                        data=exporter_fiche_texte(
+                            fiche_archivee
+                        ).encode("utf-8"),
+                        file_name=(
+                            f"nurtureai-rendez-vous-{fiche_archivee.id}.txt"
+                        ),
+                        mime="text/plain; charset=utf-8",
+                        key=f"telecharger_archive_rdv_{fiche_archivee.id}",
+                        on_click="ignore",
+                    )
+
 st.subheader("Mes rendez-vous")
+
+message_modification = st.session_state.pop(
+    "message_modification_rdv",
+    None,
+)
+
+if message_modification:
+    st.success(message_modification)
 
 message_suppression = st.session_state.pop(
     "message_suppression_rdv",
@@ -822,6 +866,85 @@ else:
                 on_click="ignore",
             )
 
+            cle_edition = (
+                f"edition_rdv_{fiche.id}_{fiche.updated_at.isoformat()}"
+            )
+
+            if st.checkbox(
+                "Modifier cette fiche",
+                key=cle_edition,
+                help="Décochez pour abandonner les modifications non enregistrées.",
+            ):
+                with st.form(f"formulaire_{cle_edition}"):
+                    type_modifie = st.selectbox(
+                        "Type",
+                        options=list(types_rdv),
+                        index=list(types_rdv).index(fiche.appointment_type),
+                        format_func=lambda valeur: types_rdv[valeur],
+                        key=f"type_{cle_edition}",
+                    )
+
+                    date_modifiee = st.date_input(
+                        "Date, si connue",
+                        value=fiche.date,
+                        format="DD/MM/YYYY",
+                        key=f"date_{cle_edition}",
+                    )
+
+                    themes_modifies = st.multiselect(
+                        "Thèmes",
+                        options=THEMES_RENDEZ_VOUS,
+                        default=list(fiche.topics),
+                        format_func=lambda valeur: libelles_themes_rdv[valeur],
+                        key=f"themes_{cle_edition}",
+                    )
+
+                    notes_modifiees = st.text_area(
+                        "Notes, 5 000 caractères maximum",
+                        value=fiche.notes,
+                        max_chars=5000,
+                        key=f"notes_{cle_edition}",
+                    )
+
+                    questions_modifiees = st.text_area(
+                        "Questions, une par ligne",
+                        value="\n".join(fiche.questions),
+                        help=(
+                            "30 questions maximum, 500 caractères chacune. "
+                            "Les lignes vides sont ignorées."
+                        ),
+                        key=f"questions_{cle_edition}",
+                    )
+
+                    enregistrer_modification = st.form_submit_button(
+                        "Enregistrer les modifications",
+                        key=f"enregistrer_{cle_edition}",
+                    )
+
+                if enregistrer_modification:
+                    try:
+                        profil = st.session_state["profil"].modifier_rendez_vous(
+                            fiche.id,
+                            appointment_type=type_modifie,
+                            date=date_modifiee,
+                            notes=notes_modifiees,
+                            questions=tuple(
+                                ligne
+                                for ligne in questions_modifiees.splitlines()
+                                if ligne.strip()
+                            ),
+                            topics=tuple(themes_modifies),
+                            modifie_le=datetime.now(timezone.utc),
+                        )
+                    except ValueError as erreur:
+                        st.error(str(erreur))
+                    else:
+                        st.session_state["profil"] = profil
+                        st.session_state["message_modification_rdv"] = (
+                            "Fiche modifiée dans le profil."
+                        )
+                        st.rerun()
+
             confirmation_suppression = st.checkbox(
                 "Je confirme vouloir supprimer cette fiche et son contenu.",
                 key=f"confirmer_suppression_rdv_{fiche.id}",
@@ -857,7 +980,7 @@ with st.expander("Sauvegarde dans ce navigateur"):
         st.success(message_restauration)
 
     st.write(
-        "Enregistrez une copie de votre profil, de ses parcours et de leurs repères dans ce navigateur. Les saisies temporaires des formulaires ne sont pas incluses."
+        "Enregistrez une copie de votre profil, de ses parcours, de leurs repères et de vos fiches de rendez-vous dans ce navigateur."
     )
 
     st.caption(
@@ -928,6 +1051,10 @@ with st.expander("Sauvegarde dans ce navigateur"):
                 "Nombre de parcours sauvegardés :",
                 len(profil_local.journeys),
             )
+            st.write(
+                f"Nombre de rendez-vous sauvegardés : "
+                f"{len(profil_local.appointments)}"
+            )
             parcours_local_actif = next(
                 (
                     journey
@@ -968,7 +1095,7 @@ with st.expander("Sauvegarde dans ce navigateur"):
 with st.expander("Exporter mes données"):
     # Textes explicatifs et bouton de téléchargement existants.
     st.write(
-        "L’export contient vos parcours et les repères enregistrés dans chacun. Les saisies temporaires des formulaires ne sont pas incluses."
+        "L’export contient vos parcours, leurs repères et toutes vos fiches de rendez-vous, y compris celles des parcours archivés."
     )
 
     st.caption(
@@ -1034,6 +1161,10 @@ with st.expander("Importer mes données"):
                 st.write(
                     "Nombre de parcours :",
                     len(profil_importe.journeys),
+                )
+                st.write(
+                    f"Nombre de rendez-vous : "
+                    f"{len(profil_importe.appointments)}"
                 )
 
                 parcours_importe_actif = next(

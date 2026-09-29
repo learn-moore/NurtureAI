@@ -985,3 +985,34 @@ def test_modifier_rendez_vous_absent(modification_rendez_vous):
     with pytest.raises(ValueError, match="introuvable"):
         profil.modifier_rendez_vous("absent", **changements)
 
+@pytest.mark.parametrize(
+    "operation",
+    ["ajout", "modification", "suppression"],
+)
+@pytest.mark.parametrize("nouveau_parcours", [False, True])
+def test_fiches_archivees_en_lecture_seule(
+    modification_rendez_vous, operation, nouveau_parcours
+):
+    profil, fiche, _, changements = modification_rendez_vous
+    profil = profil.terminer_parcours_actif(date(2026, 9, 29))
+
+    if nouveau_parcours:
+        profil = profil.demarrer_parcours(
+            "conception",
+            date(2026, 9, 29),
+        )
+
+    avant = profil.appointments
+
+    with pytest.raises(ValueError, match="lecture seule"):
+        if operation == "ajout":
+            profil.ajouter_rendez_vous(
+                Appointment(journey_id=fiche.journey_id)
+            )
+        elif operation == "modification":
+            profil.modifier_rendez_vous(fiche.id, **changements)
+        else:
+            profil.supprimer_rendez_vous(fiche.id)
+
+    assert profil.appointments == avant
+
