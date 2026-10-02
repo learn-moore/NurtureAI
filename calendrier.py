@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from modeles import Appointment, UserProfile, ConceptionJourney, PregnancyJourney
-from calculs import estimer_dpa
+from calculs import estimer_dpa, estimer_prochaines_regles
 
 
 def rendez_vous_du_mois(
@@ -163,6 +163,39 @@ def dpa_du_mois(
             jour=dpa,
             libelle=libelle,
             nature=nature,
+        ),
+    )
+
+def prochaines_regles_du_mois(
+    reperes: ConceptionJourney,
+    *,
+    annee: int,
+    mois: int,
+) -> tuple[EvenementCalendrier, ...]:
+    if type(annee) is not int or type(mois) is not int:
+        raise ValueError("L’année et le mois doivent être des entiers.")
+
+    date(annee, mois, 1)
+
+    if reperes.last_period_date is None:
+        return ()
+
+    try:
+        estimation = estimer_prochaines_regles(
+            reperes.last_period_date,
+            reperes.average_cycle_length,
+        )
+    except OverflowError:
+        return ()
+
+    if (estimation.year, estimation.month) != (annee, mois):
+        return ()
+
+    return (
+        EvenementCalendrier(
+            jour=estimation,
+            libelle="Début des prochaines règles estimé",
+            nature="estimated",
         ),
     )
 

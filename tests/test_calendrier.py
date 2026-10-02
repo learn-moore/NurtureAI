@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from calendrier import rendez_vous_du_mois, decaler_mois, construire_grille_mois, regles_du_mois, dpa_du_mois
+from calendrier import rendez_vous_du_mois, decaler_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
 from modeles import Appointment, Journey, UserProfile, ConceptionJourney, PregnancyJourney
 
 
@@ -335,4 +335,50 @@ def test_calendrier_dpa_hors_mois():
 
     assert dpa_du_mois(reperes, annee=2026, mois=11) == ()
     assert dpa_du_mois(reperes, annee=2027, mois=10) == ()
+
+@pytest.mark.parametrize(
+    "annee, mois, attendu",
+    [
+        (2026, 9, False),
+        (2026, 10, True),
+        (2026, 11, False),
+        (2027, 10, False),
+    ],
+)
+def test_prochaines_regles_calendrier(annee, mois, attendu):
+    reperes = ConceptionJourney(
+        last_period_date=date(2026, 9, 12),
+        average_cycle_length=28,
+    )
+
+    resultat = prochaines_regles_du_mois(
+        reperes,
+        annee=annee,
+        mois=mois,
+    )
+
+    if attendu:
+        assert len(resultat) == 1
+        assert resultat[0].jour == date(2026, 10, 10)
+        assert resultat[0].libelle == (
+            "Début des prochaines règles estimé"
+        )
+        assert resultat[0].nature == "estimated"
+    else:
+        assert resultat == ()
+
+
+@pytest.mark.parametrize("dernieres_regles", [None, date.max])
+def test_prochaines_regles_calendrier_sans_date_representable(
+    dernieres_regles,
+):
+    reperes = ConceptionJourney(
+        last_period_date=dernieres_regles,
+    )
+
+    assert prochaines_regles_du_mois(
+        reperes,
+        annee=9999,
+        mois=12,
+    ) == ()
 

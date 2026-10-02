@@ -10,7 +10,7 @@ from modeles import ConceptionJourney, PregnancyJourney, Appointment, THEMES_REN
 from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
-from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois
+from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -1037,7 +1037,7 @@ else:
         )
 
     st.caption(
-        "Rendez-vous saisis et repères de conception. Les fiches sans date restent dans Mes rendez-vous ou dans l’historique. "
+        "Rendez-vous saisis et repères de conception et de grossesse. Les fiches sans date restent dans Mes rendez-vous ou dans l’historique. "
         "Consulter un parcours ne le réactive pas."
     )
 
@@ -1052,19 +1052,32 @@ else:
         )
 
         parcours_consulte = parcours_calendrier[id_consulte]
-        evenements_regles = ()
+        evenements_suivi = ()
 
         if isinstance(parcours_consulte.details, ConceptionJourney):
-            evenements_regles = regles_du_mois(
+            evenements_suivi = regles_du_mois(
+                parcours_consulte.details,
+                annee=mois_consulte.year,
+                mois=mois_consulte.month,
+            ) + prochaines_regles_du_mois(
+                parcours_consulte.details,
+                annee=mois_consulte.year,
+                mois=mois_consulte.month,
+            )
+        elif isinstance(parcours_consulte.details, PregnancyJourney):
+            evenements_suivi = dpa_du_mois(
                 parcours_consulte.details,
                 annee=mois_consulte.year,
                 mois=mois_consulte.month,
             )
 
-        regles_par_jour = {
+        evenements_par_jour = {
             evenement.jour: evenement
-            for evenement in evenements_regles
+            for evenement in evenements_suivi
         }
+
+        if not fiches_mois and not evenements_suivi:
+            st.info("Aucun événement pour ce mois et ce parcours.")
 
         noms_mois = (
             "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -1106,7 +1119,7 @@ else:
                         else str(jour.day)
                     )
 
-                    evenement = regles_par_jour.get(jour)
+                    evenement = evenements_par_jour.get(jour)
                     if evenement is not None:
                         ligne[libelle] += f" ; {evenement.libelle}"
 
@@ -1117,7 +1130,13 @@ else:
         st.caption("RDV : rendez-vous saisis. Le nombre entre parenthèses indique combien de rendez-vous sont prévus ce jour-là.")
         if isinstance(parcours_consulte.details, ConceptionJourney):
             st.caption(
-                "Seul le début des règles est déclaré. Les jours suivants sont estimés à partir de la durée renseignée et ne constituent pas des observations."
+                "Seul le début des dernières règles est déclaré. Les jours suivants et le début des prochaines règles sont estimés à partir des durées renseignées. "
+                "Ces estimations ne constituent pas des observations. Les dates réelles peuvent différer, notamment si les cycles sont irréguliers ou leur régularité inconnue."
+            )
+        elif isinstance(parcours_consulte.details, PregnancyJourney):
+            st.caption(
+                "DPA renseignée : date saisie dans le parcours. DPA estimée : date calculée à partir des dernières règles et du terme de référence choisi. "
+                "Ces repères ne constituent pas une date de naissance certaine."
             )
         st.write("Détail des rendez-vous du mois")
 

@@ -2286,3 +2286,165 @@ def test_calendrier_conception_sans_date_ne_projette_pas_regles():
     cellules = app.table[0].value.to_numpy().flatten()
     assert all("règles" not in cellule for cellule in cellules)
 
+@pytest.mark.parametrize(
+    "methode, terme, jour, libelle",
+    [
+        ("due_date", None, 20, "DPA renseignée"),
+        ("last_period", 280, 8, "DPA estimée"),
+        ("last_period", 287, 15, "DPA estimée"),
+        ("last_period", None, 20, None),
+    ],
+)
+def test_calendrier_affiche_dpa_sans_modifier_profil(
+    methode, terme, jour, libelle
+):
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 1, 1),
+    )
+    identifiant = profil.active_journey_id
+    assert identifiant is not None
+
+    profil = profil.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method=methode,
+            last_period_date=date(2026, 1, 1),
+            estimated_due_date=(
+                date(2026, 10, 20)
+                if methode == "due_date"
+                else None
+            ),
+            term_reference_days=terme,
+            dating_rule_version=(
+                "sa-reference-v1" if terme is not None else None
+            ),
+        )
+    )
+    profil = profil.ajouter_rendez_vous(
+        Appointment(
+            journey_id=identifiant,
+            date=date(2026, 10, jour),
+        )
+    )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 10, 1)).run()
+
+    assert not app.exception
+
+    cellules = app.table[0].value.to_numpy().flatten()
+    attendu = f"{jour} (1 RDV)"
+
+    if libelle is not None:
+        attendu += f" ; {libelle}"
+    else:
+        assert all("DPA" not in cellule for cellule in cellules)
+
+    assert attendu in cellules
+    assert app.session_state["profil"] == profil
+
+@pytest.mark.parametrize(
+    "mois, mois_vide",
+    [(9, True), (10, False)],
+)
+def test_calendrier_message_mois_vide_tient_compte_dpa(
+    mois, mois_vide
+):
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 1, 1),
+    )
+    profil = profil.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method="due_date",
+            estimated_due_date=date(2026, 10, 20),
+        )
+    )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, mois, 1)).run()
+
+    assert not app.exception
+
+    messages = [element.value for element in app.info]
+
+    assert (
+        "Aucun événement pour ce mois et ce parcours." in messages
+    ) == mois_vide
+
+    if not mois_vide:
+        cellules = app.table[0].value.to_numpy().flatten()
+        assert "20 ; DPA renseignée" in cellules
+
+    assert app.session_state["profil"] == profil
+
+@pytest.mark.parametrize("avec_rendez_vous", [False, True])
+def test_calendrier_prochaines_regles_et_rendez_vous(
+    avec_rendez_vous,
+):
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 9, 1),
+    )
+    identifiant = profil.active_journey_id
+    assert identifiant is not None
+
+    profil = profil.renseigner_reperes_actifs(
+        ConceptionJourney(
+            last_period_date=date(2026, 9, 12),
+            average_cycle_length=28,
+        )
+    )
+
+    if avec_rendez_vous:
+        profil = profil.ajouter_rendez_vous(
+            Appointment(
+                journey_id=identifiant,
+                date=date(2026, 10, 10),
+            )
+        )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 10, 1)).run()
+
+    assert not app.exception
+
+    cellules = app.table[0].value.to_numpy().flatten()
+    debut = "10 (1 RDV)" if avec_rendez_vous else "10"
+
+    assert (
+        f"{debut} ; Début des prochaines règles estimé"
+    ) in cellules
+
+    assert "Aucun événement pour ce mois et ce parcours." not in [
+        element.value for element in app.info
+    ]
+
+    app.date_input(
+        key="calendrier_mois"
+    ).set_value(date(2026, 11, 1)).run()
+
+    assert not app.exception
+
+    cellules = app.table[0].value.to_numpy().flatten()
+    assert all(
+        "prochaines règles" not in cellule
+        for cellule in cellules
+    )
+    assert app.session_state["profil"] == profil
+
