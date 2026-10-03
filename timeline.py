@@ -63,6 +63,7 @@ def charger_timeline(chemin: Path = CHEMIN_TIMELINE) -> dict:
         valider_statut_editorial(etape)
         valider_texte_etape(etape)
         valider_source_etape(etape)
+        valider_sources_secondaires(etape)
         valider_fenetre_timeline(etape.get("window"))
 
         identifiant = etape["id"]
@@ -355,4 +356,77 @@ def construire_timeline(
         }
         for etape in etapes_triees
     )
+
+def valider_sources_secondaires(etape: dict) -> None:
+    sources = etape.get("secondary_sources", [])
+
+    if not isinstance(sources, list):
+        raise ValueError(
+            "Les sources secondaires doivent être une liste."
+        )
+
+    urls = {etape["source"]["url"]}
+
+    for source in sources:
+        if not isinstance(source, dict):
+            raise ValueError(
+                "Une source secondaire doit être un objet."
+            )
+
+        if (
+            source.get("role") != "secondary"
+            or source.get("usage") != "cross_check"
+        ):
+            raise ValueError(
+                "Une source secondaire sert uniquement au recoupement."
+            )
+
+        conditions = source.get("terms_url")
+
+        if not isinstance(conditions, str):
+            raise ValueError(
+                "Les conditions de réutilisation nécessitent une URL."
+            )
+
+        adresse = urlsplit(conditions)
+
+        if (
+            adresse.scheme != "https"
+            or not adresse.hostname
+            or adresse.username is not None
+            or adresse.password is not None
+            or any(caractere.isspace() for caractere in conditions)
+        ):
+            raise ValueError(
+                "L’URL des conditions de réutilisation est invalide."
+            )
+
+        reference = {
+            cle: valeur
+            for cle, valeur in source.items()
+            if cle not in ("role", "usage", "terms_url")
+        }
+
+        valider_source_etape({
+            "source": reference,
+            "reviewed_at": etape["reviewed_at"],
+        })
+
+        if source["url"] in urls:
+            raise ValueError(
+                "Une source est présente plusieurs fois."
+            )
+
+        urls.add(source["url"])
+
+def choisir_etape_a_mettre_en_avant(
+    elements: tuple[dict, ...],
+) -> dict | None:
+    """Sélectionne un repère dans la timeline déjà triée."""
+    for position in ("current", "upcoming"):
+        for element in elements:
+            if element["position"] == position:
+                return element
+
+    return None
 

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "content_version": "2026-10-02",
+  "content_version": "2026-10-03",
   "etapes": [
     {
       "id": "echographie_premier_trimestre",
       "title": "Échographie du premier trimestre",
       "country": "FR",
       "language": "fr",
-      "editorial_status": "draft",
+      "editorial_status": "approved",
       "window": {
         "unit": "days_sa",
         "start": 77,
@@ -22,16 +22,31 @@
         "Quel repère de datation dois-je conserver pour mon suivi ?"
       ],
       "source": {
-        "name": "Assurance Maladie",
-        "title": "Grossesse : le programme de suivi et la première consultation",
-        "url": "https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/grossesse-soins-dentaires-dentiste-consultation",
-        "section": "Première échographie",
+        "name": "Haute Autorité de santé (HAS)",
+        "title": "Suivi de grossesse : recommandations HAS, mise à jour de mai 2016",
+        "url": "https://www.has-sante.fr/jcms/c_547976/fr/suivi-et-orientation-des-femmes-enceintes-en-fonction-des-situations-a-risque-identifiees",
+        "section": "Recommandations, section 4.1, page imprimée 14 : objectifs de la première échographie.",
         "publication_date": null,
-        "displayed_date": "2026-07-14",
-        "retrieved_at": "2026-10-02",
-        "reuse_status": "to_review"
+        "displayed_date": "2016-05-26",
+        "retrieved_at": "2026-10-03",
+        "reuse_status": "approved"
       },
-      "reviewed_at": null
+      "secondary_sources": [
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "Assurance Maladie",
+          "title": "Grossesse : le programme de suivi et la première consultation",
+          "url": "https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/grossesse-soins-dentaires-dentiste-consultation",
+          "section": "Première échographie",
+          "publication_date": null,
+          "displayed_date": "2026-07-14",
+          "retrieved_at": "2026-10-03",
+          "reuse_status": "to_review",
+          "terms_url": "https://www.ameli.fr/node/24268"
+        }
+      ],
+      "reviewed_at": "2026-10-03"
     }
   ]
 }

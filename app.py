@@ -15,7 +15,7 @@ from persistance import exporter_profil, importer_profil, lire_export, sauvegard
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
 from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
-from timeline import construire_timeline
+from timeline import construire_timeline, choisir_etape_a_mettre_en_avant
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -579,6 +579,28 @@ else:
             if not elements_timeline:
                 st.info("Aucune fiche de suivi disponible pour le moment.")
 
+            repere = choisir_etape_a_mettre_en_avant(elements_timeline)
+
+            if repere is not None:
+                titre_repere = (
+                    "Repère actuel"
+                    if repere["position"] == "current"
+                    else "Prochaine période disponible"
+                )
+
+                st.write(f"**{titre_repere}**")
+                st.text(repere["etape"]["title"])
+                st.caption("Repère parmi les fiches disponibles. Consultez le détail et les sources ci-dessous.")
+
+            elif elements_timeline:
+                if any(
+                    element["position"] == "unknown"
+                    for element in elements_timeline
+                ):
+                    st.info("Complétez les repères de datation enregistrés pour situer les étapes de suivi.")
+                else:
+                    st.info("Aucune prochaine période dans les fiches disponibles. Cela ne signifie pas que le suivi est terminé.")
+
             libelles_positions = {
                 "upcoming": "Période à venir",
                 "current": "Période en cours",
@@ -613,6 +635,7 @@ else:
                         st.text(f"{numero}. {question}")
 
                     source = etape["source"]
+                    st.text(source["title"])
                     st.caption(
                         f"Source : {source['name']} ; "
                         f"consultée le {source['retrieved_at']}."
@@ -621,6 +644,25 @@ else:
                         "Consulter la source",
                         source["url"],
                     )
+                    for secondaire in etape.get(
+                        "secondary_sources", []
+                    ):
+                        st.write("**Source secondaire**")
+                        st.text(secondaire["title"])
+                        st.caption(
+                            f"{secondaire['name']} ; "
+                            f"consultée le {secondaire['retrieved_at']}. "
+                            "Référence de recoupement ; "
+                            "son texte n’est pas reproduit."
+                        )
+                        st.link_button(
+                            "Consulter la référence secondaire",
+                            secondaire["url"],
+                        )
+                        st.link_button(
+                            "Conditions de réutilisation",
+                            secondaire["terms_url"],
+                        )
 
 st.subheader("Mon parcours actif")
 

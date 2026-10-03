@@ -2484,6 +2484,7 @@ def test_affichage_timeline_grossesse(monkeypatch, cas):
                     "questions": ["Question de test ?"],
                     "source": {
                         "name": "Source fictive",
+                        "title": "Document fictif de test",
                         "retrieved_at": "2026-10-02",
                         "url": "https://example.org/",
                     },
@@ -2534,4 +2535,147 @@ def test_affichage_timeline_grossesse(monkeypatch, cas):
         assert "1. Question de test ?" in [
             element.value for element in fiche.text
         ]
+
+@pytest.mark.parametrize(
+    "jours_sa, libelle",
+    [
+        (77, "Période en cours"),
+        (98, "Période passée"),
+    ],
+)
+def test_timeline_reelle_affiche_sources_et_position(
+    jours_sa, libelle
+):
+    from timeline import charger_timeline
+
+    etape = next(
+        etape for etape in charger_timeline()["etapes"]
+        if etape["id"] == "echographie_premier_trimestre"
+    )
+
+    origine = date.today() - timedelta(days=jours_sa)
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        origine,
+    )
+    profil = profil.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method="last_period",
+            last_period_date=origine,
+        )
+    )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+
+    app.radio(
+        key="ecran_consulte"
+    ).set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    fiche = next(
+        element for element in app.expander
+        if element.label == etape["title"]
+    )
+
+    assert libelle in [
+        element.value for element in fiche.caption
+    ]
+
+    textes = [element.value for element in fiche.text]
+    assert etape["source"]["title"] in textes
+
+    secondaire = etape["secondary_sources"][0]
+    assert secondaire["title"] in textes
+
+    liens = {
+        element.proto.label: element.proto.url
+        for element in fiche.get("link_button")
+    }
+
+    assert liens["Consulter la source"] == (
+        etape["source"]["url"]
+    )
+    assert liens["Consulter la référence secondaire"] == (
+        secondaire["url"]
+    )
+    assert liens["Conditions de réutilisation"] == (
+        secondaire["terms_url"]
+    )
+
+    assert any(
+        "Référence de recoupement" in element.value
+        for element in fiche.caption
+    )
+
+    assert app.session_state["profil"] == profil
+
+@pytest.mark.parametrize(
+    "jours_sa, type_element, attendu",
+    [
+        (
+            76,
+            "markdown",
+            "**Prochaine période disponible**",
+        ),
+        (
+            77,
+            "markdown",
+            "**Repère actuel**",
+        ),
+        (
+            98,
+            "info",
+            "Aucune prochaine période dans les fiches disponibles. Cela ne signifie pas que le suivi est terminé.",
+        ),
+        (
+            None,
+            "info",
+            "Complétez les repères de datation enregistrés pour situer les étapes de suivi.",
+        ),
+    ],
+)
+def test_timeline_repere_mis_en_avant(
+    jours_sa, type_element, attendu
+):
+    origine = date.today() - timedelta(days=jours_sa or 0)
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        origine,
+    )
+
+    if jours_sa is not None:
+        profil = profil.renseigner_reperes_actifs(
+            PregnancyJourney(
+                dating_method="last_period",
+                last_period_date=origine,
+            )
+        )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+
+    app.radio(
+        key="ecran_consulte"
+    ).set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    assert attendu in [
+        element.value for element in app.get(type_element) # type: ignore
+    ]
+
+    if jours_sa is None or jours_sa == 98:
+        assert not any(
+            element.value in (
+                "**Repère actuel**",
+                "**Prochaine période disponible**",
+            )
+            for element in app.markdown
+        )
+
+    assert app.session_state["profil"] == profil
 

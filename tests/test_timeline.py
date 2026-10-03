@@ -3,10 +3,22 @@ import pytest
 from datetime import date
 from copy import deepcopy
 
-from timeline import charger_timeline, charger_etapes_affichables, situer_fenetre_timeline, calculer_jours_sa_timeline, construire_timeline
+from timeline import charger_timeline, charger_etapes_affichables, situer_fenetre_timeline, calculer_jours_sa_timeline, construire_timeline, choisir_etape_a_mettre_en_avant
 from modeles import PregnancyJourney
 
+def donnees_timeline_test():
+    donnees = charger_timeline()
+    etape = donnees["etapes"][0]
+    etape["secondary_sources"] = []
 
+    etape["editorial_status"] = "draft"
+    etape["reviewed_at"] = None
+    etape["source"]["retrieved_at"] = "2026-10-02"
+    etape["source"]["publication_date"] = None
+    etape["source"]["displayed_date"] = "2026-07-14"
+    etape["source"]["reuse_status"] = "to_review"
+
+    return donnees
 
 def test_charger_timeline_independamment_du_dossier_courant(
     tmp_path, monkeypatch
@@ -19,7 +31,7 @@ def test_charger_timeline_independamment_du_dossier_courant(
     assert donnees["etapes"][0]["id"] == (
         "echographie_premier_trimestre"
     )
-    assert donnees["etapes"][0]["editorial_status"] == "draft"
+    assert donnees["etapes"][0]["editorial_status"] == "approved"
 
 
 @pytest.mark.parametrize(
@@ -86,7 +98,7 @@ def test_charger_timeline_refuse_fichier_inexploitable(
 def test_charger_timeline_refuse_fenetre_invalide(
     tmp_path, fenetre
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     donnees["etapes"][0]["window"] = fenetre
 
     chemin = tmp_path / "timeline.json"
@@ -106,7 +118,7 @@ def test_charger_timeline_refuse_fenetre_invalide(
 def test_charger_timeline_accepte_fenetre_inclusive(
     tmp_path, debut, fin
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     donnees["etapes"][0]["window"]["start"] = debut
     donnees["etapes"][0]["window"]["end"] = fin
 
@@ -135,7 +147,7 @@ def test_charger_timeline_accepte_fenetre_inclusive(
 def test_charger_timeline_refuse_texte_invalide(
     tmp_path, champ, valeur
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     donnees["etapes"][0][champ] = valeur
 
     chemin = tmp_path / "timeline.json"
@@ -151,7 +163,7 @@ def test_charger_timeline_refuse_texte_invalide(
 def test_charger_timeline_refuse_identifiants_dupliques(
     tmp_path,
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
 
     copie = donnees["etapes"][0].copy()
     copie["title"] = "Une autre fiche"
@@ -188,7 +200,7 @@ def test_charger_timeline_refuse_identifiants_dupliques(
 def test_timeline_refuse_source_invalide(
     tmp_path, champ, valeur
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     donnees["etapes"][0]["source"][champ] = valeur
 
     chemin = tmp_path / "timeline.json"
@@ -212,7 +224,7 @@ def test_timeline_refuse_source_invalide(
     ],
 )
 def test_timeline_date_revue(tmp_path, revue):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     donnees["etapes"][0]["reviewed_at"] = revue
 
     chemin = tmp_path / "timeline.json"
@@ -242,7 +254,7 @@ def test_timeline_date_revue(tmp_path, revue):
 def test_timeline_selection_editoriale(
     tmp_path, statut, reutilisation, revue, affichee
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     etape = donnees["etapes"][0]
 
     etape["editorial_status"] = statut
@@ -263,7 +275,7 @@ def test_timeline_selection_editoriale(
 def test_timeline_refuse_statut_editorial_inconnu(
     tmp_path, statut
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     donnees["etapes"][0]["editorial_status"] = statut
 
     chemin = tmp_path / "timeline.json"
@@ -402,7 +414,7 @@ def test_jours_sa_timeline_refuse_age_negatif(methode):
 def test_construire_timeline_trie_filtre_et_positionne(
     tmp_path, reperes_connus
 ):
-    donnees = charger_timeline()
+    donnees = donnees_timeline_test()
     modele = donnees["etapes"][0]
     donnees["etapes"] = []
 
@@ -472,4 +484,107 @@ def test_construire_timeline_sans_fiche_affichable(tmp_path):
         date(2026, 3, 19),
         chemin=chemin,
     ) == ()
+
+def source_secondaire_test():
+    source = deepcopy(
+        donnees_timeline_test()["etapes"][0]["source"]
+    )
+    source.update({
+        "role": "secondary",
+        "usage": "cross_check",
+        "url": "https://example.org/reference",
+        "terms_url": "https://example.org/conditions",
+    })
+    return source
+
+
+@pytest.mark.parametrize("principal_approuve", [False, True])
+@pytest.mark.parametrize(
+    "reutilisation",
+    ["to_review", "approved", "rejected"],
+)
+def test_secondaire_ne_decide_pas_affichage(
+    tmp_path, principal_approuve, reutilisation
+):
+    donnees = donnees_timeline_test()
+    etape = donnees["etapes"][0]
+
+    etape["editorial_status"] = "approved"
+    etape["reviewed_at"] = "2026-10-02"
+    etape["source"]["reuse_status"] = (
+        "approved" if principal_approuve else "to_review"
+    )
+
+    secondaire = source_secondaire_test()
+    secondaire["reuse_status"] = reutilisation
+    etape["secondary_sources"] = [secondaire]
+
+    chemin = tmp_path / "timeline.json"
+    chemin.write_text(
+        json.dumps(donnees),
+        encoding="utf-8",
+    )
+
+    assert bool(
+        charger_etapes_affichables(chemin)
+    ) == principal_approuve
+
+
+@pytest.mark.parametrize(
+    "champ, valeur",
+    [
+        ("role", "primary"),
+        ("usage", "rag"),
+        ("terms_url", "javascript:alert(1)"),
+        ("retrieved_at", "2026-02-30"),
+    ],
+)
+def test_timeline_refuse_secondaire_invalide(
+    tmp_path, champ, valeur
+):
+    donnees = donnees_timeline_test()
+    secondaire = source_secondaire_test()
+    secondaire[champ] = valeur
+    donnees["etapes"][0]["secondary_sources"] = [secondaire]
+
+    chemin = tmp_path / "timeline.json"
+    chemin.write_text(
+        json.dumps(donnees),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        charger_timeline(chemin)
+
+@pytest.mark.parametrize(
+    "positions, index_attendu",
+    [
+        ((), None),
+        (("past",), None),
+        (("unknown",), None),
+        (("past", "upcoming", "upcoming"), 1),
+        (("upcoming", "current"), 1),
+        (("current", "current", "upcoming"), 0),
+    ],
+)
+def test_choisir_etape_a_mettre_en_avant(
+    positions, index_attendu
+):
+    elements = tuple(
+        {
+            "etape": {"id": f"etape_{index}"},
+            "position": position,
+        }
+        for index, position in enumerate(positions)
+    )
+    avant = deepcopy(elements)
+
+    resultat = choisir_etape_a_mettre_en_avant(elements)
+
+    if index_attendu is None:
+        assert resultat is None
+    else:
+        assert resultat == elements[index_attendu]
+
+    assert elements == avant
 
