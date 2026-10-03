@@ -2448,3 +2448,90 @@ def test_calendrier_prochaines_regles_et_rendez_vous(
     )
     assert app.session_state["profil"] == profil
 
+@pytest.mark.parametrize("cas", ["vide", "erreur", "fiche"])
+def test_affichage_timeline_grossesse(monkeypatch, cas):
+    import timeline
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        date(2026, 1, 1),
+    )
+    reperes = PregnancyJourney(
+        dating_method="due_date",
+        estimated_due_date=date(2026, 10, 22),
+    )
+    profil = profil.renseigner_reperes_actifs(reperes)
+    appels = []
+
+    def fausse_timeline(reperes_recus, date_reference):
+        assert type(date_reference) is date
+        appels.append(reperes_recus)
+
+        if cas == "erreur":
+            raise ValueError("Erreur simulée")
+
+        if cas == "vide":
+            return ()
+
+        return (
+            {
+                "position": "unknown",
+                "etape": {
+                    "title": "Étape fictive de test",
+                    "when": "Période de test.",
+                    "why": "Objectif de test.",
+                    "how": "Description de test.",
+                    "questions": ["Question de test ?"],
+                    "source": {
+                        "name": "Source fictive",
+                        "retrieved_at": "2026-10-02",
+                        "url": "https://example.org/",
+                    },
+                },
+            },
+        )
+
+    monkeypatch.setattr(
+        timeline,
+        "construire_timeline",
+        fausse_timeline,
+    )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+
+    app.radio(
+        key="ecran_consulte"
+    ).set_value("Grossesse en cours").run()
+
+    assert not app.exception
+    assert appels == [reperes]
+    assert app.session_state["profil"] == profil
+    assert "Mes données" in [
+        element.value for element in app.subheader
+    ]
+
+    if cas == "vide":
+        assert (
+            "Aucune fiche de suivi disponible pour le moment."
+        ) in [element.value for element in app.info]
+
+    elif cas == "erreur":
+        assert any(
+            "Les étapes de suivi sont indisponibles." in element.value
+            for element in app.warning
+        )
+
+    else:
+        fiche = next(
+            element for element in app.expander
+            if element.label == "Étape fictive de test"
+        )
+
+        assert "Position indéterminée" in [
+            element.value for element in fiche.caption
+        ]
+        assert "1. Question de test ?" in [
+            element.value for element in fiche.text
+        ]
+

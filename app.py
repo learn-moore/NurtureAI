@@ -1,16 +1,21 @@
 import streamlit as st
 from datetime import date, datetime, timezone
 
-from etat_session import initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif 
-from etat_session import reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet
-from etat_session import demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session, changer_mois_calendrier
-from calculs import estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse
-from calculs import calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse, estimer_dpa
+from etat_session import (
+    initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif,
+    reprendre_reperes_conception, reprendre_reperes_grossesse, annuler_confirmation_import, appliquer_import, effacer_profil_complet,
+    demarrer_nouveau_parcours, restaurer_profil_local, finaliser_effacement_global, remplacer_profil_session, changer_mois_calendrier
+)
+from calculs import (
+    estimer_prochaines_regles, calculer_jour_cycle, valider_durees_cycle, calculer_age_depuis_dernieres_regles, estimer_semaines_grossesse,
+    calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse, estimer_dpa
+)
 from modeles import ConceptionJourney, PregnancyJourney, Appointment, THEMES_RENDEZ_VOUS
 from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
 from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
+from timeline import construire_timeline
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -540,10 +545,82 @@ else:
             on_click=reprendre_reperes_grossesse,
         )
 
+        st.caption("Cette action remplace la méthode et les champs du formulaire par les repères du parcours actif.")
+
+    st.subheader("Les étapes de mon suivi grossesse")
+
+    profil_timeline = st.session_state["profil"]
+    grossesse_active = next(
+        (
+            journey for journey in profil_timeline.journeys
+            if journey.id == profil_timeline.active_journey_id
+            and journey.type == "pregnancy"
+        ),
+        None,
+    )
+
+    if grossesse_active is None:
+        st.info("Démarrez un parcours grossesse pour consulter ses étapes de suivi.")
+    else:
         st.caption(
-            "Cette action remplace la méthode et les champs du formulaire "
-            "par les repères du parcours actif."
+            "Les étapes utilisent les repères enregistrés du parcours actif. Une période passée ne signifie pas qu’un examen a été réalisé."
         )
+
+        try:
+            elements_timeline = construire_timeline(
+                grossesse_active.details,
+                date.today(),
+            )
+        except ValueError:
+            st.warning(
+                "Les étapes de suivi sont indisponibles. Vérifiez les repères enregistrés ; si le problème persiste, le contenu doit être vérifié."
+            )
+        else:
+            if not elements_timeline:
+                st.info("Aucune fiche de suivi disponible pour le moment.")
+
+            libelles_positions = {
+                "upcoming": "Période à venir",
+                "current": "Période en cours",
+                "past": "Période passée",
+                "unknown": "Position indéterminée",
+            }
+
+            for element in elements_timeline:
+                etape = element["etape"]
+                position = element["position"]
+
+                with st.expander(etape["title"]):
+                    st.caption(libelles_positions[position])
+
+                    if position == "unknown":
+                        st.info("Les repères enregistrés ne permettent pas de situer cette étape dans le temps.")
+
+                    for champ, titre in (
+                        ("when", "Quand ?"),
+                        ("why", "Pourquoi ?"),
+                        ("how", "Comment cela se déroule généralement ?"),
+                    ):
+                        st.write(f"**{titre}**")
+                        st.text(etape[champ])
+
+                    st.write("**Questions possibles**")
+
+                    for numero, question in enumerate(
+                        etape["questions"],
+                        start=1,
+                    ):
+                        st.text(f"{numero}. {question}")
+
+                    source = etape["source"]
+                    st.caption(
+                        f"Source : {source['name']} ; "
+                        f"consultée le {source['retrieved_at']}."
+                    )
+                    st.link_button(
+                        "Consulter la source",
+                        source["url"],
+                    )
 
 st.subheader("Mon parcours actif")
 

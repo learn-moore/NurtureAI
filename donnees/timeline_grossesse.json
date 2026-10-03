@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "content_version": "2026-10-02",
+  "etapes": [
+    {
+      "id": "echographie_premier_trimestre",
+      "title": "Échographie du premier trimestre",
+      "country": "FR",
+      "language": "fr",
+      "editorial_status": "draft",
+      "window": {
+        "unit": "days_sa",
+        "start": 77,
+        "end": 97,
+        "bounds": "inclusive"
+      },
+      "when": "Entre 11 SA et 13 SA + 6 jours.",
+      "why": "Cette échographie contribue à préciser la datation de la grossesse et à déterminer le nombre de fœtus.",
+      "how": "Le professionnel réalise un examen échographique et des mesures, notamment celle de la clarté nucale.",
+      "questions": [
+        "Que permettent de comprendre les mesures réalisées ?",
+        "Quel repère de datation dois-je conserver pour mon suivi ?"
+      ],
+      "source": {
+        "name": "Assurance Maladie",
+        "title": "Grossesse : le programme de suivi et la première consultation",
+        "url": "https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/grossesse-soins-dentaires-dentiste-consultation",
+        "section": "Première échographie",
+        "publication_date": null,
+        "displayed_date": "2026-07-14",
+        "retrieved_at": "2026-10-02",
+        "reuse_status": "to_review"
+      },
+      "reviewed_at": null
+    }
+  ]
+}
