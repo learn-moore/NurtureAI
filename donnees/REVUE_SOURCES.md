@@ -68,3 +68,26 @@ pas l’affichage de la fiche. Celui-ci dépend de l’approbation éditoriale, 
 Le futur importateur RAG devra exclure de l’ingestion de contenu les références dont l’usage est `cross_check`.
 
 Cette entrée complète les décisions précédentes sans les effacer.
+
+## Deuxième échographie : fiche en préparation
+
+Date : 2026-10-03.
+
+Fiche concernée : `echographie_deuxieme_trimestre`.
+
+Référence candidate : arrêté du 20 avril 2018, annexe II, version initiale publiée le 25 avril 2018. https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000036833452
+La fenêtre candidate correspond aux jours SA 140 à 174 inclus. Avant approbation, vérifier l’actualité du passage et les conditions de réutilisation applicables.
+La fiche reste en brouillon, avec une réutilisation à examiner et sans date de revue finalisée. Elle est exclue de l’affichage.
+
+## Deuxième échographie : sélection pour le prototype
+
+Date : 2026-10-03.
+
+Fiche concernée : `echographie_deuxieme_trimestre`.
+
+La synthèse et les bornes de 140 à 174 jours SA inclus reposent sur l’annexe II de l’arrêté du 20 avril 2018, version initiale. Le titre conserve cette précision. Le fonds JORF est publié sous licence ouverte : https://www.data.gouv.fr/datasets/jorf-les-donnees-de-l-edition-lois-et-decrets-du-journal-officiel
+
+La réutilisation conserve la source, sa date et son sens. Elle ne suggère aucune approbation officielle de NurtureAI.
+La page Ameli du 2 juin 2026 recoupe les objectifs de l’examen. Elle indique une période de 20 à 24 SA sans précision des jours :
+elle ne confirme donc pas à elle seule la borne de 174 jours. Elle reste une référence secondaire, sans ingestion de son texte.
+La fiche est retenue pour le prototype après revue documentaire. Cette sélection ne constitue ni une validation clinique ni une certification du statut juridique actuel de l’ensemble de l’arrêté.

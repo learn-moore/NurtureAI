@@ -2615,18 +2615,14 @@ def test_timeline_reelle_affiche_sources_et_position(
 @pytest.mark.parametrize(
     "jours_sa, type_element, attendu",
     [
+        (76, "markdown", "**Prochaine période disponible**"),
+        (77, "markdown", "**Repère actuel**"),
+        (98, "markdown", "**Prochaine période disponible**"),
+        (139, "markdown", "**Prochaine période disponible**"),
+        (140, "markdown", "**Repère actuel**"),
+        (174, "markdown", "**Repère actuel**"),
         (
-            76,
-            "markdown",
-            "**Prochaine période disponible**",
-        ),
-        (
-            77,
-            "markdown",
-            "**Repère actuel**",
-        ),
-        (
-            98,
+            175,
             "info",
             "Aucune prochaine période dans les fiches disponibles. Cela ne signifie pas que le suivi est terminé.",
         ),
@@ -2668,7 +2664,7 @@ def test_timeline_repere_mis_en_avant(
         element.value for element in app.get(type_element) # type: ignore
     ]
 
-    if jours_sa is None or jours_sa == 98:
+    if jours_sa is None or jours_sa == 175:
         assert not any(
             element.value in (
                 "**Repère actuel**",
@@ -2678,4 +2674,6 @@ def test_timeline_repere_mis_en_avant(
         )
 
     assert app.session_state["profil"] == profil
+
+
 

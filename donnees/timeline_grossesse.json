@@ -47,6 +47,52 @@
         }
       ],
       "reviewed_at": "2026-10-03"
+    },
+    {
+      "id": "echographie_deuxieme_trimestre",
+      "title": "Échographie du deuxième trimestre",
+      "country": "FR",
+      "language": "fr",
+      "editorial_status": "approved",
+      "window": {
+        "unit": "days_sa",
+        "start": 140,
+        "end": 174,
+        "bounds": "inclusive"
+      },
+      "when": "Entre 20 SA et 24 SA + 6 jours.",
+      "why": "Cette échographie recherche des signes pouvant évoquer une anomalie du développement du fœtus.",
+      "how": "Le professionnel observe et mesure le fœtus, localise le placenta et apprécie la quantité de liquide amniotique.",
+      "questions": [
+        "Que permettent de comprendre les observations et les mesures ?",
+        "Quelles sont les limites de cet examen ?"
+      ],
+      "source": {
+        "name": "Légifrance",
+        "title": "Arrêté du 20 avril 2018 relatif aux examens d’imagerie prénatale, version initiale",
+        "url": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000036833452",
+        "section": "Annexe II : préambule et indications des échographies de première intention au deuxième trimestre.",
+        "publication_date": "2018-04-25",
+        "displayed_date": null,
+        "retrieved_at": "2026-10-03",
+        "reuse_status": "approved"
+      },
+      "secondary_sources": [
+          {
+            "role": "secondary",
+            "usage": "cross_check",
+            "name": "Assurance Maladie",
+            "title": "Suivi mensuel de la grossesse à partir du 4e mois",
+            "url": "https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/consultation-suivi-mensuel",
+            "section": "Votre agenda du 4e au 9e mois de grossesse : deuxième échographie.",
+            "publication_date": null,
+            "displayed_date": "2026-06-02",
+            "retrieved_at": "2026-10-03",
+            "reuse_status": "to_review",
+            "terms_url": "https://www.ameli.fr/node/24268"
+          }
+      ],
+      "reviewed_at": "2026-10-03"
     }
   ]
 }

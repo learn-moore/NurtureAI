@@ -9,6 +9,7 @@ from modeles import PregnancyJourney
 def donnees_timeline_test():
     donnees = charger_timeline()
     etape = donnees["etapes"][0]
+    donnees["etapes"] = [etape]
     etape["secondary_sources"] = []
 
     etape["editorial_status"] = "draft"
@@ -587,4 +588,44 @@ def test_choisir_etape_a_mettre_en_avant(
         assert resultat == elements[index_attendu]
 
     assert elements == avant
+
+@pytest.mark.parametrize(
+    "jours_sa, positions, identifiant_attendu",
+    [
+        (97, ("current", "upcoming"), "echographie_premier_trimestre"),
+        (98, ("past", "upcoming"), "echographie_deuxieme_trimestre"),
+        (139, ("past", "upcoming"), "echographie_deuxieme_trimestre"),
+        (140, ("past", "current"), "echographie_deuxieme_trimestre"),
+        (174, ("past", "current"), "echographie_deuxieme_trimestre"),
+        (175, ("past", "past"), None),
+    ],
+)
+def test_timeline_reelle_selectionne_la_bonne_fiche(
+    jours_sa, positions, identifiant_attendu
+):
+    from datetime import timedelta
+
+    origine = date(2026, 1, 1)
+    reperes = PregnancyJourney(
+        dating_method="last_period",
+        last_period_date=origine,
+    )
+    elements = construire_timeline(
+        reperes,
+        origine + timedelta(days=jours_sa),
+    )
+
+    assert tuple(element["etape"]["id"] for element in elements) == (
+        "echographie_premier_trimestre",
+        "echographie_deuxieme_trimestre",
+    )
+    assert tuple(element["position"] for element in elements) == positions
+
+    repere = choisir_etape_a_mettre_en_avant(elements)
+
+    if identifiant_attendu is None:
+        assert repere is None
+    else:
+        assert repere is not None
+        assert repere["etape"]["id"] == identifiant_attendu
 
