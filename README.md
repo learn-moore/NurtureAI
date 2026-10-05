@@ -12,7 +12,14 @@ Le prototype permet de :
 * Conserver l’historique et les repères des parcours terminés.
 * Renseigner les repères du cycle et calculer le jour du cycle ainsi que les prochaines règles estimées.
 * Saisir une référence de grossesse : dernières règles ou DPA connue.
-* Calculer les semaines d’aménorrhée depuis les dernières règles.
+* Calculer les semaines d’aménorrhée depuis les dernières règles, ou depuis une DPA lorsque la durée de référence du terme est renseignée.
+* Présenter les semaines de grossesse approximatives, le trimestre et les repères de progression lorsque les données nécessaires sont disponibles.
+* Créer, modifier et supprimer des fiches de rendez-vous avec date facultative, thèmes, notes et questions.
+* Télécharger une fiche de rendez-vous au format texte.
+* Consulter un calendrier mensuel des rendez-vous et des repères du parcours, en distinguant les dates déclarées des estimations.
+* Consulter trois fiches sourcées consacrées aux échographies de grossesse.
+* Consulter une fiche hebdomadaire autour de 9 SA, sélectionnée à partir des repères enregistrés, avec référence documentaire et attribution.
+* Identifier la période actuelle ou la prochaine période parmi les fiches disponibles, à partir des repères enregistrés.
 * Enregistrer les repères dans le parcours actif et les reprendre dans les formulaires.
 * Exporter et importer le profil au format JSON, avec validation et confirmation du remplacement.
 * Sauvegarder manuellement le profil dans le navigateur et le restaurer après confirmation.
@@ -25,8 +32,13 @@ Une erreur ou un conflit suspend les tentatives automatiques. Un remplacement pa
 
 Les écritures et suppressions utilisent un verrou partagé entre les onglets de l’application et vérifient que la sauvegarde n’a pas changé depuis sa lecture. Si ce verrou est indisponible, aucune modification du stockage n’est effectuée ; l’export JSON reste disponible.
 
-Le calcul depuis une DPA, les SG, le trimestre, le calendrier, la timeline, les rendez-vous et l’assistant IA ne sont pas encore implémentés.
+La timeline couvre actuellement les trois échographies. Elle ne représente pas encore l’ensemble du suivi de grossesse. Une période passée ne signifie pas qu’un examen a été réalisé.
 
+Une première fiche hebdomadaire est disponible entre 9 SA et 9 SA + 6 jours. Pour les semaines sans contenu approuvé, l’application indique qu’aucune fiche n’est disponible. Les repères décrits sont généraux et ne permettent pas d’interpréter une échographie individuelle.
+
+L’assistant IA avec recherche documentaire (RAG) reste à développer. La préparation des rendez-vous repose actuellement sur les informations saisies par l’utilisateur, sans génération par IA.
+
+Les sources, les conditions de réutilisation et les décisions éditoriales des fiches sont documentées dans [la revue des sources](donnees/REVUE_SOURCES.md).
 Des tests automatisés vérifient les calculs, les modèles, les imports et les interactions Python. Le stockage du navigateur est simulé dans ces tests ; son fonctionnement réel nécessite une vérification dans le navigateur.
 
 ## Installation sur Linux / macOS
@@ -122,6 +134,14 @@ Conserver les exports dans un emplacement privé et ne pas les ajouter au dépô
 * `modeles.py` : profils, parcours, repères et règles de cohérence.
 * `persistance.py` : export JSON et validation des données importées.
 * `stockage_navigateur.py` : composant de lecture, sauvegarde et effacement dans le navigateur.
+* `calendrier.py` : construction du calendrier et des événements du parcours.
+* `fiches_rendez_vous.py` : préparation de l’export texte des fiches de rendez-vous.
+* `timeline.py` : validation des fiches, positionnement temporel et sélection du repère à mettre en avant.
+* `fiches_hebdomadaires.py` : validation, chargement des fiches approuvées et sélection selon la semaine SA.
+* `donnees/timeline_grossesse.json` : contenu versionné des fiches de suivi.
+* `donnees/fiches_hebdomadaires.json` : contenu versionné des fiches hebdomadaires et métadonnées d’attribution.
+* `donnees/REVUE_SOURCES.md` : revue documentaire et décisions de réutilisation.
+* `.github/workflows/tests.yml` : exécution des tests lors des push et des pull requests.
 
 ## Limites
 

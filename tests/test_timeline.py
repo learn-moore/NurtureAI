@@ -592,12 +592,16 @@ def test_choisir_etape_a_mettre_en_avant(
 @pytest.mark.parametrize(
     "jours_sa, positions, identifiant_attendu",
     [
-        (97, ("current", "upcoming"), "echographie_premier_trimestre"),
-        (98, ("past", "upcoming"), "echographie_deuxieme_trimestre"),
-        (139, ("past", "upcoming"), "echographie_deuxieme_trimestre"),
-        (140, ("past", "current"), "echographie_deuxieme_trimestre"),
-        (174, ("past", "current"), "echographie_deuxieme_trimestre"),
-        (175, ("past", "past"), None),
+        (97, ("current", "upcoming", "upcoming"), "echographie_premier_trimestre"),
+        (98, ("past", "upcoming", "upcoming"), "echographie_deuxieme_trimestre"),
+        (139, ("past", "upcoming", "upcoming"), "echographie_deuxieme_trimestre"),
+        (140, ("past", "current", "upcoming"), "echographie_deuxieme_trimestre"),
+        (174, ("past", "current", "upcoming"), "echographie_deuxieme_trimestre"),
+        (175, ("past", "past", "upcoming"), "echographie_troisieme_trimestre"),
+        (209, ("past", "past", "upcoming"), "echographie_troisieme_trimestre"),
+        (210, ("past", "past", "current"), "echographie_troisieme_trimestre"),
+        (244, ("past", "past", "current"), "echographie_troisieme_trimestre"),
+        (245, ("past", "past", "past"), None),
     ],
 )
 def test_timeline_reelle_selectionne_la_bonne_fiche(
@@ -618,6 +622,7 @@ def test_timeline_reelle_selectionne_la_bonne_fiche(
     assert tuple(element["etape"]["id"] for element in elements) == (
         "echographie_premier_trimestre",
         "echographie_deuxieme_trimestre",
+        "echographie_troisieme_trimestre",
     )
     assert tuple(element["position"] for element in elements) == positions
 

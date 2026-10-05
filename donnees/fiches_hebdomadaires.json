@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "content_version": "2026-10-05",
+  "fiches": [
+    {
+      "id": "developpement_9_sa",
+      "week_sa": 9,
+      "title": "Autour de 9 SA : visage et premiers mouvements",
+      "body": "À cette période, le développement concerne aussi bien les traits du visage que les capacités de mouvement.\n\nLe visage prend forme\nLes yeux, la bouche et la langue poursuivent leur formation. Ces structures sont encore en développement : leur présence ne signifie pas qu’elles ont atteint leur fonctionnement définitif.\n\nDes mouvements précoces\nLe développement musculaire permet déjà de petits mouvements. Ce repère décrit l’activité du bébé ; il ne signifie pas que vous devez sentir ces mouvements à ce stade.\n\nCette fiche est proposée entre 9 SA et 9 SA + 6 jours. Les étapes décrites se déroulent progressivement autour de cette période, sans commencer ni s’achever toutes aux mêmes dates. Elles ne permettent pas d’interpréter une échographie individuelle.",
+      "editorial_status": "approved",
+      "source": {
+        "name": "Better Health Channel, État de Victoria, Australie",
+        "title": "Pregnancy - week by week",
+        "url": "https://www.betterhealth.vic.gov.au/health/HealthyLiving/pregnancy-week-by-week",
+        "section": "Calculating pregnancy duration ; Pregnancy week 9.",
+        "publication_date": null,
+        "displayed_date": "2012-02-28",
+        "retrieved_at": "2026-10-05",
+        "reuse_status": "approved"
+      },
+      "secondary_sources": [],
+      "attribution": {
+        "mode": "reference",
+        "text": "Reference: www.betterhealth.vic.gov.au",
+        "url": "https://www.betterhealth.vic.gov.au/"
+      },
+      "reviewed_at": "2026-10-05"
+    }
+  ]
+}

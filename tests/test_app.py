@@ -2621,8 +2621,12 @@ def test_timeline_reelle_affiche_sources_et_position(
         (139, "markdown", "**Prochaine période disponible**"),
         (140, "markdown", "**Repère actuel**"),
         (174, "markdown", "**Repère actuel**"),
+        (175, "markdown", "**Prochaine période disponible**"),
+        (209, "markdown", "**Prochaine période disponible**"),
+        (210, "markdown", "**Repère actuel**"),
+        (244, "markdown", "**Repère actuel**"),
         (
-            175,
+            245,
             "info",
             "Aucune prochaine période dans les fiches disponibles. Cela ne signifie pas que le suivi est terminé.",
         ),
@@ -2664,7 +2668,7 @@ def test_timeline_repere_mis_en_avant(
         element.value for element in app.get(type_element) # type: ignore
     ]
 
-    if jours_sa is None or jours_sa == 175:
+    if jours_sa is None or jours_sa == 245:
         assert not any(
             element.value in (
                 "**Repère actuel**",
@@ -2675,5 +2679,209 @@ def test_timeline_repere_mis_en_avant(
 
     assert app.session_state["profil"] == profil
 
+@pytest.mark.parametrize(
+    "cas",
+    ["sans_parcours", "sans_reperes", "vide", "erreur", "fiche", "licence", "reference",],
+)
+def test_affichage_fiche_hebdomadaire(monkeypatch, cas):
+    import fiches_hebdomadaires
 
+    appels = []
 
+    def faux_chargement():
+        appels.append(True)
+
+        if cas == "erreur":
+            raise ValueError("Erreur simulée")
+
+        if cas == "vide":
+            return ()
+
+        fiche = {
+            "week_sa": 9,
+            "title": "Fiche hebdomadaire fictive",
+            "body": "Texte réservé au test.",
+            "source": {
+                "name": "Source fictive",
+                "title": "Document fictif",
+                "url": "https://example.org/semaine",
+                "retrieved_at": "2026-10-04",
+            },
+        }
+
+        if cas == "licence":
+            fiche["attribution"] = {
+                "mode": "licence",
+                "text": "Mention de licence fictive.",
+                "url": "https://example.org/licence",
+            }
+
+        if cas == "reference":
+            fiche["attribution"] = {
+                "mode": "reference",
+                "text": "Reference: example.org",
+                "url": "https://example.org/",
+            }
+
+        return (fiche,)
+
+    monkeypatch.setattr(
+        fiches_hebdomadaires,
+        "charger_fiches_hebdomadaires",
+        faux_chargement,
+    )
+
+    profil = UserProfile()
+    origine = date.today() - timedelta(days=65)
+
+    if cas != "sans_parcours":
+        profil = profil.demarrer_parcours("pregnancy", origine)
+
+        if cas != "sans_reperes":
+            profil = profil.renseigner_reperes_actifs(
+                PregnancyJourney(
+                    dating_method="last_period",
+                    last_period_date=origine,
+                )
+            )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+
+    app.radio(
+        key="ecran_consulte"
+    ).set_value("Grossesse en cours").run()
+
+    assert not app.exception
+    assert app.session_state["profil"] == profil
+    assert bool(appels) == (
+        cas not in ("sans_parcours", "sans_reperes")
+    )
+
+    attendus = {
+        "sans_parcours": (
+            "info",
+            "Démarrez un parcours grossesse pour consulter les fiches hebdomadaires.",
+        ),
+        "sans_reperes": (
+            "info",
+            "Complétez les repères enregistrés pour déterminer la semaine SA.",
+        ),
+        "vide": (
+            "info",
+            "Aucune fiche disponible pour 9 SA révolues.",
+        ),
+        "erreur": (
+            "warning",
+            "La fiche hebdomadaire est indisponible : les repères ou le contenu doivent être vérifiés.",
+        ),
+        "fiche": (
+            "text",
+            "Texte réservé au test.",
+        ),
+        "licence": (
+            "text",
+            "Mention de licence fictive.",
+        ),
+        "reference": (
+            "text",
+            "Texte réservé au test.",
+        ),
+    }
+
+    type_element, texte = attendus[cas]
+    assert texte in [
+        element.value for element in app.get(type_element) # type: ignore
+    ]
+
+    if cas in ("fiche", "reference"):
+        liens = {
+            element.proto.label: element.proto.url
+            for element in app.get("link_button")
+        }
+        assert liens["Source de la fiche hebdomadaire"] == (
+            "https://example.org/semaine"
+        )
+
+    if cas == "reference":
+        liens = {
+            element.proto.label: element.proto.url
+            for element in app.get("link_button")
+        }
+
+        assert liens["Reference: example.org"] == (
+            "https://example.org/"
+        )
+        assert "Licence de la fiche hebdomadaire" not in liens
+
+        assert "Document fictif" in [
+            element.value for element in app.text
+        ]
+        assert (
+            "Source : Source fictive ; consultée le 2026-10-04."
+        ) in [
+            element.value for element in app.caption
+        ]
+
+    if cas == "licence":
+        liens = {
+            element.proto.label: element.proto.url
+            for element in app.get("link_button")
+        }
+
+        assert liens["Licence de la fiche hebdomadaire"] == (
+            "https://example.org/licence"
+        )
+        assert "Source de la fiche hebdomadaire" not in liens
+
+        assert "Document fictif" not in [
+            element.value for element in app.text
+        ]
+        assert not any(
+            "Source fictive" in element.value
+            for element in app.caption
+        )
+
+def test_affichage_fiche_reelle_9_sa():
+    origine = date.today() - timedelta(days=65)
+
+    profil = UserProfile().demarrer_parcours(
+        "pregnancy",
+        origine,
+    )
+    profil = profil.renseigner_reperes_actifs(
+        PregnancyJourney(
+            dating_method="last_period",
+            last_period_date=origine,
+        )
+    )
+
+    app = AppTest.from_file("../app.py").run()
+    app.session_state["profil"] = profil
+
+    app.radio(
+        key="ecran_consulte"
+    ).set_value("Grossesse en cours").run()
+
+    assert not app.exception
+
+    textes = [element.value for element in app.text]
+
+    assert "Autour de 9 SA : visage et premiers mouvements" in textes
+    assert any("Des mouvements précoces" in texte for texte in textes)
+
+    liens = {
+        element.proto.label: element.proto.url
+        for element in app.get("link_button")
+    }
+
+    assert liens["Source de la fiche hebdomadaire"] == (
+        "https://www.betterhealth.vic.gov.au/"
+        "health/HealthyLiving/pregnancy-week-by-week"
+    )
+    assert liens["Reference: www.betterhealth.vic.gov.au"] == (
+        "https://www.betterhealth.vic.gov.au/"
+    )
+    assert "Licence de la fiche hebdomadaire" not in liens
+
+    assert app.session_state["profil"] == profil

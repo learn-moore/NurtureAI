@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2026-10-03",
+  "content_version": "2026-10-04",
   "etapes": [
     {
       "id": "echographie_premier_trimestre",
@@ -93,6 +93,52 @@
           }
       ],
       "reviewed_at": "2026-10-03"
+    },
+    {
+      "id": "echographie_troisieme_trimestre",
+      "title": "Échographie du troisième trimestre",
+      "country": "FR",
+      "language": "fr",
+      "editorial_status": "approved",
+      "window": {
+        "unit": "days_sa",
+        "start": 210,
+        "end": 244,
+        "bounds": "inclusive"
+      },
+      "when": "Entre 30 SA et 34 SA + 6 jours.",
+      "why": "Cette échographie étudie le développement du fœtus et recherche des signes pouvant évoquer une anomalie.",
+      "how": "Le professionnel observe et mesure le fœtus, précise sa présentation, localise le placenta et apprécie la quantité de liquide amniotique.",
+      "questions": [
+        "Que montrent les mesures et la présentation du bébé ?",
+        "Quels éléments de cet examen seront utiles pour la suite du suivi ?"
+      ],
+      "source": {
+        "name": "Légifrance",
+        "title": "Arrêté du 20 avril 2018 relatif aux examens d’imagerie prénatale, version initiale",
+        "url": "https://www.legifrance.gouv.fr/jorf/article_jo/JORFARTI000036833467",
+        "section": "Annexe II : préambule et indications des échographies de première intention au troisième trimestre.",
+        "publication_date": "2018-04-25",
+        "displayed_date": null,
+        "retrieved_at": "2026-10-04",
+        "reuse_status": "approved"
+      },
+      "secondary_sources": [
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "Assurance Maladie",
+          "title": "Suivi mensuel de la grossesse à partir du 4e mois",
+          "url": "https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/consultation-suivi-mensuel",
+          "section": "Septième et huitième mois de grossesse : troisième échographie.",
+          "publication_date": null,
+          "displayed_date": "2026-06-02",
+          "retrieved_at": "2026-10-04",
+          "reuse_status": "to_review",
+          "terms_url": "https://www.ameli.fr/node/24268"
+        }
+      ],
+      "reviewed_at": "2026-10-04"
     }
   ]
 }
