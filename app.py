@@ -15,7 +15,9 @@ from persistance import exporter_profil, importer_profil, lire_export, sauvegard
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
 from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
-from timeline import construire_timeline, choisir_etape_a_mettre_en_avant
+from timeline import construire_timeline, choisir_etape_a_mettre_en_avant, calculer_jours_sa_timeline
+from fiches_hebdomadaires import charger_fiches_hebdomadaires, selectionner_fiche_semaine
+
 
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
@@ -663,6 +665,66 @@ else:
                             "Conditions de réutilisation",
                             secondaire["terms_url"],
                         )
+
+    st.subheader("Ma fiche de la semaine")
+
+    if grossesse_active is None:
+        st.info("Démarrez un parcours grossesse pour consulter les fiches hebdomadaires.")
+    else:
+        st.caption("Cette fiche utilise les repères enregistrés du parcours actif.")
+
+        try:
+            jours_fiche = calculer_jours_sa_timeline(
+                grossesse_active.details,
+                date.today(),
+            )
+
+            fiche_semaine = None
+
+            if jours_fiche is not None:
+                fiche_semaine = selectionner_fiche_semaine(
+                    charger_fiches_hebdomadaires(),
+                    jours_fiche,
+                )
+        except ValueError:
+            st.warning("La fiche hebdomadaire est indisponible : les repères ou le contenu doivent être vérifiés.")
+        else:
+            if jours_fiche is None:
+                st.info("Complétez les repères enregistrés pour déterminer la semaine SA.")
+            elif fiche_semaine is None:
+                st.info(f"Aucune fiche disponible pour {jours_fiche // 7} SA révolues.")
+            else:
+                st.caption(f"{jours_fiche // 7} SA révolues.")
+                st.text(fiche_semaine["title"])
+                st.text(fiche_semaine["body"])
+
+                attribution = fiche_semaine.get("attribution")
+                mode = attribution["mode"] if attribution is not None else None
+
+                if mode == "licence":
+                    st.text(attribution["text"]) # type: ignore
+                    st.link_button(
+                        "Licence de la fiche hebdomadaire",
+                        attribution["url"], # type: ignore
+                    )
+                else:
+                    source = fiche_semaine["source"]
+                    st.text(source["title"])
+                    st.caption(
+                        f"Source : {source['name']} ; "
+                        f"consultée le {source['retrieved_at']}."
+                    )
+                    st.link_button(
+                        "Source de la fiche hebdomadaire",
+                        source["url"],
+                    )
+
+                    if mode == "reference":
+                        st.link_button(
+                            attribution["text"], # type: ignore
+                            attribution["url"], # type: ignore
+                        )
+
 
 st.subheader("Mon parcours actif")
 
