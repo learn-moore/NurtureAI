@@ -725,6 +725,23 @@ else:
                             attribution["url"], # type: ignore
                         )
 
+                secondaires = fiche_semaine.get("secondary_sources", [])
+
+                if secondaires:
+                    with st.expander("Références complémentaires"):
+                        st.caption("Documents utilisés pour recouper les informations de cette fiche.")
+
+                        for secondaire in secondaires:
+                            st.text(secondaire["title"])
+                            st.caption(
+                                f"{secondaire['name']} ; "
+                                f"consultée le {secondaire['retrieved_at']}."
+                            )
+                            st.link_button(
+                                f"Consulter : {secondaire['title']}",
+                                secondaire["url"],
+                            )
+
 
 st.subheader("Mon parcours actif")
 

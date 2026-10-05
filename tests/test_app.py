@@ -2842,19 +2842,42 @@ def test_affichage_fiche_hebdomadaire(monkeypatch, cas):
             for element in app.caption
         )
 
-def test_affichage_fiche_reelle_9_sa():
-    origine = date.today() - timedelta(days=65)
+@pytest.mark.parametrize(
+    "methode, duree_reference",
+    [
+        ("last_period", None),
+        ("due_date", 280),
+        ("due_date", 287),
+    ],
+)
+def test_affichage_fiche_reelle_9_sa(methode, duree_reference):
+    aujourd_hui = date.today()
+    origine = aujourd_hui - timedelta(days=65)
 
     profil = UserProfile().demarrer_parcours(
         "pregnancy",
         origine,
     )
-    profil = profil.renseigner_reperes_actifs(
-        PregnancyJourney(
+
+    if methode == "last_period":
+        reperes = PregnancyJourney(
             dating_method="last_period",
             last_period_date=origine,
         )
-    )
+    else:
+        assert duree_reference is not None
+
+        reperes = PregnancyJourney(
+            dating_method="due_date",
+            estimated_due_date=(
+                aujourd_hui
+                + timedelta(days=duree_reference - 65)
+            ),
+            term_reference_days=duree_reference,
+            dating_rule_version="sa-reference-v1",
+        )
+
+    profil = profil.renseigner_reperes_actifs(reperes)
 
     app = AppTest.from_file("../app.py").run()
     app.session_state["profil"] = profil
@@ -2883,5 +2906,18 @@ def test_affichage_fiche_reelle_9_sa():
         "https://www.betterhealth.vic.gov.au/"
     )
     assert "Licence de la fiche hebdomadaire" not in liens
+
+    assert "Références complémentaires" in [
+        element.label for element in app.expander
+    ]
+
+    assert liens["Consulter : Pregnancy at week 9"] == (
+        "https://www.pregnancybirthbaby.org.au/"
+        "pregnancy/pregnancy-stages/pregnancy-at-week-9"
+    )
+    assert liens["Consulter : Your baby's movements"] == (
+        "https://www.nhs.uk/pregnancy/keeping-well/"
+        "your-babys-movements/"
+    )
 
     assert app.session_state["profil"] == profil

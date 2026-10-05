@@ -18,7 +18,34 @@
         "retrieved_at": "2026-10-05",
         "reuse_status": "approved"
       },
-      "secondary_sources": [],
+      "secondary_sources": [
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "Pregnancy, Birth and Baby, Australie",
+          "title": "Pregnancy at week 9",
+          "url": "https://www.pregnancybirthbaby.org.au/pregnancy/pregnancy-stages/pregnancy-at-week-9",
+          "section": "Your baby. Date de revue affichée : août 2023, sans jour précisé.",
+          "publication_date": null,
+          "displayed_date": null,
+          "retrieved_at": "2026-10-05",
+          "reuse_status": "to_review",
+          "terms_url": "https://about.healthdirect.gov.au/terms-of-use"
+        },
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "NHS, Angleterre",
+          "title": "Your baby's movements",
+          "url": "https://www.nhs.uk/pregnancy/keeping-well/your-babys-movements/",
+          "section": "When you'll feel your baby move",
+          "publication_date": null,
+          "displayed_date": "2024-07-08",
+          "retrieved_at": "2026-10-05",
+          "reuse_status": "to_review",
+          "terms_url": "https://www.nhs.uk/our-policies/terms-and-conditions/"
+        }
+      ],
       "attribution": {
         "mode": "reference",
         "text": "Reference: www.betterhealth.vic.gov.au",
