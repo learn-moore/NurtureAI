@@ -138,6 +138,24 @@ Depuis la racine du projet, avec l’environnement virtuel activé :
 python essai_recherche.py
 ```
 
+L’essai charge `donnees/corpus_fictif.json`. Il permet plusieurs recherches, un filtre de thème et une limite de résultats. Saisir `/quitter` pour terminer.
+
+Pour ouvrir le laboratoire graphique indépendant :
+
+```bash
+python -m streamlit run laboratoire_recherche.py
+```
+
+Il affiche les passages retenus, leurs scores et les mots communs, et permet de télécharger un rapport texte. Les données sont fictives et ne sont pas utilisées par l’application de suivi.
+
+Pour exporter l’exemple de recherche « profil » depuis le terminal :
+
+```bash
+python essai_rapport.py /tmp/nurtureai_rapport_profil.txt
+```
+
+Le chemin de destination est obligatoire ; un fichier existant à cet emplacement est remplacé. Aucun service externe ni LLM n’est appelé par ces démonstrations.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -159,6 +177,10 @@ python essai_recherche.py
 * `corpus_documentaire.py` : chargement JSON et validation des passages documentaires.
 * `recherche_documentaire.py` : filtrage des autorisations et classement lexical.
 * `essai_recherche.py` : démonstration en terminal sur un corpus fictif.
+* `donnees/corpus_fictif.json` : passages et autorisations fictifs de démonstration.
+* `rapport_recherche.py` : construction du rapport texte à partir des résultats.
+* `essai_rapport.py` : export de l’exemple de recherche vers un fichier choisi.
+* `laboratoire_recherche.py` : interface de démonstration indépendante de l’application de suivi.
 
 ## Limites
 
