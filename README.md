@@ -40,6 +40,10 @@ Un premier moteur de recherche documentaire est développé et testé sur des pa
 
 Ce moteur reste indépendant de l’interface. Le corpus médical destiné au RAG, la classification des intentions et la génération par LLM ne sont pas encore intégrés. La préparation des rendez-vous repose sur les informations saisies par l’utilisateur.
 
+La démonstration documentaire charge un corpus fictif depuis JSON. Le moteur valide les métadonnées, les dates, les statuts et l’unicité des identifiants avant de filtrer les autorisations et, si demandé, le thème. Il classe les passages par mots communs dans leur titre et leur contenu, avec une explication du score. Un rapport texte peut être produit à partir des résultats retenus. Aucun LLM ni service externe n’est utilisé dans cette démonstration.
+
+La recherche reste lexicale : elle ne comprend pas les négations, les synonymes ou toutes les variations grammaticales. Le score ne mesure ni fiabilité médicale ni capacité à répondre à une question.
+
 Les sources, les conditions de réutilisation et les décisions éditoriales des fiches sont documentées dans [la revue des sources](donnees/REVUE_SOURCES.md).
 Des tests automatisés vérifient les calculs, les modèles, les imports et les interactions Python. Le stockage du navigateur est simulé dans ces tests ; son fonctionnement réel nécessite une vérification dans le navigateur.
 

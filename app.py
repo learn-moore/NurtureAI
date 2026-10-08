@@ -34,7 +34,7 @@ if "profil" not in st.session_state:
         st.stop()
 
     st.session_state["lecture_initiale_stockage"] = (
-        lecture_initiale.copy()
+        lecture_initiale.copy() # type: ignore
     )
 
     probleme_lecture = None

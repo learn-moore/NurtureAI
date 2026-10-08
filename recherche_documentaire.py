@@ -58,12 +58,14 @@ def rechercher_passages(
         texte_recherche = (
             f"{passage.get('title', '')}\n{passage['content']}"
         )
-        score = calculer_score_lexical(question, texte_recherche)
+        mots_commun = mots_question & extraire_mots_recherche(texte_recherche)
+        score = len(mots_commun)
 
         if score > 0:
             resultats.append({
                 "passage": passage,
                 "score": score,
+                "mots_communs": tuple(sorted(mots_commun)),
             })
 
     resultats.sort(key=lambda resultat: resultat["score"], reverse=True)
