@@ -36,7 +36,9 @@ La timeline couvre actuellement les trois échographies. Elle ne représente pas
 
 Une première fiche hebdomadaire est disponible entre 9 SA et 9 SA + 6 jours. Pour les semaines sans contenu approuvé, l’application indique qu’aucune fiche n’est disponible. Les repères décrits sont généraux et ne permettent pas d’interpréter une échographie individuelle.
 
-L’assistant IA avec recherche documentaire (RAG) reste à développer. La préparation des rendez-vous repose actuellement sur les informations saisies par l’utilisateur, sans génération par IA.
+Un premier moteur de recherche documentaire est développé et testé sur des passages fictifs. Il valide les fichiers JSON et les métadonnées, exclut les passages non autorisés pour le RAG et classe les résultats selon les mots communs avec leur titre et leur contenu.
+
+Ce moteur reste indépendant de l’interface. Le corpus médical destiné au RAG, la classification des intentions et la génération par LLM ne sont pas encore intégrés. La préparation des rendez-vous repose sur les informations saisies par l’utilisateur.
 
 Les sources, les conditions de réutilisation et les décisions éditoriales des fiches sont documentées dans [la revue des sources](donnees/REVUE_SOURCES.md).
 Des tests automatisés vérifient les calculs, les modèles, les imports et les interactions Python. Le stockage du navigateur est simulé dans ces tests ; son fonctionnement réel nécessite une vérification dans le navigateur.
@@ -124,6 +126,14 @@ Le stockage local ne signifie pas que tous les traitements restent sur l’appar
 
 Conserver les exports dans un emplacement privé et ne pas les ajouter au dépôt Git. Utiliser des données fictives pour les démonstrations du projet.
 
+## Essayer la recherche documentaire
+
+Depuis la racine du projet, avec l’environnement virtuel activé :
+
+```bash
+python essai_recherche.py
+```
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -142,6 +152,9 @@ Conserver les exports dans un emplacement privé et ne pas les ajouter au dépô
 * `donnees/fiches_hebdomadaires.json` : contenu versionné des fiches hebdomadaires et métadonnées d’attribution.
 * `donnees/REVUE_SOURCES.md` : revue documentaire et décisions de réutilisation.
 * `.github/workflows/tests.yml` : exécution des tests lors des push et des pull requests.
+* `corpus_documentaire.py` : chargement JSON et validation des passages documentaires.
+* `recherche_documentaire.py` : filtrage des autorisations et classement lexical.
+* `essai_recherche.py` : démonstration en terminal sur un corpus fictif.
 
 ## Limites
 
