@@ -14,6 +14,15 @@ CHAMPS_TEXTE_PASSAGE = (
     "country",
 )
 
+THEMES_CORPUS = frozenset({
+    "conception",
+    "suivi_grossesse",
+    "nutrition",
+    "habitudes_de_vie",
+    "medicaments",
+    "signes_alerte",
+})
+
 
 def lire_date_passage(
     valeur: object,
@@ -51,6 +60,9 @@ def valider_passage(passage: dict) -> None:
 
     if passage["id"] != passage["id"].strip():
         raise ValueError("L’identifiant ne doit pas avoir d’espaces aux extrémités.")
+
+    if passage["topic"] not in THEMES_CORPUS:
+        raise ValueError("Thème topic non pris en charge.")
 
     url = passage["url"]
 

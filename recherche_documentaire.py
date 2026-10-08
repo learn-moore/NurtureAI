@@ -1,6 +1,8 @@
 import re
 import unicodedata
 
+from corpus_documentaire import THEMES_CORPUS, valider_corpus
+
 MOTS_IGNORES = frozenset({
     "a", "au", "aux",
     "d", "de", "des", "du",
@@ -72,14 +74,26 @@ def rechercher_corpus(
     question: str,
     corpus: tuple[dict, ...],
     limite: int = 3,
+    *,
+    theme: str | None = None,
 ) -> tuple[dict, ...]:
-    """Recherche parmi les passages autorisés d’un corpus déjà validé."""
+    """Valide le corpus et recherche parmi les passages autorisés."""
+    if theme is not None:
+        if not isinstance(theme, str) or theme not in THEMES_CORPUS:
+            raise ValueError("Thème de recherche non pris en charge.")
+
+    if not isinstance(corpus, tuple):
+        raise ValueError("Le corpus de recherche doit être un tuple.")
+
+    corpus = valider_corpus(list(corpus))
+
     passages_autorises = tuple(
         passage
         for passage in corpus
-        if passage.get("editorial_status") == "approved"
-        and passage.get("reuse_status") == "approved"
-        and passage.get("usage") == "rag"
+        if passage["editorial_status"] == "approved"
+        and passage["reuse_status"] == "approved"
+        and passage["usage"] == "rag"
+        and (theme is None or passage["topic"] == theme)
     )
 
     return rechercher_passages(

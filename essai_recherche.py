@@ -1,4 +1,4 @@
-from corpus_documentaire import valider_corpus
+from corpus_documentaire import THEMES_CORPUS, valider_corpus
 from recherche_documentaire import rechercher_corpus
 
 
@@ -40,7 +40,19 @@ def main() -> None:
     print("Démonstration sur des textes fictifs, sans information médicale.")
     question = input("Votre recherche : ")
 
-    resultats = rechercher_corpus(question, corpus)
+    print("Thèmes disponibles :", ", ".join(sorted(THEMES_CORPUS)))
+    saisie_theme = input("Thème, ou Entrée pour tous : ").strip()
+    theme = saisie_theme or None
+
+    try:
+        resultats = rechercher_corpus(
+            question,
+            corpus,
+            theme=theme,
+        )
+    except ValueError as erreur:
+        print(f"Recherche impossible : {erreur}")
+        return
 
     if not resultats:
         print("Aucun passage correspondant.")

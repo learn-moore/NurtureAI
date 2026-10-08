@@ -271,3 +271,35 @@ def test_charger_corpus_refuse_passage_invalide(tmp_path, passage):
     with pytest.raises(ValueError, match="content"):
         charger_corpus(chemin)
 
+@pytest.mark.parametrize(
+    "theme",
+    [
+        "conception",
+        "suivi_grossesse",
+        "nutrition",
+        "habitudes_de_vie",
+        "medicaments",
+        "signes_alerte",
+    ],
+)
+def test_valider_passage_accepte_theme_du_perimetre(passage, theme):
+    passage["topic"] = theme
+
+    assert valider_passage(passage) is None
+
+
+@pytest.mark.parametrize(
+    "theme",
+    [
+        "grossesse",
+        "suivi_grossese",
+        "Suivi_grossesse",
+        "suivi_grossesse ",
+        "diagnostic",
+    ],
+)
+def test_valider_passage_refuse_theme_inconnu(passage, theme):
+    passage["topic"] = theme
+
+    with pytest.raises(ValueError, match="topic"):
+        valider_passage(passage)

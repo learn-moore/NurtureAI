@@ -5,6 +5,24 @@ from recherche_documentaire import extraire_mots, extraire_mots_recherche, calcu
 from corpus_documentaire import charger_corpus
 
 
+@pytest.fixture
+def passage_valide():
+    return {
+        "id": "test",
+        "topic": "suivi_grossesse",
+        "title": "Document fictif",
+        "content": "Calendrier.",
+        "source": "Source fictive",
+        "url": "https://example.org/document",
+        "country": "FR",
+        "publication_date": None,
+        "retrieved_at": "2026-10-05",
+        "reviewed_at": "2026-10-05",
+        "editorial_status": "approved",
+        "reuse_status": "approved",
+        "usage": "rag",
+    }
+
 @pytest.mark.parametrize(
     "texte, attendu",
     [
@@ -120,21 +138,18 @@ def test_recherche_ne_retient_pas_les_articles(question):
 
     assert rechercher_passages(question, passages) == ()
 
-def test_rechercher_corpus_filtre_avant_classement():
+def test_rechercher_corpus_filtre_avant_classement(passage_valide):
     corpus = (
         {
+            **passage_valide,
             "id": "brouillon",
             "content": "Calendrier rendez-vous profil.",
             "editorial_status": "draft",
-            "reuse_status": "approved",
-            "usage": "rag",
+            "reviewed_at": None,
         },
         {
+            **passage_valide,
             "id": "retenu",
-            "content": "Calendrier.",
-            "editorial_status": "approved",
-            "reuse_status": "approved",
-            "usage": "rag",
         },
     )
 
@@ -159,34 +174,25 @@ def test_rechercher_corpus_filtre_avant_classement():
         ("usage", "cross_check"),
     ],
 )
-def test_rechercher_corpus_exclut_passage_non_autorise(champ, valeur):
-    passage = {
-        "id": "test",
-        "content": "Calendrier.",
-        "editorial_status": "approved",
-        "reuse_status": "approved",
-        "usage": "rag",
-    }
-    passage[champ] = valeur
+def test_rechercher_corpus_exclut_passage_non_autorise(
+    passage_valide, champ, valeur
+):
+    passage_valide[champ] = valeur
 
-    assert rechercher_corpus("calendrier", (passage,)) == ()
+    assert rechercher_corpus("calendrier", (passage_valide,)) == ()
 
 
 @pytest.mark.parametrize(
     "champ",
     ["editorial_status", "reuse_status", "usage"],
 )
-def test_rechercher_corpus_refuse_autorisation_manquante(champ):
-    passage = {
-        "id": "test",
-        "content": "Calendrier.",
-        "editorial_status": "approved",
-        "reuse_status": "approved",
-        "usage": "rag",
-    }
-    del passage[champ]
+def test_rechercher_corpus_refuse_autorisation_manquante(
+    passage_valide, champ
+):
+    del passage_valide[champ]
 
-    assert rechercher_corpus("calendrier", (passage,)) == ()
+    with pytest.raises(ValueError, match=champ):
+        rechercher_corpus("calendrier", (passage_valide,))
 
 def test_recherche_depuis_fichier_valide(tmp_path):
     base = {
@@ -292,4 +298,77 @@ def test_recherche_ignore_mots_des_metadonnees():
     },)
 
     assert rechercher_passages("calendrier", passages) == ()
+
+@pytest.mark.parametrize("question", ["calendrier", ""])
+def test_rechercher_corpus_refuse_approbation_sans_revue(
+    passage_valide, question
+):
+    passage_valide["reviewed_at"] = None
+
+    with pytest.raises(ValueError, match="reviewed_at"):
+        rechercher_corpus(question, (passage_valide,))
+
+
+def test_rechercher_corpus_refuse_doublons(passage_valide):
+    with pytest.raises(ValueError, match="en double"):
+        rechercher_corpus(
+            "calendrier",
+            (passage_valide, passage_valide.copy()),
+        )
+
+@pytest.mark.parametrize(
+    "theme, identifiants",
+    [
+        (None, ["suivi", "nutrition"]),
+        ("suivi_grossesse", ["suivi"]),
+        ("nutrition", ["nutrition"]),
+        ("conception", []),
+    ],
+)
+def test_rechercher_corpus_filtre_par_theme(
+    passage_valide, theme, identifiants
+):
+    corpus = (
+        {
+            **passage_valide,
+            "id": "suivi",
+            "topic": "suivi_grossesse",
+        },
+        {
+            **passage_valide,
+            "id": "nutrition",
+            "topic": "nutrition",
+        },
+    )
+
+    resultats = rechercher_corpus(
+        "calendrier",
+        corpus,
+        theme=theme,
+    )
+
+    assert [
+        resultat["passage"]["id"] for resultat in resultats
+    ] == identifiants
+
+
+@pytest.mark.parametrize("theme", ["inconnu", "", True, []])
+def test_rechercher_corpus_refuse_filtre_theme_invalide(theme):
+    with pytest.raises(ValueError, match="Thème"):
+        rechercher_corpus("calendrier", (), theme=theme)
+
+
+def test_filtre_theme_ne_masque_pas_un_passage_invalide(passage_valide):
+    invalide = {
+        **passage_valide,
+        "topic": "nutrition",
+        "content": "",
+    }
+
+    with pytest.raises(ValueError, match="content"):
+        rechercher_corpus(
+            "calendrier",
+            (invalide,),
+            theme="suivi_grossesse",
+        )
 
