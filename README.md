@@ -38,7 +38,7 @@ Une première fiche hebdomadaire est disponible entre 9 SA et 9 SA + 6 jours. Po
 
 Un premier moteur de recherche documentaire est développé et testé sur des passages fictifs. Il valide les fichiers JSON et les métadonnées, exclut les passages non autorisés pour le RAG et classe les résultats selon les mots communs avec leur titre et leur contenu.
 
-Ce moteur reste indépendant de l’interface. Le corpus médical destiné au RAG, la classification des intentions et la génération par LLM ne sont pas encore intégrés. La préparation des rendez-vous repose sur les informations saisies par l’utilisateur.
+Le moteur est accessible dans un laboratoire Streamlit indépendant de l’application de suivi. Le corpus médical destiné au RAG, la classification des intentions et la génération par LLM ne sont pas encore intégrés. La préparation des rendez-vous repose sur les informations saisies par l’utilisateur.
 
 La démonstration documentaire charge un corpus fictif depuis JSON. Le moteur valide les métadonnées, les dates, les statuts et l’unicité des identifiants avant de filtrer les autorisations et, si demandé, le thème. Il classe les passages par mots communs dans leur titre et leur contenu, avec une explication du score. Un rapport texte peut être produit à partir des résultats retenus. Aucun LLM ni service externe n’est utilisé dans cette démonstration.
 
@@ -146,7 +146,15 @@ Pour ouvrir le laboratoire graphique indépendant :
 python -m streamlit run laboratoire_recherche.py
 ```
 
-Il affiche les passages retenus, leurs scores et les mots communs, et permet de télécharger un rapport texte. Les données sont fictives et ne sont pas utilisées par l’application de suivi.
+Le laboratoire affiche les passages retenus, leurs scores et les mots communs, et permet de télécharger un rapport texte. Les données sont fictives et ne sont pas utilisées par l’application de suivi.
+
+Deux sections dépliables présentent le contexte documentaire et les messages préparés pour un futur modèle. Le contexte conserve les passages entiers, dans leur ordre de classement, jusqu’à une limite de 6 000 caractères. Cette limite ne comprend ni la question ni les consignes et ne correspond pas à un nombre de tokens.
+
+Les consignes sont séparées de la question et des documents. Si aucun passage ne tient dans le contexte, aucun message n’est préparé. Aucun appel API n’est effectué.
+
+Un champ facultatif permet de saisir une réponse fictive pour contrôler ses références entre crochets. Les identifiants cités sont comparés aux documents du contexte. Une référence inconnue empêche l’affichage de la liste des sources ; une absence de citation produit un avertissement.
+
+Les titres et les URL des sources citées proviennent des métadonnées du contexte. Ce contrôle vérifie la présence des références, pas que les passages soutiennent chaque affirmation.
 
 Pour exporter l’exemple de recherche « profil » depuis le terminal :
 
@@ -181,6 +189,9 @@ Le chemin de destination est obligatoire ; un fichier existant à cet emplacemen
 * `rapport_recherche.py` : construction du rapport texte à partir des résultats.
 * `essai_rapport.py` : export de l’exemple de recherche vers un fichier choisi.
 * `laboratoire_recherche.py` : interface de démonstration indépendante de l’application de suivi.
+* `contexte_documentaire.py` : construction d’un contexte JSON limité en caractères, avec passages complets et sources.
+* `messages_assistant.py` : préparation des consignes et des données pour le laboratoire, sans appel à un modèle.
+* `citations_documentaires.py` : extraction des citations, détection des références inconnues et récupération des métadonnées des sources citées.
 
 ## Limites
 

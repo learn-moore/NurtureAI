@@ -61,3 +61,66 @@ def test_laboratoire_refuse_question_vide():
     ]
     assert len(app.subheader) == 0
     assert len(app.get("download_button")) == 0
+
+@pytest.mark.parametrize(
+    "theme, reponse, statut",
+    [
+        (
+            "Tous les thèmes",
+            "Les rendez-vous sont affichés [calendrier].",
+            "reconnue",
+        ),
+        (
+            "Tous les thèmes",
+            "Les rendez-vous [calendrier] et un détail [invente].",
+            "inconnue",
+        ),
+        (
+            "conception",
+            "Les rendez-vous sont affichés [calendrier].",
+            "inconnue",
+        ),
+        (
+            "Tous les thèmes",
+            "Les documents sont insuffisants.",
+            "sans_citation",
+        ),
+    ],
+)
+def test_laboratoire_controle_references(theme, reponse, statut):
+    app = AppTest.from_file(str(CHEMIN_APP)).run()
+
+    app.text_input(key="question_recherche").set_value("profil")
+    app.selectbox[0].set_value(theme)
+    app.text_area(key="reponse_fictive").set_value(reponse)
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    controle = next(
+        element
+        for element in app.expander
+        if element.label == "Contrôle des références de la réponse fictive"
+    )
+
+    if statut == "reconnue":
+        assert len(controle.success) == 1
+        assert not controle.error
+        assert not controle.warning
+        assert "https://example.org/calendrier" in [
+            element.value for element in controle.text
+        ]
+
+    elif statut == "inconnue":
+        assert len(controle.error) == 1
+        assert "Références absentes du contexte" in controle.error[0].value
+        assert not controle.success
+        assert not controle.text
+
+    else:
+        assert len(controle.warning) == 1
+        assert "Aucune citation détectée" in controle.warning[0].value
+        assert not controle.success
+        assert not controle.error
+        assert not controle.text
+
