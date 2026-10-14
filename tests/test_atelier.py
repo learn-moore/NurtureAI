@@ -300,3 +300,66 @@ def test_assistant_signale_absence_de_citation(
     assert resultat["reponse"] == reponse
     assert resultat["sources"] == ()
 
+def test_assistant_utilise_generateur_fourni(corpus):
+    resultats = rechercher_corpus("profil", corpus)
+    appels = []
+
+    def autre_generateur(messages):
+        appels.append(messages)
+        return "Le profil est conservé dans le navigateur [sauvegarde]."
+
+    resultat = assistant_documentaire.preparer_reponse(
+        "profil",
+        resultats,
+        generer=autre_generateur,
+    )
+
+    assert len(appels) == 1
+
+    messages_recus = appels[0]
+    assert [message["role"] for message in messages_recus] == [
+        "system",
+        "user",
+    ]
+
+    donnees = json.loads(messages_recus[1]["content"])
+    assert donnees["question"] == "profil"
+    assert [document["id"] for document in donnees["documents"]] == [
+        "calendrier",
+        "sauvegarde",
+        "export",
+    ]
+
+    assert resultat["statut"] == "references_controlees"
+    assert resultat["reponse"] == (
+        "Le profil est conservé dans le navigateur [sauvegarde]."
+    )
+    assert [source["id"] for source in resultat["sources"]] == [
+        "sauvegarde",
+    ]
+    assert resultat["sources"][0]["url"] == (
+        "https://example.org/sauvegarde"
+    )
+
+def test_assistant_transmet_indisponibilite_generateur(corpus):
+    resultats = rechercher_corpus("profil", corpus)
+    appels = []
+
+    def generateur_indisponible(messages):
+        appels.append(messages)
+        raise assistant_documentaire.GenerationIndisponible(
+            "Indisponibilité simulée"
+        )
+
+    with pytest.raises(
+        assistant_documentaire.GenerationIndisponible,
+        match="Indisponibilité simulée",
+    ):
+        assistant_documentaire.preparer_reponse(
+            "profil",
+            resultats,
+            generer=generateur_indisponible,
+        )
+
+    assert len(appels) == 1
+

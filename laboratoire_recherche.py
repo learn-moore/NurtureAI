@@ -8,7 +8,7 @@ from rapport_recherche import construire_rapport_recherche
 from contexte_documentaire import construire_contexte
 from messages_assistant import preparer_messages
 from citations_documentaires import retrouver_sources_citees
-from assistant_documentaire import preparer_reponse_simulee
+from assistant_documentaire import preparer_reponse_simulee, GenerationIndisponible
 
 
 CHEMIN_CORPUS = Path(__file__).resolve().parent / "donnees" / "corpus_fictif.json"
@@ -124,6 +124,8 @@ if soumettre:
                         question,
                         resultats,
                     )
+                except GenerationIndisponible:
+                    st.error("La génération est temporairement indisponible. Les passages documentaires restent consultables.")
                 except ValueError as erreur:
                     st.error(f"La simulation n’a pas pu aboutir : {erreur}")
                 else:

@@ -230,3 +230,51 @@ def test_laboratoire_signale_simulation_sans_citation(monkeypatch):
         for element in simulation.caption
     )
 
+def test_laboratoire_conserve_recherche_si_generation_indisponible(
+    monkeypatch,
+):
+    def generation_indisponible(messages):
+        raise assistant_documentaire.GenerationIndisponible(
+            "Détail technique fictif à ne pas afficher"
+        )
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_indisponible,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP)).run()
+    app.text_input(key="question_recherche").set_value("profil")
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    simulation = next(
+        element
+        for element in app.expander
+        if element.label == "Réponse simulée"
+    )
+
+    assert len(simulation.error) == 1
+    assert simulation.error[0].value == (
+        "La génération est temporairement indisponible. "
+        "Les passages documentaires restent consultables."
+    )
+    assert not simulation.text
+
+    assert [
+        element.value for element in app.subheader
+    ] == [
+        "1. Calendrier de démonstration",
+        "2. Sauvegarde de démonstration",
+        "3. Export de démonstration",
+    ]
+    assert "Le calendrier présente les rendez-vous du profil." in [
+        element.value for element in app.text
+    ]
+
+    boutons = app.get("download_button")
+    assert len(boutons) == 1
+    assert not boutons[0].disabled # type: ignore
+
