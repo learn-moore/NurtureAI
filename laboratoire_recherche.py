@@ -8,6 +8,7 @@ from rapport_recherche import construire_rapport_recherche
 from contexte_documentaire import construire_contexte
 from messages_assistant import preparer_messages
 from citations_documentaires import retrouver_sources_citees
+from assistant_documentaire import preparer_reponse_simulee
 
 
 CHEMIN_CORPUS = Path(__file__).resolve().parent / "donnees" / "corpus_fictif.json"
@@ -112,6 +113,36 @@ if soumettre:
                             st.caption(
                                 "La présence des références ne garantit pas que les passages soutiennent les affirmations."
                             )
+
+            with st.expander("Réponse simulée", expanded=True):
+                st.caption(
+                    "Simulation déterministe : reprise du premier passage. Aucun modèle IA ni service externe n’est appelé."
+                )
+
+                try:
+                    simulation = preparer_reponse_simulee(
+                        question,
+                        resultats,
+                    )
+                except ValueError as erreur:
+                    st.error(f"La simulation n’a pas pu aboutir : {erreur}")
+                else:
+                    if simulation["statut"] == "sans_contexte":
+                        st.info(simulation["reponse"])
+                    elif simulation["statut"] == "sans_citation":
+                        st.warning("Aucune citation détectée. La réponse n’est pas validée comme sourcée.")
+                        st.text(simulation["reponse"])
+                    else:
+                        st.text(simulation["reponse"])
+
+                        for source in simulation["sources"]:
+                            st.text(
+                                f"[{source['id']}] {source['title']}"
+                            )
+                            st.caption(source["source"])
+                            st.text(source["url"])
+
+                        st.caption("Les références appartiennent au contexte. Ce contrôle ne valide pas le sens de la réponse.")
 
             st.download_button(
                 "Télécharger le rapport",

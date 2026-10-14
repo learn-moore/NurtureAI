@@ -8,8 +8,11 @@ from corpus_documentaire import charger_corpus
 from recherche_documentaire import rechercher_corpus
 from rapport_recherche import construire_rapport_recherche
 from contexte_documentaire import construire_contexte
-from citations_documentaires import trouver_citations_inconnues
+from citations_documentaires import trouver_citations_inconnues, retrouver_sources_citees
 from messages_assistant import preparer_messages
+from generation_simulee import generer_reponse_simulee
+
+import assistant_documentaire
 
 
 CHEMIN = Path(__file__).resolve().parents[1] / "donnees" / "corpus_fictif.json"
@@ -146,4 +149,154 @@ def test_citations_limitees_aux_documents_transmis(corpus):
         reponse,
         contexte_transmis,
     ) == ("sauvegarde",)
+
+@pytest.mark.parametrize(
+    "theme, identifiant_attendu",
+    [
+        ("suivi_grossesse", "calendrier"),
+        ("conception", "export"),
+    ],
+)
+def test_generation_simulee_utilise_document_transmis(
+    corpus,
+    theme,
+    identifiant_attendu,
+):
+    resultats = rechercher_corpus("profil", corpus, theme=theme)
+    messages = preparer_messages("profil", resultats)
+
+    reponse = generer_reponse_simulee(messages)
+
+    donnees = json.loads(messages[1]["content"])
+    contexte_transmis = json.dumps(
+        donnees["documents"],
+        ensure_ascii=False,
+    )
+    sources = retrouver_sources_citees(reponse, contexte_transmis)
+
+    assert "Démonstration sur un corpus fictif." in reponse
+    assert resultats[0]["passage"]["content"] in reponse
+    assert [source["id"] for source in sources] == [
+        identifiant_attendu,
+    ]
+    assert sources[0]["url"] == (
+        f"https://example.org/{identifiant_attendu}"
+    )
+
+
+def test_generation_simulee_refuse_messages_vides():
+    with pytest.raises(ValueError, match="nécessite des messages"):
+        generer_reponse_simulee(())
+
+@pytest.mark.parametrize(
+    "question, budget",
+    [
+        ("banane", 6000),
+        ("profil", 2),
+    ],
+)
+def test_assistant_ne_genere_pas_sans_contexte(
+    corpus,
+    monkeypatch,
+    question,
+    budget,
+):
+    resultats = rechercher_corpus(question, corpus)
+
+    def generation_interdite(messages):
+        pytest.fail("Le générateur ne devait pas être appelé.")
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_interdite,
+    )
+
+    resultat = assistant_documentaire.preparer_reponse_simulee(
+        question,
+        resultats,
+        max_caracteres=budget,
+    )
+
+    assert resultat["statut"] == "sans_contexte"
+    assert resultat["sources"] == ()
+    assert "Aucun passage disponible" in resultat["reponse"]
+
+
+def test_assistant_refuse_reference_inventee(corpus, monkeypatch):
+    resultats = rechercher_corpus("profil", corpus)
+    appels = []
+
+    def generation_invalide(messages):
+        appels.append(messages)
+        return "Une information fictive [invente]."
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_invalide,
+    )
+
+    with pytest.raises(ValueError, match="invente"):
+        assistant_documentaire.preparer_reponse_simulee(
+            "profil",
+            resultats,
+        )
+
+    assert len(appels) == 1
+
+@pytest.mark.parametrize("reponse", ["", "   ", None, 42])
+def test_assistant_refuse_generation_inexploitable(
+    corpus,
+    monkeypatch,
+    reponse,
+):
+    resultats = rechercher_corpus("profil", corpus)
+
+    def generation_inexploitable(messages):
+        return reponse
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_inexploitable,
+    )
+
+    with pytest.raises(ValueError, match="texte non vide"):
+        assistant_documentaire.preparer_reponse_simulee(
+            "profil",
+            resultats,
+        )
+
+@pytest.mark.parametrize(
+    "reponse",
+    [
+        "Les documents sont insuffisants pour répondre.",
+        "Le calendrier présente les rendez-vous.",
+    ],
+)
+def test_assistant_signale_absence_de_citation(
+    corpus,
+    monkeypatch,
+    reponse,
+):
+    resultats = rechercher_corpus("profil", corpus)
+
+    def generation_sans_citation(messages):
+        return reponse
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_sans_citation,
+    )
+
+    resultat = assistant_documentaire.preparer_reponse_simulee(
+        "profil",
+        resultats,
+    )
+
+    assert resultat["statut"] == "sans_citation"
+    assert resultat["reponse"] == reponse
+    assert resultat["sources"] == ()
 

@@ -3,6 +3,8 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
+import assistant_documentaire
+
 
 CHEMIN_APP = (
     Path(__file__).resolve().parents[1]
@@ -123,4 +125,108 @@ def test_laboratoire_controle_references(theme, reponse, statut):
         assert not controle.success
         assert not controle.error
         assert not controle.text
+
+@pytest.mark.parametrize(
+    "theme, identifiant",
+    [
+        ("Tous les thèmes", "calendrier"),
+        ("conception", "export"),
+        ("nutrition", None),
+    ],
+)
+def test_laboratoire_affiche_simulation(theme, identifiant):
+    app = AppTest.from_file(str(CHEMIN_APP)).run()
+
+    app.text_input(key="question_recherche").set_value("profil")
+    app.selectbox[0].set_value(theme)
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    simulation = next(
+        element
+        for element in app.expander
+        if element.label == "Réponse simulée"
+    )
+
+    assert not simulation.error
+
+    if identifiant is None:
+        assert len(simulation.info) == 1
+        assert "Aucun passage disponible" in simulation.info[0].value
+        assert not simulation.text
+    else:
+        assert not simulation.info
+        assert f"[{identifiant}]" in simulation.text[0].value
+        assert "Démonstration sur un corpus fictif." in (
+            simulation.text[0].value
+        )
+        assert f"https://example.org/{identifiant}" in [
+            element.value for element in simulation.text
+        ]
+
+
+def test_laboratoire_masque_simulation_invalide(monkeypatch):
+    def generation_invalide(messages):
+        return "Une information à ne pas afficher [invente]."
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_invalide,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP)).run()
+    app.text_input(key="question_recherche").set_value("profil")
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    simulation = next(
+        element
+        for element in app.expander
+        if element.label == "Réponse simulée"
+    )
+
+    assert len(simulation.error) == 1
+    assert "invente" in simulation.error[0].value
+    assert not simulation.text
+
+def test_laboratoire_signale_simulation_sans_citation(monkeypatch):
+    reponse = "Les documents sont insuffisants pour répondre."
+
+    def generation_sans_citation(messages):
+        return reponse
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "generer_reponse_simulee",
+        generation_sans_citation,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP)).run()
+    app.text_input(key="question_recherche").set_value("profil")
+    app.button[0].click().run()
+
+    assert not app.exception
+
+    simulation = next(
+        element
+        for element in app.expander
+        if element.label == "Réponse simulée"
+    )
+
+    assert len(simulation.warning) == 1
+    assert "Aucune citation détectée" in simulation.warning[0].value
+    assert not simulation.error
+    assert not simulation.success
+
+    assert [
+        element.value for element in simulation.text
+    ] == [reponse]
+
+    assert not any(
+        "Les références appartiennent au contexte" in element.value
+        for element in simulation.caption
+    )
 

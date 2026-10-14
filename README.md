@@ -156,6 +156,10 @@ Un champ facultatif permet de saisir une réponse fictive pour contrôler ses r�
 
 Les titres et les URL des sources citées proviennent des métadonnées du contexte. Ce contrôle vérifie la présence des références, pas que les passages soutiennent chaque affirmation.
 
+Une simulation automatique reprend le premier passage du contexte et ajoute son identifiant comme citation. Elle ne comprend pas la question et ne réalise aucune synthèse.
+
+Si le contexte est vide, le générateur n’est pas appelé. Une réponse vide ou contenant une référence inconnue provoque une erreur et n’est pas affichée. Une réponse sans citation reste visible dans le laboratoire avec un avertissement, sans être présentée comme sourcée.
+
 Pour exporter l’exemple de recherche « profil » depuis le terminal :
 
 ```bash
@@ -192,6 +196,8 @@ Le chemin de destination est obligatoire ; un fichier existant à cet emplacemen
 * `contexte_documentaire.py` : construction d’un contexte JSON limité en caractères, avec passages complets et sources.
 * `messages_assistant.py` : préparation des consignes et des données pour le laboratoire, sans appel à un modèle.
 * `citations_documentaires.py` : extraction des citations, détection des références inconnues et récupération des métadonnées des sources citées.
+* `generation_simulee.py` : production déterministe d’un texte à partir du premier passage transmis.
+* `assistant_documentaire.py` : coordination de la préparation des messages, de la simulation et du contrôle des références.
 
 ## Limites
 
