@@ -213,6 +213,16 @@ Ces observations ponctuelles ne constituent pas une évaluation générale du mo
 
 L’application de suivi et le laboratoire simulé restent indépendants de cet essai. Aucun profil utilisateur n’est transmis.
 
+## Contrôle des intentions en préparation
+
+Quatre catégories sont définies : information générale, situation médicale personnelle, urgence potentielle et demande hors périmètre.
+
+Le point d’entrée `preparer_reponse_selon_intention` autorise la chaîne documentaire uniquement pour `GENERAL_INFORMATION`. Les autres catégories et une intention indéterminée bloquent la préparation des messages et la génération.
+
+La conversion des catégories textuelles exige une valeur exacte. Une valeur inconnue, ambiguë ou de type incorrect devient une intention indéterminée et n’autorise pas la génération.
+
+Ces fonctions sont testées, mais aucun classifieur de demandes n’est encore implémenté. Les interfaces existantes n’utilisent pas encore ce point d’entrée. Le message de blocage est provisoire : il ne constitue pas une réponse adaptée à une urgence.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -245,6 +255,7 @@ L’application de suivi et le laboratoire simulé restent indépendants de cet 
 * `assistant_documentaire.py` : coordination de la préparation des messages, d’un générateur interchangeable et du contrôle des références.
 * `generation_groq.py` : adaptateur Groq et traduction des erreurs du fournisseur.
 * `essai_groq.py` : essais distants sur des questions prédéfinies et un corpus fictif, après autorisation explicite.
+* `intentions.py` : catégories, conversion stricte et autorisation de génération documentaire.
 
 
 ## Limites

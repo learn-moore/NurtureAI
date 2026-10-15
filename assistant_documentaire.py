@@ -4,6 +4,7 @@ from collections.abc import Callable
 from citations_documentaires import retrouver_sources_citees
 from generation_simulee import generer_reponse_simulee
 from messages_assistant import preparer_messages
+from intentions import Intention, autoriser_generation_documentaire
 
 
 def preparer_reponse(
@@ -75,3 +76,28 @@ def preparer_reponse_simulee(
 
 class GenerationIndisponible(RuntimeError):
     """Signale une indisponibilité attendue du service de génération."""
+
+def preparer_reponse_selon_intention(
+    question: str,
+    resultats: tuple[dict, ...],
+    max_caracteres: int = 6000,
+    *,
+    intention: Intention | None,
+    generer: Callable[[tuple[dict[str, str], ...]], str],
+) -> dict:
+    """Contrôle l’intention avant d’accéder à la génération documentaire."""
+    if not autoriser_generation_documentaire(intention):
+        return {
+            "statut": "generation_non_autorisee",
+            "reponse": (
+                "Cette demande nécessite un traitement distinct de la génération documentaire."
+            ),
+            "sources": (),
+        }
+
+    return preparer_reponse(
+        question,
+        resultats,
+        max_caracteres=max_caracteres,
+        generer=generer,
+    )
