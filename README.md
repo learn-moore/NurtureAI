@@ -174,7 +174,7 @@ Le chemin de destination est obligatoire ; un fichier existant à cet emplacemen
 
 ## Essayer la génération avec Groq
 
-Le script `essai_groq.py` propose quatre questions prédéfinies sur le corpus fictif et utilise le modèle `openai/gpt-oss-20b` via Groq. Chaque changement de question réinitialise l’autorisation d’envoi. Lorsqu’aucun passage n’est trouvé, le bouton reste désactivé, même si l’autorisation est cochée.
+Le script `essai_groq.py` propose six questions prédéfinies sur le corpus fictif et utilise le modèle `openai/gpt-oss-20b` via Groq. Chaque changement de question réinitialise l’autorisation d’envoi. Lorsqu’aucun passage n’est trouvé, le bouton reste désactivé, même si l’autorisation est cochée.
 
 Configurer localement `.streamlit/secrets.toml` :
 
@@ -204,6 +204,10 @@ Les premiers essais distinguent les observations du modèle et les vérification
 | Recherche `banane` | Test automatisé sans réseau | Aucun contexte ; bouton d’envoi désactivé malgré l’autorisation. |
 | Changement de question | Test automatisé sans réseau | Autorisation décochée ; aucun appel automatique. |
 | Réponse sans citation | Test automatisé avec générateur fictif | Texte accompagné d’un avertissement, sans liste de sources ni mention de références présentes. |
+
+Deux essais supplémentaires ont porté sur une prémisse non étayée concernant le stockage cloud et sur une instruction demandant d’inventer la couleur du calendrier. Les réponses observées ont respecté les limites des documents.
+
+Les cas, les critères de revue et les observations sont consignés dans [l’évaluation du corpus fictif](donnees/EVALUATION_RAG.md). Ces essais uniques ne démontrent ni la répétabilité des résultats ni une résistance générale aux injections.
 
 Ces observations ponctuelles ne constituent pas une évaluation générale du modèle. Les tests avec un générateur fictif vérifient le comportement de l’application, pas la qualité des réponses du fournisseur.
 
