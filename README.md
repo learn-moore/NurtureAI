@@ -172,6 +172,32 @@ python essai_rapport.py /tmp/nurtureai_rapport_profil.txt
 
 Le chemin de destination est obligatoire ; un fichier existant à cet emplacement est remplacé. Aucun service externe ni LLM n’est appelé par ces démonstrations.
 
+## Essayer la génération avec Groq
+
+Le script `essai_groq.py` propose une question fixe sur le corpus fictif et utilise le modèle `openai/gpt-oss-20b` via Groq.
+
+Configurer localement `.streamlit/secrets.toml` :
+
+```toml
+GROQ_API_KEY = "votre-cle"
+```
+
+Ce fichier doit rester exclu de Git. Ne jamais publier une clé réelle.
+
+Lancer depuis la racine du projet :
+
+```bash
+python -m streamlit run essai_groq.py
+```
+
+La page présente les messages avant envoi. L’appel nécessite une autorisation cochée puis un clic explicite. Aucun appel n’est effectué à l’ouverture.
+
+L’adaptateur limite la génération à 512 tokens, configure un délai d’attente réseau de 20 secondes et désactive les nouvelles tentatives automatiques. Les réponses interrompues, vides ou contenant une référence inconnue sont refusées. Une réponse sans citation est accompagnée d’un avertissement.
+
+Un premier essai manuel a produit une réponse conforme au passage sur le calendrier, avec sa référence et son URL. Cette vérification ponctuelle ne constitue pas une évaluation générale du modèle.
+
+L’application de suivi et le laboratoire simulé restent indépendants de cet essai. Aucun profil utilisateur n’est transmis.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -202,6 +228,8 @@ Le chemin de destination est obligatoire ; un fichier existant à cet emplacemen
 * `citations_documentaires.py` : extraction des citations, détection des références inconnues et récupération des métadonnées des sources citées.
 * `generation_simulee.py` : production déterministe d’un texte à partir du premier passage transmis.
 * `assistant_documentaire.py` : coordination de la préparation des messages, d’un générateur interchangeable et du contrôle des références.
+* `generation_groq.py` : adaptateur Groq et traduction des erreurs du fournisseur.
+* `essai_groq.py` : essai distant sur une question fixe et un corpus fictif, après autorisation explicite.
 
 
 ## Limites
