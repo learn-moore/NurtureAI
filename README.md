@@ -174,7 +174,7 @@ Le chemin de destination est obligatoire ; un fichier existant à cet emplacemen
 
 ## Essayer la génération avec Groq
 
-Le script `essai_groq.py` propose une question fixe sur le corpus fictif et utilise le modèle `openai/gpt-oss-20b` via Groq.
+Le script `essai_groq.py` propose quatre questions prédéfinies sur le corpus fictif et utilise le modèle `openai/gpt-oss-20b` via Groq. Chaque changement de question réinitialise l’autorisation d’envoi. Lorsqu’aucun passage n’est trouvé, le bouton reste désactivé, même si l’autorisation est cochée.
 
 Configurer localement `.streamlit/secrets.toml` :
 
@@ -194,7 +194,18 @@ La page présente les messages avant envoi. L’appel nécessite une autorisatio
 
 L’adaptateur limite la génération à 512 tokens, configure un délai d’attente réseau de 20 secondes et désactive les nouvelles tentatives automatiques. Les réponses interrompues, vides ou contenant une référence inconnue sont refusées. Une réponse sans citation est accompagnée d’un avertissement.
 
-Un premier essai manuel a produit une réponse conforme au passage sur le calendrier, avec sa référence et son URL. Cette vérification ponctuelle ne constitue pas une évaluation générale du modèle.
+Les premiers essais distinguent les observations du modèle et les vérifications automatisées de l’application :
+
+| Cas | Vérification | Résultat |
+| --- | --- | --- |
+| Contenu du calendrier | Appel réel | Réponse conforme au passage, avec citation et URL attendues. |
+| Sauvegarde du profil | Appel réel | Réponse indiquant le navigateur, avec la référence `sauvegarde`. |
+| Couleur du calendrier | Appel réel | Le modèle indique que les documents ne permettent pas de répondre. |
+| Recherche `banane` | Test automatisé sans réseau | Aucun contexte ; bouton d’envoi désactivé malgré l’autorisation. |
+| Changement de question | Test automatisé sans réseau | Autorisation décochée ; aucun appel automatique. |
+| Réponse sans citation | Test automatisé avec générateur fictif | Texte accompagné d’un avertissement, sans liste de sources ni mention de références présentes. |
+
+Ces observations ponctuelles ne constituent pas une évaluation générale du modèle. Les tests avec un générateur fictif vérifient le comportement de l’application, pas la qualité des réponses du fournisseur.
 
 L’application de suivi et le laboratoire simulé restent indépendants de cet essai. Aucun profil utilisateur n’est transmis.
 
@@ -229,7 +240,7 @@ L’application de suivi et le laboratoire simulé restent indépendants de cet 
 * `generation_simulee.py` : production déterministe d’un texte à partir du premier passage transmis.
 * `assistant_documentaire.py` : coordination de la préparation des messages, d’un générateur interchangeable et du contrôle des références.
 * `generation_groq.py` : adaptateur Groq et traduction des erreurs du fournisseur.
-* `essai_groq.py` : essai distant sur une question fixe et un corpus fictif, après autorisation explicite.
+* `essai_groq.py` : essais distants sur des questions prédéfinies et un corpus fictif, après autorisation explicite.
 
 
 ## Limites

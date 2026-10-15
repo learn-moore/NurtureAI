@@ -14,18 +14,31 @@ from recherche_documentaire import rechercher_corpus
 
 
 MODELE = "openai/gpt-oss-20b"
-QUESTION = "Que présente le calendrier ?"
+QUESTIONS = (
+    "Que présente le calendrier ?",
+    "Où la sauvegarde conserve-t-elle le profil ?",
+    "Quelle couleur utilise le calendrier ?",
+    "banane",
+)
 CHEMIN = Path(__file__).resolve().parent / "donnees" / "corpus_fictif.json"
+
+def reinitialiser_autorisation():
+    st.session_state["autorisation_groq"] = False
 
 st.title("Premier essai Groq")
 st.info("Démonstration technique sur des documents fictifs.")
 st.text(f"Modèle : {MODELE}")
-st.text(f"Question : {QUESTION}")
+question = st.selectbox(
+    "Question fictive",
+    QUESTIONS,
+    key="question_groq",
+    on_change=reinitialiser_autorisation,
+)
 
 try:
     corpus = charger_corpus(CHEMIN)
-    resultats = rechercher_corpus(QUESTION, corpus)
-    messages = preparer_messages(QUESTION, resultats)
+    resultats = rechercher_corpus(question, corpus)
+    messages = preparer_messages(question, resultats)
 except ValueError as erreur:
     st.error(str(erreur))
     st.stop()
@@ -33,8 +46,11 @@ except ValueError as erreur:
 with st.expander("Voir les messages qui seront envoyés"):
     st.json(list(messages))
 
+if not messages:
+    st.info("Aucun passage trouvé. Aucun appel à Groq ne sera effectué.")
+
 st.write(
-    "Un clic enverra à Groq les consignes, cette question fixe et les passages fictifs affichés ci-dessus. "
+    "Un clic enverra à Groq les consignes, la question sélectionnée et les passages fictifs affichés ci-dessus. "
     "Aucun profil utilisateur n’est chargé."
 )
 st.caption(
@@ -49,6 +65,8 @@ st.markdown(
 autorisation = st.checkbox(
     "J’autorise l’envoi de ces messages fictifs à Groq.",
     value=False,
+    key="autorisation_groq",
+    help="Cette autorisation est requise pour activer le bouton d’envoi.",
 )
 
 envoyer = st.button(
@@ -72,7 +90,7 @@ if envoyer and autorisation and messages:
     try:
         with st.spinner("Génération en cours…"):
             resultat = preparer_reponse(
-                QUESTION,
+                question,
                 resultats,
                 generer=generer,
             )
@@ -93,6 +111,5 @@ if envoyer and autorisation and messages:
                 st.text(f"[{source['id']}] {source['title']}")
                 st.text(source["url"])
 
-            st.caption(
-                "La présence des références ne prouve pas que chaque affirmation est étayée."
-            )
+            if resultat["sources"]:
+                st.caption("La présence des références ne prouve pas que chaque affirmation est étayée.")

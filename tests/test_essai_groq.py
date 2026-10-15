@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
@@ -91,4 +92,94 @@ def test_essai_signale_indisponibilite_sans_relance(monkeypatch):
 
     assert not app.exception
     assert len(appels) == 1
+
+@pytest.mark.parametrize(
+    "question, contexte_disponible",
+    [
+        ("Où la sauvegarde conserve-t-elle le profil ?", True),
+        ("banane", False),
+    ],
+)
+def test_changement_question_reinitialise_autorisation(
+    monkeypatch,
+    question,
+    contexte_disponible,
+):
+    def generation_interdite(messages, *, cle_api, modele):
+        pytest.fail("Aucun appel ne devait être effectué.")
+
+    monkeypatch.setattr(
+        generation_groq,
+        "generer_reponse_groq",
+        generation_interdite,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+
+    app.checkbox(key="autorisation_groq").check().run()
+    assert not app.button[0].disabled
+
+    app.selectbox(key="question_groq").set_value(question).run()
+
+    assert not app.exception
+    assert not app.checkbox(key="autorisation_groq").value
+    assert app.button[0].disabled
+
+    app.checkbox(key="autorisation_groq").check().run()
+
+    assert not app.exception
+    assert app.button[0].disabled == (not contexte_disponible)
+
+    if not contexte_disponible:
+        assert (
+            "Aucun passage trouvé. Aucun appel à Groq ne sera effectué."
+        ) in [element.value for element in app.info]
+
+def test_essai_affiche_reponse_sans_citation(monkeypatch):
+    reponse = (
+        "Les documents ne précisent pas la couleur du calendrier."
+    )
+    appels = []
+
+    def faux_generateur(messages, *, cle_api, modele):
+        appels.append(messages)
+        return reponse
+
+    monkeypatch.setattr(
+        generation_groq,
+        "generer_reponse_groq",
+        faux_generateur,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+
+    app.selectbox(key="question_groq").set_value(
+        "Quelle couleur utilise le calendrier ?"
+    ).run()
+    app.checkbox(key="autorisation_groq").check().run()
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert not app.error
+    assert len(appels) == 1
+
+    assert [element.value for element in app.warning] == [
+        "Réponse sans citation : sources non vérifiées.",
+    ]
+
+    textes = [element.value for element in app.text]
+    assert reponse in textes
+    assert not any(
+        texte.startswith("https://example.org/")
+        for texte in textes
+    )
+
+    assert not any(
+        "La présence des références" in element.value
+        for element in app.caption
+    )
 
