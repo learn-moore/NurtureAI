@@ -2,7 +2,7 @@ import pytest
 import json
 
 import assistant_documentaire
-from intentions import Intention, autoriser_generation_documentaire, convertir_intention
+from intentions import Intention, autoriser_generation_documentaire, convertir_intention, ClassificationIndisponible
 
 
 @pytest.mark.parametrize(
@@ -126,4 +126,78 @@ def test_conversion_invalide_n_autorise_pas_generation(valeur):
 
     assert intention is None
     assert autoriser_generation_documentaire(intention) is False
+
+@pytest.mark.parametrize(
+    "intention",
+    [
+        Intention.PERSONAL_MEDICAL_SITUATION,
+        Intention.POTENTIAL_EMERGENCY,
+        Intention.OUT_OF_SCOPE,
+        None,
+    ],
+)
+def test_demande_bloquee_ne_recherche_pas(monkeypatch, intention):
+    questions_classees = []
+
+    def faux_classifieur(question):
+        questions_classees.append(question)
+        return intention
+
+    def recherche_interdite(*args, **kwargs):
+        pytest.fail("La recherche documentaire devait être bloquée.")
+
+    def generation_interdite(messages):
+        pytest.fail("La génération devait être bloquée.")
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "rechercher_corpus",
+        recherche_interdite,
+    )
+
+    resultat = assistant_documentaire.traiter_demande(
+        "  Demande fictive  ",
+        (),
+        classer=faux_classifieur,
+        generer=generation_interdite,
+    )
+
+    assert questions_classees == ["Demande fictive"]
+    assert resultat["statut"] == "generation_non_autorisee"
+    assert resultat["sources"] == ()
+
+def test_classification_indisponible_bloque_la_suite(monkeypatch):
+    appels = []
+
+    def classifieur_indisponible(question):
+        appels.append(question)
+        raise ClassificationIndisponible("Détail technique fictif")
+
+    def recherche_interdite(*args, **kwargs):
+        pytest.fail("La recherche ne devait pas être appelée.")
+
+    def generation_interdite(messages):
+        pytest.fail("La génération ne devait pas être appelée.")
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "rechercher_corpus",
+        recherche_interdite,
+    )
+
+    resultat = assistant_documentaire.traiter_demande(
+        "Demande fictive",
+        (),
+        classer=classifieur_indisponible,
+        generer=generation_interdite,
+    )
+
+    assert appels == ["Demande fictive"]
+    assert resultat == {
+        "statut": "classification_indisponible",
+        "reponse": (
+            "La demande ne peut pas être orientée pour le moment. Aucune réponse automatique n’a été générée."
+        ),
+        "sources": (),
+    }
 

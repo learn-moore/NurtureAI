@@ -11,6 +11,7 @@ from contexte_documentaire import construire_contexte
 from citations_documentaires import trouver_citations_inconnues, retrouver_sources_citees
 from messages_assistant import preparer_messages
 from generation_simulee import generer_reponse_simulee
+from intentions import Intention
 
 import assistant_documentaire
 
@@ -362,4 +363,60 @@ def test_assistant_transmet_indisponibilite_generateur(corpus):
         )
 
     assert len(appels) == 1
+
+@pytest.mark.parametrize(
+    "question, budget, statut_attendu, source_attendue",
+    [
+        ("calendrier", 6000, "references_controlees", "calendrier"),
+        ("sauvegarde", 6000, "references_controlees", "sauvegarde"),
+        ("banane", 6000, "sans_contexte", None),
+        ("calendrier", 2, "sans_contexte", None),
+    ],
+)
+def test_traiter_demande_generale_sur_corpus(
+    corpus,
+    question,
+    budget,
+    statut_attendu,
+    source_attendue,
+):
+    etapes = []
+
+    def faux_classifieur(texte):
+        etapes.append(("classification", texte))
+        return Intention.GENERAL_INFORMATION
+
+    def generateur_fictif(messages):
+        etapes.append(("generation", None))
+
+        donnees = json.loads(messages[1]["content"])
+        assert donnees["question"] == question
+        assert donnees["documents"][0]["id"] == source_attendue
+
+        return generer_reponse_simulee(messages)
+
+    resultat = assistant_documentaire.traiter_demande(
+        question,
+        corpus,
+        classer=faux_classifieur,
+        generer=generateur_fictif,
+        max_caracteres=budget,
+    )
+
+    assert resultat["statut"] == statut_attendu
+
+    if source_attendue is None:
+        assert etapes == [("classification", question)]
+        assert resultat["sources"] == ()
+    else:
+        assert etapes == [
+            ("classification", question),
+            ("generation", None),
+        ]
+        assert [source["id"] for source in resultat["sources"]] == [
+            source_attendue,
+        ]
+        assert resultat["sources"][0]["url"] == (
+            f"https://example.org/{source_attendue}"
+        )
 

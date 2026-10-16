@@ -4,7 +4,8 @@ from collections.abc import Callable
 from citations_documentaires import retrouver_sources_citees
 from generation_simulee import generer_reponse_simulee
 from messages_assistant import preparer_messages
-from intentions import Intention, autoriser_generation_documentaire
+from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible
+from recherche_documentaire import rechercher_corpus
 
 
 def preparer_reponse(
@@ -99,5 +100,42 @@ def preparer_reponse_selon_intention(
         question,
         resultats,
         max_caracteres=max_caracteres,
+        generer=generer,
+    )
+
+def traiter_demande(
+    question: str,
+    corpus: tuple[dict, ...],
+    *,
+    classer: Callable[[str], Intention | None],
+    generer: Callable[[tuple[dict[str, str], ...]], str],
+    max_caracteres: int = 6000,
+) -> dict:
+    """Classe la demande avant toute recherche documentaire."""
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError("La question doit être un texte non vide.")
+
+    question = question.strip()
+    try:
+        intention = classer(question)
+    except ClassificationIndisponible:
+        return {
+            "statut": "classification_indisponible",
+            "reponse": (
+                "La demande ne peut pas être orientée pour le moment. Aucune réponse automatique n’a été générée."
+            ),
+            "sources": (),
+        }
+
+    resultats = ()
+
+    if autoriser_generation_documentaire(intention):
+        resultats = rechercher_corpus(question, corpus)
+
+    return preparer_reponse_selon_intention(
+        question,
+        resultats,
+        max_caracteres=max_caracteres,
+        intention=intention,
         generer=generer,
     )

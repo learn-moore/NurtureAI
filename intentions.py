@@ -1,6 +1,9 @@
 from enum import StrEnum
 
 
+class ClassificationIndisponible(RuntimeError):
+    """Signale une indisponibilité attendue du classifieur."""
+
 class Intention(StrEnum):
     GENERAL_INFORMATION = "GENERAL_INFORMATION"
     PERSONAL_MEDICAL_SITUATION = "PERSONAL_MEDICAL_SITUATION"
