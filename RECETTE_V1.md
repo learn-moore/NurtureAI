@@ -2,9 +2,7 @@
 
 ## Objet
 
-Suivre la réalisation et la vérification du périmètre défini dans
-le cadrage fonctionnel. Ce document ne remplace pas le cadrage
-et ne réduit pas son périmètre.
+Suivre la réalisation et la vérification du périmètre défini dans le cadrage fonctionnel. Ce document ne remplace pas le cadrage et ne réduit pas son périmètre.
 
 ## États utilisés
 
@@ -39,8 +37,7 @@ ni une revue du contenu médical.
 * Stratégie de classification et traitement des demandes ambiguës.
 * Hébergement de démonstration et conditions d’utilisation des données.
 
-Toute réduction du périmètre doit être explicitement décidée,
-puis reportée dans le cadrage.
+Toute réduction du périmètre doit être explicitement décidée, puis reportée dans le cadrage.
 
 ## Prochain lot : orientation des demandes
 
@@ -54,8 +51,24 @@ Résultats attendus :
 * Les intentions non autorisées n’appellent pas le générateur.
 * Une erreur de classification ne déclenche pas de génération libre.
 
-Les catégories et le contrôle d’autorisation existent.
-Le classifieur et les réponses locales restent à construire.
+### État au 20 octobre 2026
+
+Un classifieur distant expérimental et des réponses prédéfinies existent pour les urgences potentielles, les situations médicales personnelles, les demandes hors périmètre et les demandes indéterminées.
+
+Un signalement explicite d’urgence interrompt le traitement avant la classification. Une règle locale reconnaît également certaines
+déclarations contenant « vis », « vit » ou « vivre une urgence médicale ». Lorsqu’elle correspond, ni le classifieur distant, ni la recherche, ni le générateur ne sont appelés.
+
+L’application propose une aide d’urgence consultable sans passer par le chat, y compris pendant la lecture du profil.
+
+### Vérifications et limites
+
+Les tests automatisés vérifient la priorité du signalement, le blocage des appels, les réponses prédéfinies et l’accès à l’aide pendant le chargement du profil.
+
+La règle locale ne constitue pas une détection clinique des urgences. Elle peut manquer d’autres formulations et déclencher une alerte
+pour certaines négations ou citations. Une absence de correspondance ne signifie pas une absence de danger.
+
+Le classifieur distant reste expérimental. L’assistant complet n’est pas encore intégré à l’application. Le critère CA-18 reste
+partiellement couvert ; les critères CA-17 à CA-19 ne sont pas déclarés validés.
 
 ## Preuves de validation
 

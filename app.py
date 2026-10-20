@@ -17,6 +17,7 @@ from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv
 from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
 from timeline import construire_timeline, choisir_etape_a_mettre_en_avant, calculer_jours_sa_timeline
 from fiches_hebdomadaires import charger_fiches_hebdomadaires, selectionner_fiche_semaine
+from intentions import MESSAGE_URGENCE
 
 
 st.title("NurtureAI")
@@ -25,6 +26,13 @@ st.write("Votre compagnon d'information sur la conception et la grossesse.")
 st.info(
     "NurtureAI fournit des informations générales et des estimations. Il ne remplace pas une professionnel de santé."
 )
+
+with st.expander("Besoin d’aide en urgence ?"):
+    st.warning(MESSAGE_URGENCE)
+    st.markdown(
+        "[Consulter les numéros d’urgence sur Service Public]"
+        "(https://www.service-public.gouv.fr/particuliers/vosdroits/F33954)"
+    )
 
 if "profil" not in st.session_state:
     lecture_initiale = lire_sauvegarde_initiale()

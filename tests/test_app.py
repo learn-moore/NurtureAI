@@ -2921,3 +2921,31 @@ def test_affichage_fiche_reelle_9_sa(methode, duree_reference):
     )
 
     assert app.session_state["profil"] == profil
+
+def test_aide_urgence_accessible_pendant_lecture_profil(monkeypatch):
+    import stockage_navigateur
+    from intentions import MESSAGE_URGENCE
+
+    monkeypatch.setattr(
+        stockage_navigateur,
+        "lire_sauvegarde_initiale",
+        lambda: None,
+    )
+
+    app = AppTest.from_file("../app.py").run()
+
+    assert not app.exception
+
+    assert "Lecture de votre sauvegarde locale…" in [
+        element.value for element in app.info
+    ]
+
+    assert "Besoin d’aide en urgence ?" in [
+        element.label for element in app.expander
+    ]
+
+    assert MESSAGE_URGENCE in [
+        element.value for element in app.warning
+    ]
+
+    assert len(app.radio) == 0

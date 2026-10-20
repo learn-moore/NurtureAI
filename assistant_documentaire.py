@@ -4,7 +4,8 @@ from collections.abc import Callable
 from citations_documentaires import retrouver_sources_citees
 from generation_simulee import generer_reponse_simulee
 from messages_assistant import preparer_messages
-from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible
+from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible, reperer_declaration_urgence
+from intentions import MESSAGE_URGENCE, VERSION_MESSAGE_URGENCE, MESSAGE_SITUATION_PERSONNELLE, MESSAGE_HORS_PERIMETRE, MESSAGE_DEMANDE_INDETERMINEE
 from recherche_documentaire import rechercher_corpus
 
 
@@ -87,12 +88,26 @@ def preparer_reponse_selon_intention(
     generer: Callable[[tuple[dict[str, str], ...]], str],
 ) -> dict:
     """Contrôle l’intention avant d’accéder à la génération documentaire."""
+
+    if intention is Intention.POTENTIAL_EMERGENCY:
+        return {
+            "statut": "urgence_potentielle",
+            "reponse": MESSAGE_URGENCE,
+            "sources": (),
+            "version_message": VERSION_MESSAGE_URGENCE,
+        }
+
     if not autoriser_generation_documentaire(intention):
+        if intention is Intention.PERSONAL_MEDICAL_SITUATION:
+            message = MESSAGE_SITUATION_PERSONNELLE
+        elif intention is Intention.OUT_OF_SCOPE:
+            message = MESSAGE_HORS_PERIMETRE
+        else:
+            message = MESSAGE_DEMANDE_INDETERMINEE
+
         return {
             "statut": "generation_non_autorisee",
-            "reponse": (
-                "Cette demande nécessite un traitement distinct de la génération documentaire."
-            ),
+            "reponse": message,
             "sources": (),
         }
 
@@ -110,12 +125,33 @@ def traiter_demande(
     classer: Callable[[str], Intention | None],
     generer: Callable[[tuple[dict[str, str], ...]], str],
     max_caracteres: int = 6000,
+    urgence_signalee: bool = False,
 ) -> dict:
-    """Classe la demande avant toute recherche documentaire."""
+    """Traite le signalement d’urgence avant toute classification."""
+    if type(urgence_signalee) is not bool:
+        raise ValueError("Le signalement d’urgence doit être un booléen.")
+
+    if urgence_signalee:
+        return {
+            "statut": "urgence_signalee",
+            "reponse": MESSAGE_URGENCE,
+            "sources": (),
+            "version_message": VERSION_MESSAGE_URGENCE,
+        }
+
     if not isinstance(question, str) or not question.strip():
         raise ValueError("La question doit être un texte non vide.")
 
     question = question.strip()
+
+    if reperer_declaration_urgence(question):
+        return preparer_reponse_selon_intention(
+            question,
+            (),
+            intention=Intention.POTENTIAL_EMERGENCY,
+            generer=generer,
+        )
+
     try:
         intention = classer(question)
     except ClassificationIndisponible:
