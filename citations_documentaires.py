@@ -2,6 +2,9 @@ import json
 import re
 
 
+class CitationInconnue(ValueError):
+    """Signale une référence absente du contexte transmis."""
+
 def extraire_citations(reponse: str) -> tuple[str, ...]:
     """Extrait les références entre crochets, sans doublons."""
     if not isinstance(reponse, str):
@@ -39,7 +42,7 @@ def retrouver_sources_citees(
     inconnues = trouver_citations_inconnues(reponse, contexte)
 
     if inconnues:
-        raise ValueError(
+        raise CitationInconnue(
             "Références absentes du contexte : "
             + ", ".join(inconnues)
         )

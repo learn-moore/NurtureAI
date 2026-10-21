@@ -223,11 +223,28 @@ La conversion des catégories textuelles exige une valeur exacte. Une valeur inc
 
 Ces fonctions sont testées, mais aucun classifieur de demandes n’est encore implémenté. Les interfaces existantes n’utilisent pas encore ce point d’entrée. Le message de blocage est provisoire : il ne constitue pas une réponse adaptée à une urgence.
 
+## Essai de la chaîne documentaire
+
+Une page indépendante permet d’exécuter onze scénarios fictifs :
+
+```bash
+streamlit run essai_assistant.py
+```
+
+Elle utilise un classifieur et un générateur simulés, sans clé API ni appel à un service distant.
+
+Les scénarios couvrent une réponse avec référence, l’absence de contexte, une déclaration d’urgence reconnue localement, les demandes
+personnelles, hors périmètre ou indéterminées, les erreurs de classification, l’indisponibilité du générateur et les réponses avec référence inconnue ou sans citation.
+
+Le traitement remplace les réponses rejetées par un message préétabli. La page affiche également les appels aux composants simulés pour vérifier leur ordre et les interruptions attendues.
+
+Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qualité d’un modèle distant, ni la détection clinique des urgences, ni l’adéquation des affirmations aux sources. L’assistant documentaire reste distinct de l’application de suivi.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
 * `calculs.py` : calculs indépendants de l’interface.
-* `tests/` : tests des calculs et des interactions avec l'interface.
+* `tests/` : tests des règles métier, du stockage simulé, de la chaîne documentaire et des interfaces.
 * `requirements.txt` : dépendances Python.
 * `etat_session.py` : initialisation et effacement des données de session.
 * `modeles.py` : profils, parcours, repères et règles de cohérence.
@@ -252,10 +269,18 @@ Ces fonctions sont testées, mais aucun classifieur de demandes n’est encore i
 * `messages_assistant.py` : préparation des consignes et des données pour le laboratoire, sans appel à un modèle.
 * `citations_documentaires.py` : extraction des citations, détection des références inconnues et récupération des métadonnées des sources citées.
 * `generation_simulee.py` : production déterministe d’un texte à partir du premier passage transmis.
-* `assistant_documentaire.py` : coordination de la préparation des messages, d’un générateur interchangeable et du contrôle des références.
+* `assistant_documentaire.py` : coordination du contrôle local, de la classification, de la recherche, de la génération et du traitement des erreurs.
 * `generation_groq.py` : adaptateur Groq et traduction des erreurs du fournisseur.
 * `essai_groq.py` : essais distants sur des questions prédéfinies et un corpus fictif, après autorisation explicite.
-* `intentions.py` : catégories, conversion stricte et autorisation de génération documentaire.
+* `intentions.py` : catégories, exceptions de classification, réponses prédéfinies, règle locale expérimentale d’urgence et autorisation de génération.
+* `classification_intentions.py` : consignes versionnées et adaptateur de classification expérimentale.
+* `evaluation_intentions.py` : comparaison des classifications aux attentes et repérage des autorisations indues.
+* `essai_intentions.py` : évaluation en terminal avec un classifieur simulé.
+* `essai_classification.py` : essais de classification distante après autorisation, avec historique de session et export JSON.
+* `essai_assistant.py` : interface de onze scénarios simulés couvrant la chaîne documentaire et ses erreurs.
+* `donnees/evaluation_intentions.json` : cas fictifs et catégories attendues pour les essais.
+* `donnees/REVUE_CLASSIFICATION.md` : résultats des essais, modifications des consignes et limites observées.
+* `RECETTE_V1.md` : suivi des critères de recette, des vérifications et du travail restant.
 
 
 ## Limites

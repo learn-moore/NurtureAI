@@ -368,3 +368,56 @@ def test_reponse_predefinie_selon_intention(
         "sources": (),
     }
 
+@pytest.mark.parametrize(
+    "reponse_modele",
+    [
+        "",
+        "GENERAL_INFORMATION avec une explication",
+        '{"intention": "GENERAL_INFORMATION"}',
+    ],
+)
+def test_classification_invalide_bloque_la_suite(
+    monkeypatch,
+    reponse_modele,
+):
+    from functools import partial
+    from classification_intentions import classer_demande_experimentale
+
+    appels = []
+
+    def faux_modele(messages):
+        appels.append(messages)
+        return reponse_modele
+
+    def appel_interdit(*args, **kwargs):
+        pytest.fail(
+            "Une classification invalide doit bloquer la recherche et la génération documentaire."
+        )
+
+    monkeypatch.setattr(
+        assistant_documentaire,
+        "rechercher_corpus",
+        appel_interdit,
+    )
+
+    classer = partial(
+        classer_demande_experimentale,
+        generer=faux_modele,
+    )
+
+    resultat = assistant_documentaire.traiter_demande(
+        "Que signifie SA ?",
+        (),
+        classer=classer,
+        generer=appel_interdit,
+    )
+
+    assert len(appels) == 1
+    assert resultat == {
+        "statut": "classification_invalide",
+        "reponse": (
+            "La demande n’a pas pu être classée correctement. Aucune réponse documentaire n’a été générée."
+        ),
+        "sources": (),
+    }
+

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from assistant_documentaire import GenerationIndisponible
 from intentions import (
     ClassificationIndisponible,
+    ClassificationInvalide,
     Intention,
     convertir_intention,
 )
@@ -82,6 +83,8 @@ def classer_demande_experimentale(
     intention = convertir_intention(categorie)
 
     if intention is None:
-        raise ValueError("Le classifieur a retourné une catégorie non conforme.")
+        raise ClassificationInvalide(
+            "Le classifieur a retourné une catégorie non conforme."
+        )
 
     return intention

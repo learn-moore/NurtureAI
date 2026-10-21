@@ -1,13 +1,16 @@
 import json
 from collections.abc import Callable
 
-from citations_documentaires import retrouver_sources_citees
+from citations_documentaires import retrouver_sources_citees, CitationInconnue
 from generation_simulee import generer_reponse_simulee
 from messages_assistant import preparer_messages
-from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible, reperer_declaration_urgence
+from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible, ClassificationInvalide, reperer_declaration_urgence
 from intentions import MESSAGE_URGENCE, VERSION_MESSAGE_URGENCE, MESSAGE_SITUATION_PERSONNELLE, MESSAGE_HORS_PERIMETRE, MESSAGE_DEMANDE_INDETERMINEE
 from recherche_documentaire import rechercher_corpus
 
+
+class ReponseInvalide(ValueError):
+    """Signale une réponse générée dont le format est invalide."""
 
 def preparer_reponse(
     question: str,
@@ -27,8 +30,7 @@ def preparer_reponse(
         return {
             "statut": "sans_contexte",
             "reponse": (
-                "Aucun passage disponible dans le contexte "
-                "pour préparer une réponse."
+                "Aucun passage disponible dans le contexte pour préparer une réponse."
             ),
             "sources": (),
         }
@@ -36,7 +38,9 @@ def preparer_reponse(
     reponse = generer(messages)
 
     if not isinstance(reponse, str) or not reponse.strip():
-        raise ValueError("La génération doit produire un texte non vide.")
+        raise ReponseInvalide(
+            "La génération doit produire un texte non vide."
+        )
 
     donnees = json.loads(messages[1]["content"])
     contexte_transmis = json.dumps(
@@ -162,16 +166,52 @@ def traiter_demande(
             ),
             "sources": (),
         }
+    except ClassificationInvalide:
+        return {
+            "statut": "classification_invalide",
+            "reponse": (
+                "La demande n’a pas pu être classée correctement. Aucune réponse documentaire n’a été générée."
+            ),
+            "sources": (),
+        }
 
     resultats = ()
 
     if autoriser_generation_documentaire(intention):
         resultats = rechercher_corpus(question, corpus)
 
-    return preparer_reponse_selon_intention(
-        question,
-        resultats,
-        max_caracteres=max_caracteres,
-        intention=intention,
-        generer=generer,
-    )
+    try:
+        resultat = preparer_reponse_selon_intention(
+            question,
+            resultats,
+            max_caracteres=max_caracteres,
+            intention=intention,
+            generer=generer,
+        )
+    except GenerationIndisponible:
+        return {
+            "statut": "generation_indisponible",
+            "reponse": (
+                "La réponse documentaire est temporairement indisponible. Vous pouvez réessayer plus tard."
+            ),
+            "sources": (),
+        }
+    except (ReponseInvalide, CitationInconnue):
+        return {
+            "statut": "reponse_rejetee",
+            "reponse": (
+                "La réponse produite n’a pas satisfait les contrôles de format ou de références. Elle n’est pas affichée."
+            ),
+            "sources": (),
+        }
+
+    if resultat["statut"] == "sans_citation":
+        return {
+            "statut": "sans_citation",
+            "reponse": (
+                "Aucune réponse accompagnée de références n’a pu être fournie. Le texte généré n’est pas affiché."
+            ),
+            "sources": (),
+        }
+
+    return resultat

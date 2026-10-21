@@ -30,6 +30,9 @@ MESSAGE_DEMANDE_INDETERMINEE = (
 class ClassificationIndisponible(RuntimeError):
     """Signale une indisponibilité attendue du classifieur."""
 
+class ClassificationInvalide(ValueError):
+    """Signale une réponse de classification non conforme."""
+
 class Intention(StrEnum):
     GENERAL_INFORMATION = "GENERAL_INFORMATION"
     PERSONAL_MEDICAL_SITUATION = "PERSONAL_MEDICAL_SITUATION"

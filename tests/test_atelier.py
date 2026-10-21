@@ -420,3 +420,106 @@ def test_traiter_demande_generale_sur_corpus(
             f"https://example.org/{source_attendue}"
         )
 
+def test_traiter_demande_generation_indisponible(corpus):
+    etapes = []
+
+    def faux_classifieur(question):
+        etapes.append("classification")
+        return Intention.GENERAL_INFORMATION
+
+    def generateur_indisponible(messages):
+        etapes.append("generation")
+
+        donnees = json.loads(messages[1]["content"])
+        assert donnees["question"] == "calendrier"
+        assert [
+            document["id"]
+            for document in donnees["documents"]
+        ] == ["calendrier"]
+
+        raise assistant_documentaire.GenerationIndisponible(
+            "Détail technique fictif à ne pas afficher"
+        )
+
+    resultat = assistant_documentaire.traiter_demande(
+        "calendrier",
+        corpus,
+        classer=faux_classifieur,
+        generer=generateur_indisponible,
+    )
+
+    assert etapes == ["classification", "generation"]
+    assert resultat == {
+        "statut": "generation_indisponible",
+        "reponse": (
+            "La réponse documentaire est temporairement indisponible. Vous pouvez réessayer plus tard."
+        ),
+        "sources": (),
+    }
+
+@pytest.mark.parametrize(
+    "reponse",
+    [
+        "",
+        "   ",
+        None,
+        "Texte à ne pas afficher [source_inventee].",
+    ],
+)
+def test_traiter_demande_rejette_reponse_invalide(corpus, reponse):
+    appels = []
+
+    def faux_generateur(messages):
+        appels.append(messages)
+        return reponse
+
+    resultat = assistant_documentaire.traiter_demande(
+        "calendrier",
+        corpus,
+        classer=lambda question: Intention.GENERAL_INFORMATION,
+        generer=faux_generateur,
+    )
+
+    assert len(appels) == 1
+    assert resultat == {
+        "statut": "reponse_rejetee",
+        "reponse": (
+            "La réponse produite n’a pas satisfait les contrôles de format ou de références. Elle n’est pas affichée."
+        ),
+        "sources": (),
+    }
+
+@pytest.mark.parametrize(
+    "reponse_brute",
+    [
+        "Le calendrier présente les rendez-vous.",
+        "Les documents sont insuffisants pour répondre.",
+    ],
+)
+def test_traiter_demande_masque_reponse_sans_citation(
+    corpus,
+    reponse_brute,
+):
+    appels = []
+
+    def faux_generateur(messages):
+        appels.append(messages)
+        return reponse_brute
+
+    resultat = assistant_documentaire.traiter_demande(
+        "calendrier",
+        corpus,
+        classer=lambda question: Intention.GENERAL_INFORMATION,
+        generer=faux_generateur,
+    )
+
+    assert len(appels) == 1
+    assert resultat == {
+        "statut": "sans_citation",
+        "reponse": (
+            "Aucune réponse accompagnée de références n’a pu être fournie. Le texte généré n’est pas affiché."
+        ),
+        "sources": (),
+    }
+    assert reponse_brute not in resultat["reponse"]
+
