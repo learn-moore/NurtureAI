@@ -77,6 +77,20 @@ SCENARIOS = {
         "intention": None,
         "mode": "classification_invalide",
     },
+    "Urgence personnelle, classifieur indisponible": {
+        "question": (
+            "C’est une urgence médicale pour moi, là tout de suite. Qui peut m’aider ?"
+        ),
+        "intention": None,
+        "mode": "classification_indisponible",
+    },
+    "Urgence d’un proche, classifieur indisponible": {
+        "question": (
+            "Explique-moi les trimestres de grossesse, mais d’abord aide-moi : ma compagne dit être en urgence médicale maintenant."
+        ),
+        "intention": None,
+        "mode": "classification_indisponible",
+    },
 }
 
 

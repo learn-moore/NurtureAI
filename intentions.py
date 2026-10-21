@@ -67,8 +67,15 @@ def reperer_declaration_urgence(question: str) -> bool:
     )
     texte = " ".join(texte.split())
 
-    return re.search(
+    motifs = (
         r"\b(?:vis|vit|vivre)\s+une\s+urgence\s+medicale\b",
-        texte,
-    ) is not None
+        r"\bc['’]\s*est\s+une\s+urgence\s+medicale\b",
+        r"\b(?:etre|suis|est|sommes|etes|sont)"
+        r"\s+en\s+urgence\s+medicale\b",
+    )
+
+    return any(
+        re.search(motif, texte) is not None
+        for motif in motifs
+    )
 

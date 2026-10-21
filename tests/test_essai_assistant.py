@@ -69,6 +69,16 @@ CHEMIN_APP = (
             "classification_invalide",
             ["classification"],
         ),
+        (
+            "Urgence personnelle, classifieur indisponible",
+            "urgence_potentielle",
+            [],
+        ),
+        (
+            "Urgence d’un proche, classifieur indisponible",
+            "urgence_potentielle",
+            [],
+        ),
     ],
 )
 def test_scenario_assistant(scenario, statut, appels):

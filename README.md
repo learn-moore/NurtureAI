@@ -225,7 +225,7 @@ Ces fonctions sont testées, mais aucun classifieur de demandes n’est encore i
 
 ## Essai de la chaîne documentaire
 
-Une page indépendante permet d’exécuter onze scénarios fictifs :
+Une page indépendante permet d’exécuter treize scénarios fictifs :
 
 ```bash
 streamlit run essai_assistant.py
@@ -277,7 +277,7 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 * `evaluation_intentions.py` : comparaison des classifications aux attentes et repérage des autorisations indues.
 * `essai_intentions.py` : évaluation en terminal avec un classifieur simulé.
 * `essai_classification.py` : essais de classification distante après autorisation, avec historique de session et export JSON.
-* `essai_assistant.py` : interface de onze scénarios simulés couvrant la chaîne documentaire et ses erreurs.
+* `essai_assistant.py` : interface de treize scénarios simulés couvrant la chaîne documentaire et ses erreurs.
 * `donnees/evaluation_intentions.json` : cas fictifs et catégories attendues pour les essais.
 * `donnees/REVUE_CLASSIFICATION.md` : résultats des essais, modifications des consignes et limites observées.
 * `RECETTE_V1.md` : suivi des critères de recette, des vérifications et du travail restant.

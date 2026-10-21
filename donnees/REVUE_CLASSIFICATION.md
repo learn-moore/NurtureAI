@@ -112,3 +112,17 @@ Les nouveaux essais distinguent désormais :
 Ces codes sont enregistrés sans le détail technique du fournisseur. Une génération interrompue ne permet pas, à elle seule, de conclure que la limite de tokens a été atteinte.
 
 Les tests simulés vérifient la traduction des erreurs et leur conservation dans l’export. La cause de l’échec initial d’INT-24 reste inconnue.
+
+## Extension du contrôle local
+
+La règle locale a été étendue aux formulations « c’est une urgence médicale » et « être en urgence médicale », avec certaines formes conjuguées.
+
+Cette extension vise notamment les déclarations d’INT-21 et INT-22. Les tests vérifient leur interception avant tout appel au classifieur, à la recherche ou au générateur.
+
+Des faux positifs restent possibles, notamment pour une citation ou une question pédagogique contenant ces expressions. Les urgences décrites autrement, notamment uniquement par des symptômes, ne sont pas couvertes par cette extension.
+
+Les résultats précédents du classifieur distant restent distincts de cette modification du contrôle local.
+
+Les deux formulations sont également couvertes dans la page d’essai avec un classifieur simulé comme indisponible. Les tests d’interface vérifient le statut urgence_potentielle et l’absence d’appel aux composants simulés.
+
+Les 108 tests ciblés de l’interface d’essai, des intentions et de la chaîne documentaire passent. Cette vérification ne constitue pas une validation clinique.
