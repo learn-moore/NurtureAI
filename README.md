@@ -281,6 +281,8 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 * `donnees/evaluation_intentions.json` : cas fictifs et catégories attendues pour les essais.
 * `donnees/REVUE_CLASSIFICATION.md` : résultats des essais, modifications des consignes et limites observées.
 * `RECETTE_V1.md` : suivi des critères de recette, des vérifications et du travail restant.
+* `assistant_groq.py` : branchement des adaptateurs Groq sur la chaîne documentaire, avec maintien des contrôles locaux prioritaires.
+* `essai_assistant_groq.py` : essai distant sur questions et corpus fictifs, avec aperçu des messages, autorisation des envois et priorité au contrôle local.
 
 
 ## Limites

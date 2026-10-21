@@ -126,3 +126,19 @@ Les résultats précédents du classifieur distant restent distincts de cette mo
 Les deux formulations sont également couvertes dans la page d’essai avec un classifieur simulé comme indisponible. Les tests d’interface vérifient le statut urgence_potentielle et l’absence d’appel aux composants simulés.
 
 Les 108 tests ciblés de l’interface d’essai, des intentions et de la chaîne documentaire passent. Cette vérification ne constitue pas une validation clinique.
+
+## Essai de la chaîne distante sur le corpus fictif
+
+Fournisseur : Groq.
+Modèle : openai/gpt-oss-20b.
+Interface : essai_assistant_groq.py.
+
+Les six scénarios ont affiché les comportements attendus : réponse avec référence, masquage d’une réponse sans citation, messages prédéfinis pour les demandes personnelles, hors périmètre et indéterminées, puis aide locale pour l’urgence explicite.
+
+Le scénario du calendrier a produit une réponse accompagnée de la référence calendrier et de la mention du corpus fictif.
+
+Pour la couleur du calendrier, le texte généré a été masqué : son contenu n’a pas été inspecté. Le résultat vérifie le contrôle d’affichage, pas la capacité du modèle à s’abstenir correctement.
+
+Le scénario d’urgence a affiché le message local et la mention d’absence d’appel distant. Les tests automatisés vérifient séparément cette absence d’appel.
+
+Ces observations portent sur un essai par scénario. Elles ne démontrent ni la répétabilité, ni la qualité médicale, ni l’adéquation systématique des affirmations aux sources.
