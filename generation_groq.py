@@ -3,6 +3,17 @@ from groq import APIConnectionError, APIStatusError, Groq
 from assistant_documentaire import GenerationIndisponible
 
 
+class RequeteGroqRefusee(ValueError):
+    """Signale un refus de la requête par le fournisseur."""
+
+
+class GenerationGroqInterrompue(ValueError):
+    """Signale une génération qui ne s’est pas terminée normalement."""
+
+
+class ReponseGroqVide(ValueError):
+    """Signale une absence de réponse textuelle exploitable."""
+
 def generer_reponse_groq(
     messages: tuple[dict[str, str], ...],
     *,
@@ -41,21 +52,21 @@ def generer_reponse_groq(
                 "Service Groq temporairement indisponible."
             ) from None
 
-        raise ValueError(
+        raise RequeteGroqRefusee(
             "La requête Groq a été refusée. Vérifier la configuration de la clé et du modèle."
         ) from None
 
     if not resultat.choices:
-        raise ValueError("Groq n’a retourné aucune réponse.")
+        raise ReponseGroqVide("Groq n’a retourné aucune réponse.")
 
     choix = resultat.choices[0]
 
     if choix.finish_reason != "stop":
-        raise ValueError("La génération ne s’est pas terminée normalement.")
+        raise GenerationGroqInterrompue("La génération ne s’est pas terminée normalement.")
 
     texte = choix.message.content
 
     if not isinstance(texte, str) or not texte.strip():
-        raise ValueError("Groq n’a retourné aucun texte exploitable.")
+        raise ReponseGroqVide("Groq n’a retourné aucun texte exploitable.")
 
     return texte

@@ -13,7 +13,12 @@ from classification_intentions import (
     classer_demande_experimentale,
 )
 from evaluation_intentions import evaluer_classifieur
-from generation_groq import generer_reponse_groq
+from generation_groq import (
+    GenerationGroqInterrompue,
+    ReponseGroqVide,
+    RequeteGroqRefusee,
+    generer_reponse_groq,
+)
 
 
 MODELE = "openai/gpt-oss-20b"
@@ -97,14 +102,23 @@ if evaluer and autorisation:
                 [cas],
                 classer=classer,
             )[0]
-    except ValueError:
+    except ValueError as erreur:
+        if isinstance(erreur, RequeteGroqRefusee):
+            code_erreur = "requete_refusee"
+        elif isinstance(erreur, GenerationGroqInterrompue):
+            code_erreur = "generation_interrompue"
+        elif isinstance(erreur, ReponseGroqVide):
+            code_erreur = "reponse_vide"
+        else:
+            code_erreur = "evaluation_refusee"
+
         evaluation = {
             "id": cas["id"],
             "attendu": cas["intention_attendue"],
             "obtenu": None,
             "conforme": False,
             "generation_indument_autorisee": False,
-            "erreur": "evaluation_refusee",
+            "erreur": code_erreur,
         }
 
     essai = {
@@ -122,10 +136,33 @@ if evaluer and autorisation:
 
     st.json(evaluation)
 
-    if evaluation["erreur"] == "evaluation_refusee":
-        st.error("Évaluation refusée : vérifier la configuration ou le format de la réponse du classifieur.")
-    elif evaluation["erreur"]:
-        st.error("Classification indisponible : cas non réussi.")
+    messages_erreur = {
+        "requete_refusee": (
+            "La requête a été refusée par le fournisseur."
+        ),
+        "generation_interrompue": (
+            "La génération ne s’est pas terminée normalement."
+        ),
+        "reponse_vide": (
+            "Le fournisseur n’a retourné aucun texte exploitable."
+        ),
+        "classification_invalide": (
+            "Le classifieur a retourné une catégorie non conforme."
+        ),
+        "classification_indisponible": (
+            "Le service de classification est indisponible."
+        ),
+        "evaluation_refusee": (
+            "L’évaluation a été refusée ; la cause reste à préciser."
+        ),
+    }
+
+    if evaluation["erreur"]:
+        message = messages_erreur.get(
+            evaluation["erreur"],
+            "Une erreur non identifiée a interrompu l’évaluation.",
+        )
+        st.error(f"{message} Cas non réussi.")
     elif evaluation["conforme"]:
         st.success("Catégorie conforme à l’attente de ce cas.")
     else:

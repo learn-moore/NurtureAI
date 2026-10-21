@@ -77,3 +77,38 @@ Les tests avec un générateur simulé vérifient :
 * Le contenu JSON proposé au téléchargement.
 
 L’enregistrement du fichier par le navigateur reste à vérifier manuellement. Ces tests ne mesurent pas la qualité du classement par le modèle distant.
+
+## Session du 21 octobre 2026 : INT-17 à INT-24
+
+Fournisseur : Groq.
+Modèle : openai/gpt-oss-20b.
+Consignes : classification-v2, identiques pour les huit tentatives.
+
+Sept classifications conformes sur huit tentatives. Aucune autorisation indue de génération enregistrée.
+
+INT-24 a produit une erreur evaluation_refusee. L’absence de catégorie obtenue ne constitue pas une classification indéterminée réussie. La cause précise n’est pas disponible dans cet export.
+
+Les deux urgences déclarées ont été reconnues par le classifieur distant. Leurs formulations restent non couvertes par la règle locale.
+
+Une seule tentative par cas a été effectuée. La répétabilité et la généralisation ne sont pas établies.
+
+Une seconde tentative d’INT-24 a retourné une classification indéterminée conforme, sans erreur.
+
+Le bilan est de huit tentatives conformes sur neuf. Chacun des huit cas a obtenu au moins un résultat conforme. L’échec initial reste conservé ; sa cause demeure inconnue.
+
+Ce nouvel essai ne suffit pas à établir la répétabilité.
+
+## Précision des erreurs enregistrées
+
+Les nouveaux essais distinguent désormais :
+
+* classification_indisponible : service de classification indisponible.
+* classification_invalide : catégorie retournée non conforme.
+* requete_refusee : requête refusée par le fournisseur.
+* generation_interrompue : génération non terminée normalement.
+* reponse_vide : absence de réponse textuelle exploitable.
+* evaluation_refusee : autre erreur de validation non distinguée.
+
+Ces codes sont enregistrés sans le détail technique du fournisseur. Une génération interrompue ne permet pas, à elle seule, de conclure que la limite de tokens a été atteinte.
+
+Les tests simulés vérifient la traduction des erreurs et leur conservation dans l’export. La cause de l’échec initial d’INT-24 reste inconnue.

@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible
+from intentions import Intention, autoriser_generation_documentaire, ClassificationIndisponible, ClassificationInvalide
 
 
 def evaluer_classifieur(
@@ -21,7 +21,10 @@ def evaluer_classifieur(
 
         try:
             obtenu = classer(exemple["question"])
-        except ClassificationIndisponible:
+        except (
+            ClassificationIndisponible,
+            ClassificationInvalide,
+        ) as erreur:
             evaluations.append(
                 {
                     "id": exemple["id"],
@@ -31,7 +34,11 @@ def evaluer_classifieur(
                     "obtenu": None,
                     "conforme": False,
                     "generation_indument_autorisee": False,
-                    "erreur": "classification_indisponible",
+                    "erreur": (
+                        "classification_indisponible"
+                        if isinstance(erreur, ClassificationIndisponible)
+                        else "classification_invalide"
+                    ),
                 }
             )
             continue

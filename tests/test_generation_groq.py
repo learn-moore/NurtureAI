@@ -67,20 +67,51 @@ def test_generation_groq_transmet_parametres_et_ferme_client(monkeypatch):
     assert fermetures == [True]
 
 @pytest.mark.parametrize(
-    "raison, texte, erreur_attendue",
+    "raison, texte, exception_attendue, erreur_attendue",
     [
-        (None, None, "aucune réponse"),
-        ("length", "Texte interrompu [calendrier]", "normalement"),
-        ("tool_calls", None, "normalement"),
-        ("stop", None, "texte exploitable"),
-        ("stop", "", "texte exploitable"),
-        ("stop", "   ", "texte exploitable"),
+        (
+            None,
+            None,
+            generation_groq.ReponseGroqVide,
+            "aucune réponse",
+        ),
+        (
+            "length",
+            "Texte interrompu [calendrier]",
+            generation_groq.GenerationGroqInterrompue,
+            "normalement",
+        ),
+        (
+            "tool_calls",
+            None,
+            generation_groq.GenerationGroqInterrompue,
+            "normalement",
+        ),
+        (
+            "stop",
+            None,
+            generation_groq.ReponseGroqVide,
+            "texte exploitable",
+        ),
+        (
+            "stop",
+            "",
+            generation_groq.ReponseGroqVide,
+            "texte exploitable",
+        ),
+        (
+            "stop",
+            "   ",
+            generation_groq.ReponseGroqVide,
+            "texte exploitable",
+        ),
     ],
 )
 def test_generation_groq_refuse_reponse_inexploitable(
     monkeypatch,
     raison,
     texte,
+    exception_attendue,
     erreur_attendue,
 ):
     choix = []
@@ -111,7 +142,7 @@ def test_generation_groq_refuse_reponse_inexploitable(
 
     monkeypatch.setattr(generation_groq, "Groq", FauxClient)
 
-    with pytest.raises(ValueError, match=erreur_attendue):
+    with pytest.raises(exception_attendue, match=erreur_attendue):
         generation_groq.generer_reponse_groq(
             (
                 {"role": "user", "content": "Question fictive"},
@@ -145,12 +176,12 @@ def test_generation_groq_refuse_reponse_inexploitable(
         ),
         (
             401,
-            ValueError,
+            generation_groq.RequeteGroqRefusee,
             "La requête Groq a été refusée. Vérifier la configuration de la clé et du modèle.",
         ),
         (
             400,
-            ValueError,
+            generation_groq.RequeteGroqRefusee,
             "La requête Groq a été refusée. Vérifier la configuration de la clé et du modèle.",
         ),
     ],

@@ -127,7 +127,10 @@ def test_historique_et_export_classification(monkeypatch):
     "scenario, erreur_attendue",
     [
         ("indisponible", "classification_indisponible"),
-        ("format_invalide", "evaluation_refusee"),
+        ("format_invalide", "classification_invalide"),
+        ("requete_refusee", "requete_refusee"),
+        ("generation_interrompue", "generation_interrompue"),
+        ("reponse_vide", "reponse_vide"),
     ],
 )
 def test_echec_conserve_dans_historique(
@@ -143,6 +146,19 @@ def test_echec_conserve_dans_historique(
 
         if scenario == "indisponible":
             raise GenerationIndisponible(
+                "Détail technique fictif"
+            )
+
+        erreurs_fournisseur = {
+            "requete_refusee": generation_groq.RequeteGroqRefusee,
+            "generation_interrompue": (
+                generation_groq.GenerationGroqInterrompue
+            ),
+            "reponse_vide": generation_groq.ReponseGroqVide,
+        }
+
+        if scenario in erreurs_fournisseur:
+            raise erreurs_fournisseur[scenario](
                 "Détail technique fictif"
             )
 

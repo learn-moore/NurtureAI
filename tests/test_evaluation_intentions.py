@@ -1,7 +1,7 @@
 import pytest
 
 from evaluation_intentions import evaluer_classifieur
-from intentions import Intention, ClassificationIndisponible
+from intentions import Intention, ClassificationIndisponible, ClassificationInvalide
 
 
 def test_evaluation_distingue_reussite_erreur_et_indetermination():
@@ -86,7 +86,23 @@ def test_evaluation_repere_generation_indument_autorisee(
         attendu == (obtenu.value if obtenu is not None else None)
     )
 
-def test_evaluation_distingue_panne_et_indetermination():
+@pytest.mark.parametrize(
+    "type_erreur, code_attendu",
+    [
+        (
+            ClassificationIndisponible,
+            "classification_indisponible",
+        ),
+        (
+            ClassificationInvalide,
+            "classification_invalide",
+        ),
+    ],
+)
+def test_evaluation_distingue_panne_et_indetermination(
+    type_erreur,
+    code_attendu,
+):
     cas = [
         {
             "id": "PANNE",
@@ -105,7 +121,7 @@ def test_evaluation_distingue_panne_et_indetermination():
         appels.append(question)
 
         if question == "Question pendant une panne":
-            raise ClassificationIndisponible("Erreur fictive")
+            raise type_erreur("Erreur fictive")
 
         return None
 
@@ -115,7 +131,7 @@ def test_evaluation_distingue_panne_et_indetermination():
         "Question pendant une panne",
         "Question ambiguë",
     ]
-    assert evaluations[0]["erreur"] == "classification_indisponible"
+    assert evaluations[0]["erreur"] == code_attendu
     assert evaluations[0]["conforme"] is False
     assert evaluations[0]["generation_indument_autorisee"] is False
 
