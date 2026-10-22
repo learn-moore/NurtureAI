@@ -23,6 +23,9 @@ def construire_contexte(
             "url": passage["url"],
         }
 
+        if "source_version" in passage:
+            document["source_version"] = passage["source_version"]
+
         candidat = json.dumps(
             [*documents, document],
             ensure_ascii=False,

@@ -140,3 +140,47 @@ def test_erreur_fournisseur_interrompt_la_chaine(
     assert resultat["sources"] == ()
     assert resultat["reponse"]
     assert "Détail technique fictif" not in resultat["reponse"]
+
+@pytest.mark.parametrize("mode", ["laboratoire", "medical"])
+def test_branchement_transmet_mode_generation(monkeypatch, mode):
+    from classification_intentions import CONSIGNES_CLASSIFICATION
+    from messages_assistant import (
+        CONSIGNES_LABORATOIRE,
+        CONSIGNES_MEDICALES,
+    )
+
+    appels = []
+
+    def faux_appel(messages, *, cle_api, modele):
+        appels.append(messages)
+
+        if len(appels) == 1:
+            return "GENERAL_INFORMATION"
+
+        assert len(appels) == 2
+        return "Réponse de test [calendrier]."
+
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        faux_appel,
+    )
+
+    resultat = assistant_groq.traiter_demande_groq(
+        "calendrier",
+        charger_corpus(CHEMIN_CORPUS),
+        cle_api="cle-fictive",
+        modele="modele-fictif",
+        mode=mode,
+    )
+
+    consignes_attendues = (
+        CONSIGNES_MEDICALES
+        if mode == "medical"
+        else CONSIGNES_LABORATOIRE
+    )
+
+    assert len(appels) == 2
+    assert appels[0][0]["content"] == CONSIGNES_CLASSIFICATION
+    assert appels[1][0]["content"] == consignes_attendues
+    assert resultat["statut"] == "references_controlees"

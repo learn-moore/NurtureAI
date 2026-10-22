@@ -3,6 +3,7 @@ import pytest
 
 from messages_assistant import (
     CONSIGNES_LABORATOIRE,
+    CONSIGNES_MEDICALES,
     preparer_messages,
 )
 
@@ -69,3 +70,32 @@ def test_question_ne_modifie_pas_les_consignes(resultats):
 
     assert messages[0]["content"] == CONSIGNES_LABORATOIRE
     assert json.loads(messages[1]["content"])["question"] == question
+
+def test_mode_medical_change_uniquement_les_consignes(resultats):
+    laboratoire = preparer_messages("Question de test", resultats)
+    medical = preparer_messages(
+        "Question de test",
+        resultats,
+        mode="medical",
+    )
+
+    assert laboratoire[0]["content"] == CONSIGNES_LABORATOIRE
+    assert medical[0]["content"] == CONSIGNES_MEDICALES
+    assert medical[1] == laboratoire[1]
+
+
+def test_mode_medical_sans_contexte_ne_prepare_pas_appel():
+    assert preparer_messages(
+        "Question de test",
+        (),
+        mode="medical",
+    ) == ()
+
+
+def test_mode_inconnu_refuse(resultats):
+    with pytest.raises(ValueError, match="Mode de préparation"):
+        preparer_messages(
+            "Question de test",
+            resultats,
+            mode="inconnu",
+        )

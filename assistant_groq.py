@@ -17,6 +17,7 @@ def traiter_demande_groq(
     cle_api: str,
     modele: str,
     urgence_signalee: bool = False,
+    mode: str = "laboratoire",
 ) -> dict:
     """Relie la chaîne documentaire aux adaptateurs distants."""
     generer = partial(
@@ -36,6 +37,7 @@ def traiter_demande_groq(
             classer=classer,
             generer=generer,
             urgence_signalee=urgence_signalee,
+            mode=mode,
         )
     except RequeteGroqRefusee:
         return {

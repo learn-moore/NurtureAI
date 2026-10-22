@@ -240,6 +240,22 @@ Le traitement remplace les réponses rejetées par un message préétabli. La pa
 
 Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qualité d’un modèle distant, ni la détection clinique des urgences, ni l’adéquation des affirmations aux sources. L’assistant documentaire reste distinct de l’application de suivi.
 
+## Essai documentaire préconceptionnel
+
+```bash
+streamlit run essai_assistant_groq.py
+```
+
+La page propose un corpus fictif et deux passages consacrés à la consultation préconceptionnelle, synthétisés à partir d’une source HAS dont la page indique une mise à jour en 2013.
+
+Le corpus choisi détermine les questions et les consignes. Les messages sont prévisualisés avant autorisation. Changer de corpus ou de question retire l’autorisation d’envoi.
+
+Les références affichent l’organisme, le lien et la version de la source. Un rappel de portée générale accompagne systématiquement les réponses médicales avec références reconnues.
+
+Les premiers essais ont permis de comparer les réponses aux passages transmis. La question tarifaire reste non couverte. Les contrôles de références ne vérifient pas automatiquement que chaque affirmation est étayée.
+
+Cette page reste expérimentale et distincte de l’application de suivi. Les conditions de réutilisation, décisions éditoriales et observations sont consignées dans la revue des sources.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -282,7 +298,9 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 * `donnees/REVUE_CLASSIFICATION.md` : résultats des essais, modifications des consignes et limites observées.
 * `RECETTE_V1.md` : suivi des critères de recette, des vérifications et du travail restant.
 * `assistant_groq.py` : branchement des adaptateurs Groq sur la chaîne documentaire, avec maintien des contrôles locaux prioritaires.
-* `essai_assistant_groq.py` : essai distant sur questions et corpus fictifs, avec aperçu des messages, autorisation des envois et priorité au contrôle local.
+* `essai_assistant_groq.py` : essai distant avec sélection du corpus fictif ou préconceptionnel, aperçu des messages, autorisation réinitialisée lors des changements et priorité au contrôle local.
+* `donnees/COUVERTURE_CORPUS.md` : questions générales visées, passages associés et état de vérification de la couverture documentaire.
+* `donnees/corpus_medical.json` : passages médicaux et métadonnées de revue ; les brouillons sont exclus de la recherche.
 
 
 ## Limites

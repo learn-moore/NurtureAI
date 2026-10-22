@@ -175,3 +175,112 @@ def test_classification_bloque_second_appel(
 
     assert not app.exception
     assert len(appels) == 1
+
+def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
+    from messages_assistant import CONSIGNES_MEDICALES
+
+    appels = []
+
+    def faux_appel(messages, *, cle_api, modele):
+        assert cle_api == "cle-fictive"
+        appels.append(messages)
+
+        if len(appels) == 1:
+            return "GENERAL_INFORMATION"
+
+        assert len(appels) == 2
+        return (
+            "- Échanger sur le projet de grossesse [conception_consultation_objectif].\n"
+            "- Recevoir des informations de prévention [conception_consultation_objectif]."
+        )
+
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        faux_appel,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+
+    # Une autorisation accordée au corpus fictif ne doit pas subsister.
+    app.checkbox(
+        key="autorisation_assistant_groq"
+    ).check().run()
+
+    app.selectbox(key="corpus_assistant_groq").set_value(
+        "Consultation préconceptionnelle"
+    ).run()
+
+    assert not app.exception
+    assert appels == []
+    assert not app.checkbox(
+        key="autorisation_assistant_groq"
+    ).value
+    assert app.button(key="executer_assistant_groq").disabled
+    assert app.selectbox(key="question_assistant_groq").value == (
+        "À quoi sert une consultation avant une grossesse ?"
+    )
+
+    apercus = [
+        json.loads(element.value)
+        for element in app.json
+    ]
+    assert len(apercus) == 2
+    assert apercus[1][0]["content"] == CONSIGNES_MEDICALES
+
+    documents = json.loads(
+        apercus[1][1]["content"]
+    )["documents"]
+
+    assert {document["id"] for document in documents} == {
+        "conception_consultation_objectif",
+        "conception_consultation_preparation",
+    }
+    assert all(
+        document["source_version"]
+        == "Page mise à jour le 15 février 2013"
+        for document in documents
+    )
+
+    app.checkbox(
+        key="autorisation_assistant_groq"
+    ).check().run()
+
+    assert appels == []
+
+    app.button(key="executer_assistant_groq").click().run()
+
+    assert not app.exception
+    assert len(appels) == 2
+    assert [list(messages) for messages in appels] == apercus
+    assert (
+        "- Échanger sur le projet de grossesse [conception_consultation_objectif].\n"
+        "- Recevoir des informations de prévention [conception_consultation_objectif]."
+    ) in [
+        element.value for element in app.markdown
+    ]
+
+    assert (
+        "Information générale issue des documents cités. Elle ne permet pas d’interpréter une situation personnelle et ne remplace pas une consultation."
+    ) in [
+        element.value for element in app.caption
+    ]
+
+    textes = [element.value for element in app.text]
+    assert "Haute Autorité de santé" in textes
+    assert "Page mise à jour le 15 février 2013" in textes
+    assert "https://www.has-sante.fr/jcms/c_1360649/" in textes
+
+    # Le retour au corpus fictif retire aussi l’autorisation.
+    app.selectbox(key="corpus_assistant_groq").set_value(
+        "Démonstration fictive"
+    ).run()
+
+    assert not app.exception
+    assert not app.checkbox(
+        key="autorisation_assistant_groq"
+    ).value
+    assert app.button(key="executer_assistant_groq").disabled
+    assert len(appels) == 2

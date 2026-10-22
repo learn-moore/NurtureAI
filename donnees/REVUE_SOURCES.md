@@ -168,3 +168,146 @@ Ces références servent au recoupement documentaire. Leurs textes ne sont pas i
 La mention « Reference: www.betterhealth.vic.gov.au » est affichée sous forme de lien. Le document précis reste également accessible. La fenêtre de 63 à 69 jours SA inclus détermine l’affichage. Elle ne constitue pas une limite biologique des étapes décrites.
 
 La fiche est retenue pour le prototype après revue documentaire. Cette sélection ne constitue pas une validation clinique.
+
+## Consultation préconceptionnelle : COR-01 et COR-02
+
+### Périmètre examiné
+
+* COR-01 : objectif général d’une consultation avant une grossesse.
+* COR-02 : sujets à préparer pour cette consultation.
+
+La sélection reste limitée à l’information générale. Les prescriptions, doses, examens à décider individuellement et interprétations de résultats sont exclus de ces premiers passages.
+
+### Sources candidates
+
+HAS : Projet de grossesse : informations, messages de prévention, examens à proposer.
+https://www.has-sante.fr/jcms/c_1360649/
+
+La page indique une mise à jour du 15 février 2013. Les sections sur l’objectif et les professionnels concernés sont candidates pour COR-01.
+
+Assurance Maladie : Consulter avant d’être enceinte : la consultation préconceptionnelle.
+https://www.ameli.fr/assure/sante/devenir-parent/concevoir-un-enfant/consultation-et-mode-de-vie-en-vue-d-une-grossesse/avant-d-etre-enceinte-la-consultation-preconceptionnelle
+
+Date affichée : 26 mai 2025.
+La section consacrée aux échanges pendant la consultation est candidate pour le recoupement de COR-02.
+
+### Actualité documentaire
+
+Les recommandations HAS de juin 2026 sur la santé sexuelle et reproductive, volet 2, mentionnent une actualisation en cours du volet consacré à la consultation préconceptionnelle.
+
+La disponibilité d’une version finalisée de ce volet reste à vérifier avant l’approbation des passages.
+
+### Réutilisation
+
+La consultation complète des conditions HAS n’a pas abouti lors de cette recherche. Leur vérification reste à terminer, notamment pour la synthèse, la diffusion et l’usage envisagé dans le corpus transmis au fournisseur.
+
+La page Ameli sert à ce stade de référence de recoupement. Aucune nouvelle autorisation de réutilisation n’est établie ici.
+
+### Décision
+
+COR-01 et COR-02 passent à l’état En revue. Aucun passage médical n’est encore approuvé ni ajouté au corpus utilisé pour la génération.
+
+## Consultation préconceptionnelle : brouillons des passages
+
+Date de travail : 22 octobre 2026.
+Statut : brouillons, exclus de la génération.
+
+### Actualité
+
+La recherche retrouve les recommandations HAS de juin 2026. Elles mentionnent encore le volet consacré à la consultation préconceptionnelle comme étant en préparation. Aucune version finalisée de ce volet n’a été identifiée lors de cette recherche.
+
+Cette observation ne prouve pas l’absence de publication ailleurs.
+
+### Réutilisation
+
+La section sur la reproduction des travaux HAS a pu être consultée dans le contenu restitué par le moteur de recherche. Elle prévoit une réutilisation des informations publiques sous conditions, avec notamment attribution, date et respect du sens, et réserve les droits de tiers.
+
+L’ouverture directe des mentions légales reste en échec. La vérification complète n’est donc pas clôturée. Aucun logo ni aucune présentation suggérant une validation de NurtureAI par la HAS ne sera utilisé.
+
+### COR-01 : objectif de la consultation
+
+Identifiant proposé : conception_consultation_objectif.
+
+Texte proposé : Une consultation avant une grossesse permet d’échanger avec un professionnel de santé sur le projet de grossesse, de recevoir des informations de prévention et d’aborder les besoins d’accompagnement. Elle peut être menée par un médecin généraliste, un gynécologue ou une sage-femme.
+
+Source candidate : https://www.has-sante.fr/jcms/c_1360649/
+
+Sections : Définition et objectif ; Qui fait la consultation ?
+
+Limites : Ce passage ne définit aucun bilan obligatoire et ne détermine pas les examens ou traitements adaptés à une personne.
+
+### COR-02 : préparer les échanges
+
+Identifiant proposé : conception_consultation_preparation.
+
+Texte proposé : Pour préparer les échanges avant une grossesse, les sujets à aborder peuvent inclure les questions sur le projet de grossesse, les antécédents personnels et familiaux, les éventuelles grossesses précédentes et les habitudes de vie. Le professionnel adapte les échanges à la situation.
+
+Source candidate : https://www.has-sante.fr/jcms/c_1360649/
+
+Sections : À quelles occasions ? ; Principes ; Quelles informations recueillir ?
+
+La liste proposée résume des sujets abordés par la source. Elle ne constitue pas un questionnaire médical exhaustif.
+
+Limites : Cette préparation n’implique pas de saisir ces informations dans NurtureAI. Le passage ne propose pas d’interpréter les documents. La réutilisation de cette synthèse reste à examiner.
+
+### Décision
+
+COR-01 et COR-02 restent En revue. Les textes sont des propositions éditoriales, pas des passages approuvés. Aucun envoi à un modèle distant n’est effectué.
+
+## Vérification complémentaire du 22 octobre 2026
+
+Les mentions légales HAS et la page consacrée au projet de grossesse ont été téléchargées et lues directement. Les difficultés d’accès signalées précédemment sont résolues.
+
+### Réutilisation
+
+Les mentions légales prévoient la réutilisation des informations publiques HAS sous conditions, notamment attribution, indication de la dernière mise à jour et respect du sens, sous réserve des droits de tiers.
+
+Le projet retient une synthèse attribuée, sans logo ni charte graphique HAS. La source, sa date et les limites du passage devront accompagner le contenu. La réponse produite par NurtureAI ne sera pas présentée comme une communication validée par la HAS.
+
+### Relecture des brouillons
+
+COR-01 correspond aux sections consacrées à l’objectif de la consultation et aux professionnels qui peuvent la mener.
+
+COR-02 est recentré sur les sujets documentés par la HAS. La phrase sur les documents médicaux à apporter est retirée. Ameli reste une référence de recoupement, sans incorporation de son texte dans ces passages.
+
+### Limites conservées
+
+La source HAS est ancienne. Les passages restent limités à l’objectif général et aux sujets d’échange. Ils ne reprennent ni calendrier de dépistage, ni liste d’examens à réaliser, ni prescription ou dose.
+
+Les deux questions restent En revue jusqu’à la vérification des passages structurés et de leur attribution.
+
+## Décision éditoriale du 22 octobre 2026 : COR-01 et COR-02
+
+Les passages conception_consultation_objectif et conception_consultation_preparation sont retenus pour les essais du prototype après revue documentaire et examen des conditions de réutilisation HAS.
+
+Leur attribution conserve l’organisme, l’URL et la date de mise à jour de la source. Les textes restent limités à l’objectif général de la consultation et aux sujets d’échange.
+
+Les statuts éditorial et de réutilisation passent à approved. Cette décision ne constitue ni une certification clinique, ni une validation de NurtureAI par la HAS.
+
+La recherche a été vérifiée sur trois formulations. La qualité des réponses générées reste à évaluer, notamment sur la question tarifaire non couverte.
+
+Les interfaces existantes continuent d’utiliser le corpus fictif.
+
+## Premier essai distant des passages préconceptionnels
+
+Interface : essai_assistant_groq.py.
+Fournisseur : Groq.
+Modèle : openai/gpt-oss-20b.
+
+COR-01 : les affirmations observées correspondent au passage cité. L’organisme, la date de mise à jour et le lien sont affichés.
+
+COR-02 : les sujets proposés et le complément sur l’objectif de la consultation correspondent aux deux passages cités. Le complément est secondaire par rapport à la question. La présentation des puces reste à améliorer.
+
+Pour les deux réponses, le rappel de portée générale demandé dans les consignes est absent du texte généré. Un avertissement est toutefois présent dans l’interface.
+
+Question tarifaire : le statut sans_citation a entraîné le masquage du texte généré. Son contenu n’a pas été inspecté ; aucune conclusion n’est tirée sur la capacité du modèle à s’abstenir ou sur une éventuelle invention tarifaire.
+
+Ces observations portent sur une tentative par question. Elles ne démontrent pas la répétabilité ni une validation clinique.
+
+## Affichage des réponses : complément du 22 octobre 2026
+
+Le rappel de portée générale est désormais ajouté par l’interface aux réponses du mode médical avec références reconnues. Son affichage ne dépend plus du respect de cette consigne par le modèle.
+
+Le texte est rendu en Markdown, avec le HTML désactivé. Les tests vérifient le composant utilisé et le rappel fixe. L’apparence finale des listes reste à contrôler dans le navigateur.
+
+Ces modifications ne constituent pas un contrôle automatique de la validité médicale ou de l’adéquation des affirmations aux passages cités.

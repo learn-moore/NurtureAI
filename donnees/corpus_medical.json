@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "passages": [
+    {
+      "id": "conception_consultation_objectif",
+      "topic": "conception",
+      "title": "À quoi sert une consultation avant une grossesse ?",
+      "content": "Une consultation avant une grossesse permet d’échanger avec un professionnel de santé sur le projet de grossesse, de recevoir des informations de prévention et d’aborder les besoins d’accompagnement. Elle peut être menée par un médecin généraliste, un gynécologue ou une sage-femme. Ces informations générales ne déterminent pas les examens ou traitements adaptés à une personne.",
+      "source": "Haute Autorité de santé",
+      "url": "https://www.has-sante.fr/jcms/c_1360649/",
+      "country": "FR",
+      "publication_date": "2010-06-10",
+      "source_version": "Page mise à jour le 15 février 2013",
+      "retrieved_at": "2026-10-22",
+      "reviewed_at": "2026-10-22",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
+    },
+    {
+      "id": "conception_consultation_preparation",
+      "topic": "conception",
+      "title": "Quels sujets préparer pour une consultation avant une grossesse ?",
+      "content": "Pour préparer les échanges avant une grossesse, les sujets à aborder peuvent inclure les questions sur le projet de grossesse, les antécédents personnels et familiaux, les éventuelles grossesses précédentes et les habitudes de vie. Le professionnel adapte les échanges à la situation. Cette liste n’est pas exhaustive et ne demande pas de saisir ces informations dans NurtureAI.",
+      "source": "Haute Autorité de santé",
+      "url": "https://www.has-sante.fr/jcms/c_1360649/",
+      "country": "FR",
+      "publication_date": "2010-06-10",
+      "source_version": "Page mise à jour le 15 février 2013",
+      "retrieved_at": "2026-10-22",
+      "reviewed_at": "2026-10-22",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
+    }
+  ]
+}

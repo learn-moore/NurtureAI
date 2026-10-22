@@ -18,12 +18,14 @@ def preparer_reponse(
     max_caracteres: int = 6000,
     *,
     generer: Callable[[tuple[dict[str, str], ...]], str],
+    mode: str = "laboratoire",
 ) -> dict:
     """Relie préparation, génération et contrôle des références."""
     messages = preparer_messages(
         question,
         resultats,
         max_caracteres=max_caracteres,
+        mode=mode,
     )
 
     if not messages:
@@ -90,6 +92,7 @@ def preparer_reponse_selon_intention(
     *,
     intention: Intention | None,
     generer: Callable[[tuple[dict[str, str], ...]], str],
+    mode: str = "laboratoire",
 ) -> dict:
     """Contrôle l’intention avant d’accéder à la génération documentaire."""
 
@@ -120,6 +123,7 @@ def preparer_reponse_selon_intention(
         resultats,
         max_caracteres=max_caracteres,
         generer=generer,
+        mode=mode,
     )
 
 def traiter_demande(
@@ -128,6 +132,7 @@ def traiter_demande(
     *,
     classer: Callable[[str], Intention | None],
     generer: Callable[[tuple[dict[str, str], ...]], str],
+    mode: str = "laboratoire",
     max_caracteres: int = 6000,
     urgence_signalee: bool = False,
 ) -> dict:
@@ -154,6 +159,7 @@ def traiter_demande(
             (),
             intention=Intention.POTENTIAL_EMERGENCY,
             generer=generer,
+            mode=mode,
         )
 
     try:
@@ -187,6 +193,7 @@ def traiter_demande(
             max_caracteres=max_caracteres,
             intention=intention,
             generer=generer,
+            mode=mode,
         )
     except GenerationIndisponible:
         return {

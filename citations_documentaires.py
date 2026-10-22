@@ -58,14 +58,17 @@ def retrouver_sources_citees(
     for identifiant in extraire_citations(reponse):
         document = documents_par_id[identifiant]
 
-        sources.append(
-            {
-                "id": document["id"],
-                "title": document["title"],
-                "source": document["source"],
-                "url": document["url"],
-            }
-        )
+        source = {
+            "id": document["id"],
+            "title": document["title"],
+            "source": document["source"],
+            "url": document["url"],
+        }
+
+        if "source_version" in document:
+            source["source_version"] = document["source_version"]
+
+        sources.append(source)
 
     return tuple(sources)
 
