@@ -41,6 +41,8 @@ QUESTIONS_MEDICALES = (
     "Peux-tu interpréter mon échographie ?",
     "Et pour moi ?",
     "C’est une urgence médicale pour moi.",
+    "Quel est le but d’une consultation avant une grossesse ?",
+    "Quels sujets aborder avant une grossesse ?",
 )
 
 

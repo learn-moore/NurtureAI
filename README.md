@@ -252,6 +252,12 @@ Le corpus choisi détermine les questions et les consignes. Les messages sont pr
 
 Les références affichent l’organisme, le lien et la version de la source. Un rappel de portée générale accompagne systématiquement les réponses médicales avec références reconnues.
 
+En mode médical, la sortie du modèle suit un format JSON contrôlé. Elle distingue une réponse documentaire d’une déclaration d’insuffisance des informations.
+
+Une insuffisance déclarée produit le statut information_insuffisante et un message fixe sans références. Une réponse documentaire reste soumise au contrôle des citations. Un format invalide est rejeté.
+
+Ce mécanisme ne vérifie pas automatiquement si le jugement d’insuffisance est correct ni si chaque affirmation est justifiée.
+
 Les premiers essais ont permis de comparer les réponses aux passages transmis. La question tarifaire reste non couverte. Les contrôles de références ne vérifient pas automatiquement que chaque affirmation est étayée.
 
 Cette page reste expérimentale et distincte de l’application de suivi. Les conditions de réutilisation, décisions éditoriales et observations sont consignées dans la revue des sources.

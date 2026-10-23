@@ -158,6 +158,12 @@ def test_branchement_transmet_mode_generation(monkeypatch, mode):
             return "GENERAL_INFORMATION"
 
         assert len(appels) == 2
+        if mode == "medical":
+            return (
+                '{"type": "reponse", '
+                '"texte": "Réponse de test [calendrier]."}'
+            )
+
         return "Réponse de test [calendrier]."
 
     monkeypatch.setattr(

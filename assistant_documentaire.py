@@ -12,6 +12,35 @@ from recherche_documentaire import rechercher_corpus
 class ReponseInvalide(ValueError):
     """Signale une réponse générée dont le format est invalide."""
 
+def lire_sortie_documentaire(sortie: str) -> dict:
+    """Valide le format produit, sans évaluer sa justesse documentaire."""
+    if not isinstance(sortie, str):
+        raise ReponseInvalide("La sortie doit être un texte JSON.")
+
+    try:
+        donnees = json.loads(sortie)
+    except json.JSONDecodeError as erreur:
+        raise ReponseInvalide("La sortie doit être un JSON valide.") from erreur
+
+    if not isinstance(donnees, dict):
+        raise ReponseInvalide("La sortie doit être un objet JSON.")
+
+    if donnees == {"type": "information_insuffisante"}:
+        return donnees
+
+    if (
+        set(donnees) == {"type", "texte"}
+        and donnees["type"] == "reponse"
+        and isinstance(donnees["texte"], str)
+        and donnees["texte"].strip()
+    ):
+        return {
+            "type": "reponse",
+            "texte": donnees["texte"].strip(),
+        }
+
+    raise ReponseInvalide("Le format documentaire est invalide.")
+
 def preparer_reponse(
     question: str,
     resultats: tuple[dict, ...],
@@ -45,6 +74,21 @@ def preparer_reponse(
         )
 
     donnees = json.loads(messages[1]["content"])
+
+    if mode == "medical":
+        sortie = lire_sortie_documentaire(reponse)
+
+        if sortie["type"] == "information_insuffisante":
+            return {
+                "statut": "information_insuffisante",
+                "reponse": (
+                    "Les documents disponibles ne permettent pas de répondre à cette question."
+                ),
+                "sources": (),
+            }
+
+        reponse = sortie["texte"]
+
     contexte_transmis = json.dumps(
         donnees["documents"],
         ensure_ascii=False,

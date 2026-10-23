@@ -523,3 +523,83 @@ def test_traiter_demande_masque_reponse_sans_citation(
     }
     assert reponse_brute not in resultat["reponse"]
 
+def test_sortie_documentaire_accepte_insuffisance():
+    from assistant_documentaire import lire_sortie_documentaire
+
+    assert lire_sortie_documentaire(
+        '{"type": "information_insuffisante"}'
+    ) == {"type": "information_insuffisante"}
+
+
+def test_sortie_documentaire_accepte_reponse():
+    from assistant_documentaire import lire_sortie_documentaire
+
+    assert lire_sortie_documentaire(
+        '{"type": "reponse", "texte": " Réponse [source]. "}'
+    ) == {
+        "type": "reponse",
+        "texte": "Réponse [source].",
+    }
+
+
+def test_sortie_documentaire_refuse_formats_invalides():
+    import pytest
+
+    from assistant_documentaire import (
+        ReponseInvalide,
+        lire_sortie_documentaire,
+    )
+
+    sorties_invalides = (
+        None,
+        "Texte libre",
+        "[]",
+        "{}",
+        '{"type": "inconnu"}',
+        '{"type": "reponse", "texte": ""}',
+        '{"type": "reponse", "texte": 42}',
+        '{"type": "information_insuffisante", "texte": "Un prix inventé"}',
+    )
+
+    for sortie in sorties_invalides:
+        with pytest.raises(ReponseInvalide):
+            lire_sortie_documentaire(sortie) # type: ignore
+
+@pytest.mark.parametrize(
+    "sortie, statut",
+    [
+        (
+            '{"type": "information_insuffisante"}',
+            "information_insuffisante",
+        ),
+        (
+            '{"type": "information_insuffisante", "texte": "Prix inventé"}',
+            "reponse_rejetee",
+        ),
+        (
+            '{"type": "reponse", "texte": "Réponse sans référence."}',
+            "sans_citation",
+        ),
+        (
+            '{"type": "reponse", "texte": "Réponse [inconnue]."}',
+            "reponse_rejetee",
+        ),
+    ],
+)
+def test_sortie_medicale_controlee(corpus, sortie, statut):
+    resultat = assistant_documentaire.traiter_demande(
+        "calendrier",
+        corpus,
+        classer=lambda question: Intention.GENERAL_INFORMATION,
+        generer=lambda messages: sortie,
+        mode="medical",
+    )
+
+    assert resultat["statut"] == statut
+    assert resultat["sources"] == ()
+    assert "Prix inventé" not in resultat["reponse"]
+
+    if statut == "information_insuffisante":
+        assert resultat["reponse"] == (
+            "Les documents disponibles ne permettent pas de répondre à cette question."
+        )

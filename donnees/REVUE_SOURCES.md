@@ -311,3 +311,121 @@ Le rappel de portée générale est désormais ajouté par l’interface aux ré
 Le texte est rendu en Markdown, avec le HTML désactivé. Les tests vérifient le composant utilisé et le rappel fixe. L’apparence finale des listes reste à contrôler dans le navigateur.
 
 Ces modifications ne constituent pas un contrôle automatique de la validité médicale ou de l’adéquation des affirmations aux passages cités.
+
+## Essais de reformulation des questions COR-01 et COR-02
+
+Deux variantes ont été essayées avec le corpus préconceptionnel.
+
+### Variante COR-01
+
+Question : Quel est le but d’une consultation avant une grossesse ?
+
+Statut obtenu : references_controlees.
+
+La réponse reprend des informations présentes dans le corpus. Toutefois, la première puce associe les antécédents et les habitudes de vie au seul passage conception_consultation_objectif. Ces éléments relèvent du passage conception_consultation_preparation.
+
+Le contrôle des identifiants de références réussit, mais l’attribution des affirmations aux passages reste imparfaite.
+
+### Variante COR-02
+
+Question : Quels sujets aborder avant une grossesse ?
+
+Statut obtenu : references_controlees.
+
+Les sujets énumérés correspondent au passage sur la préparation. Le complément sur l’objectif de la consultation est également sourcé. Sa présentation comme deuxième puce est maladroite.
+
+### Affichage et limites
+
+Le rappel fixe sur la portée générale de la réponse apparaît dans les deux essais. Un rappel généré produit un doublon.
+
+Ces observations portent sur une exécution par variante. Elles ne démontrent pas la répétabilité des résultats.
+
+## Nouveaux essais après précision des consignes de citation
+
+Question : Quel est le but d’une consultation avant une grossesse ?
+
+Les consignes demandent désormais de séparer les affirmations provenant de passages différents ou de placer les références nécessaires immédiatement après les informations concernées.
+
+Deux exécutions ont été réalisées avec les mêmes consignes.
+
+| Essai | Statut | Observation |
+| --- | --- | --- |
+| 1 | references_controlees | Informations présentes dans le corpus, mais les deux références sont regroupées à la fin du paragraphe L’association entre chaque phrase et son passage reste implicite. |
+| 2 | references_controlees | Chaque puce est accompagnée du passage correspondant à son contenu. |
+
+Le rappel fixe est affiché dans les deux cas.
+
+Ces essais montrent une variabilité dans le placement des citations. Ils ne démontrent pas une attribution systématiquement correcte. Le contrôle automatique vérifie les références, pas le soutien de chaque affirmation par le passage cité.
+
+## Essais sur les sujets à préparer après modification des consignes
+
+Question : Quels sujets aborder avant une grossesse ?
+
+Deux exécutions ont retourné le statut references_controlees.
+
+Dans le premier essai, la réponse ajoute des exemples concernant le projet de grossesse et les habitudes de vie qui ne figurent pas dans les passages transmis.
+
+Dans le second essai, la réponse ajoute également des exemples pour les habitudes de vie : alimentation, activité et substances.
+
+Les grandes catégories et les objectifs de la consultation correspondent au corpus. En revanche, les précisions ajoutées ne sont pas justifiées par les passages cités.
+
+Les deux essais ne satisfont donc pas le critère de fidélité exclusive aux documents transmis. Le contrôle des références ne détecte pas ces ajouts.
+
+## Essais après interdiction explicite des exemples non documentés
+
+Deux nouvelles exécutions de la question « Quels sujets aborder avant une grossesse ? » ont été réalisées.
+
+Les deux réponses développent les habitudes de vie avec des exemples absents des passages transmis, malgré la nouvelle consigne.
+
+Le second essai attribue également le caractère non exhaustif de la liste au passage sur l’objectif, alors que cette information figure dans celui sur la préparation.
+
+Résultat : aucun des deux essais ne satisfait le critère de fidélité exclusive au corpus. Le statut references_controlees vérifie les références, sans détecter ces ajouts ni cette attribution incorrecte.
+
+### Rectification sur les consignes utilisées
+
+La vérification de l’aperçu a montré que la nouvelle consigne n’était pas chargée lors des essais précédents.
+
+Les ajouts non documentés observés restent des défauts des réponses, mais ces essais ne permettent pas de conclure à l’inefficacité de la nouvelle consigne.
+
+Sa présence dans le message system est désormais confirmée. Les prochains essais permettront d’évaluer cette version.
+
+## Essais avec présence des nouvelles consignes confirmée
+
+Question : Quels sujets aborder avant une grossesse ?
+
+La présence de la nouvelle consigne dans le message system a été vérifiée avant les deux essais.
+
+Aucune des deux réponses ne développe les habitudes de vie avec des exemples absents du corpus.
+
+Premier essai : les catégories sont correctement référencées. La phrase finale introduit toutefois le terme « habituellement », non étayé, et cite un passage qui ne justifie pas cette affirmation.
+
+Second essai : le contenu correspond au passage sur la préparation. La référence unique est placée après la liste et la phrase finale, ce qui rend son rattachement à l’ensemble moins explicite.
+
+Ces deux observations ne suffisent pas à établir la fiabilité du comportement sur d’autres questions ou exécutions.
+
+## Question tarifaire avec les nouvelles consignes chargées
+
+Question : Combien coûte une consultation avant une grossesse ?
+
+Trois essais ont été réalisés.
+
+Le premier retourne references_controlees et indique explicitement que les documents ne contiennent aucune information tarifaire. Aucun prix ni remboursement n’est inventé dans la réponse affichée.
+
+Les deuxième et troisième essais retournent sans_citation. Le texte généré étant masqué, son contenu ne peut pas être évalué.
+
+Aucun tarif n’est affiché sur ces trois essais. Cela ne démontre pas trois abstentions correctes du modèle : seule la première est directement observable.
+
+Le statut references_controlees ne distingue pas une réponse documentaire d’un constat d’insuffisance accompagné de références.
+
+## Essais du format documentaire structuré
+
+La présence des consignes de sortie JSON a été vérifiée dans l’aperçu avant les essais.
+
+| Question | Statut obtenu | Observation |
+| --- | --- | --- |
+| Combien coûte une consultation avant une grossesse ? | information_insuffisante | Message fixe affiché, sans référence ni information tarifaire. |
+| À quoi sert une consultation avant une grossesse ? | references_controlees | Réponse fidèle au passage conception_consultation_objectif, correctement cité. |
+
+Le format JSON n’apparaît pas dans l’interface.
+
+Ces deux essais vérifient un cas couvert et un cas non couvert. Ils ne démontrent pas une détection systématiquement correcte des informations insuffisantes ni une fidélité garantie des réponses.

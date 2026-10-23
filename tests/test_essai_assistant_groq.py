@@ -189,10 +189,13 @@ def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
             return "GENERAL_INFORMATION"
 
         assert len(appels) == 2
-        return (
-            "- Échanger sur le projet de grossesse [conception_consultation_objectif].\n"
-            "- Recevoir des informations de prévention [conception_consultation_objectif]."
-        )
+        return json.dumps({
+            "type": "reponse",
+            "texte": (
+                "- Échanger sur le projet de grossesse [conception_consultation_objectif].\n"
+                "- Recevoir des informations de prévention [conception_consultation_objectif]."
+            ),
+        }, ensure_ascii=False)
 
     monkeypatch.setattr(
         assistant_groq,
@@ -283,4 +286,72 @@ def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
         key="autorisation_assistant_groq"
     ).value
     assert app.button(key="executer_assistant_groq").disabled
+    assert len(appels) == 2
+
+def test_insuffisance_medicale_affiche_message_fixe(monkeypatch):
+    appels = []
+
+    def faux_appel(messages, *, cle_api, modele):
+        assert cle_api == "cle-fictive"
+        appels.append(messages)
+
+        if len(appels) == 1:
+            return "GENERAL_INFORMATION"
+
+        assert len(appels) == 2
+        return '{"type": "information_insuffisante"}'
+
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        faux_appel,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+
+    app.selectbox(key="corpus_assistant_groq").set_value(
+        "Consultation préconceptionnelle"
+    ).run()
+
+    app.selectbox(key="question_assistant_groq").set_value(
+        "Combien coûte une consultation avant une grossesse ?"
+    ).run()
+
+    assert not app.exception
+    assert appels == []
+
+    app.checkbox(
+        key="autorisation_assistant_groq"
+    ).check().run()
+
+    assert appels == []
+
+    app.button(key="executer_assistant_groq").click().run()
+
+    assert not app.exception
+    assert len(appels) == 2
+
+    assert "Statut : information_insuffisante" in [
+        element.value for element in app.caption
+    ]
+
+    textes_markdown = [
+        element.value for element in app.markdown
+    ]
+    assert (
+        "Les documents disponibles ne permettent pas de répondre à cette question."
+    ) in textes_markdown
+    assert not any(
+        '"type"' in texte
+        for texte in textes_markdown
+    )
+
+    # Les références de résultat sont affichées avec st.text.
+    assert not app.text
+
+    app.run()
+
+    assert not app.exception
     assert len(appels) == 2
