@@ -112,6 +112,22 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "nutrition_cuisson_lavage",
+      "topic": "nutrition",
+      "title": "Quels gestes de cuisson et de lavage des aliments respecter pendant la grossesse ?",
+      "content": "Les règles générales de sécurité alimentaire comprennent la cuisson complète des aliments, notamment des viandes, volailles, œufs et fruits de mer. Les aliments déjà cuits doivent être bien réchauffés. Les fruits et légumes doivent être lavés, particulièrement lorsqu’ils sont consommés crus. Ces règles générales ne constituent pas une liste des aliments autorisés ou déconseillés pendant la grossesse. Ce passage ne fournit ni température ni durée de cuisson par aliment et ne garantit pas l’élimination de tous les risques.",
+      "source": "Autorité européenne de sécurité des aliments (EFSA)",
+      "url": "https://www.efsa.europa.eu/fr/safe2eat/proper-food-handling",
+      "country": "EU",
+      "publication_date": null,
+      "source_version": "Page sans date de publication ou de mise à jour affichée ; consultée le 4 novembre 2026",
+      "retrieved_at": "2026-11-04",
+      "reviewed_at": "2026-11-04",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

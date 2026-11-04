@@ -866,3 +866,58 @@ La réponse indique la décongélation au réfrigérateur et cite nutrition_mise
 Verdict : conforme pour cette exécution.
 
 Bilan du deuxième passage : trois essais, comprenant une question principale, une question non couverte et une reformulation. Deux réponses documentaires et une insuffisance ont été jugées conformes. La répétabilité n’est pas établie.
+
+### Troisième passage : cuisson et lavage des aliments
+
+Source : EFSA, Manipulation appropriée des aliments.
+
+https://www.efsa.europa.eu/fr/safe2eat/proper-food-handling
+
+Sections examinées :
+* Bien cuire.
+* Utiliser de l’eau propre et des matières premières sûres.
+
+### Proposition de contenu
+
+Les règles générales de sécurité alimentaire comprennent la cuisson complète des aliments, notamment des viandes, volailles, œufs et fruits de mer. Les aliments déjà cuits doivent être bien réchauffés.
+
+Les fruits et légumes doivent être lavés, particulièrement lorsqu’ils sont consommés crus.
+
+### Portée et limites
+
+Le passage décrit des règles générales de préparation. Il ne fournit ni température ni durée de cuisson par aliment.
+
+Il ne constitue pas une liste des aliments autorisés ou déconseillés pendant la grossesse. La cuisson ou le lavage ne doivent pas être présentés comme une garantie éliminant tous les risques.
+
+La présence possible de Listeria dans une catégorie alimentaire ne suffit pas, à elle seule, à déduire une interdiction générale de cette catégorie.
+
+### Réutilisation
+
+Les conditions EFSA déjà examinées s’appliquent aux sections retenues. Attribution de la source, sans logo ni visuel.
+
+Le passage nutrition_cuisson_lavage est retenu pour les essais du prototype après examen des sections EFSA correspondantes. Les phrases finales explicitent ses limites éditoriales. La réponse générée reste à évaluer ; COR-06 demeure en revue.
+
+### Premiers essais du passage cuisson et lavage
+
+Question 1 : Quels gestes de cuisson et de lavage des aliments respecter pendant la grossesse ?
+
+Statut : references_controlees. La réponse reprend la cuisson complète, le réchauffage et le lavage des fruits et légumes, avec la référence nutrition_cuisson_lavage. Elle ajoute des gestes généraux d’hygiène présents dans nutrition_hygiene_preparation et correctement attribués Aucune température ni durée non documentée n’est ajoutée.
+Verdict : conforme pour cette exécution, avec un complément sourcé dépassant le sujet précis de la question.
+
+Question 2 : Pendant la grossesse, quelle durée de cuisson en minutes prévoir pour les œufs ?
+
+Statut : information_insuffisante. Aucune durée n’est affichée.
+Verdict : conforme pour cette exécution.
+
+La reformulation reste à examiner. Ces résultats ne démontrent pas une fiabilité systématique.
+
+### Essai de reformulation sur les fruits et légumes crus
+
+Question : Pendant la grossesse, que faire avant de consommer des fruits et légumes crus ?
+
+Statut : references_controlees. La réponse indique le lavage des fruits et légumes avec la référence nutrition_cuisson_lavage. Elle ajoute le lavage des mains, correctement attribué à nutrition_hygiene_preparation.
+
+Aucun produit, temps de trempage ou résultat garanti n’est ajouté.
+Verdict : conforme pour cette exécution.
+
+Bilan du troisième passage : trois essais conformes observés, comprenant deux réponses documentaires et une insuffisance. Ces résultats ne démontrent pas une fiabilité systématique.

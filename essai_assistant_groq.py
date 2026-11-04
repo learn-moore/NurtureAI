@@ -54,6 +54,9 @@ QUESTIONS_MEDICALES = (
     "Pendant la grossesse, combien de jours peut-on conserver les restes au réfrigérateur ?",
     "Pendant la grossesse, quels repères respecter pour mettre au froid et décongeler les aliments ?",
     "Pendant la grossesse, quelle méthode privilégier pour décongeler des aliments surgelés ?",
+    "Quels gestes de cuisson et de lavage des aliments respecter pendant la grossesse ?",
+    "Pendant la grossesse, quelle durée de cuisson en minutes prévoir pour les œufs ?",
+    "Pendant la grossesse, que faire avant de consommer des fruits et légumes crus ?",
 )
 
 
@@ -89,7 +92,7 @@ questions = (
 
 if mode == "medical":
     st.caption(
-        "Cinq passages utilisables : consultations, orientation vers un guide nutritionnel et gestes généraux d’hygiène alimentaire. "
+        "Passages sur les consultations, une ressource nutritionnelle et des gestes généraux de sécurité alimentaire : préparation, mise au froid, décongélation, cuisson et lavage. "
         "Sources : HAS, Santé publique France et EFSA. Les précautions alimentaires spécifiques à la grossesse ne sont pas toutes couvertes."
     )
 
