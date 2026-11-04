@@ -584,3 +584,92 @@ Statut obtenu : references_controlees.
 La réponse reprend les objectifs du passage grossesse_premiere_consultation_objectif, sans ajout ni confusion avec la consultation préconceptionnelle. La référence et sa version sont correctement affichées.
 
 Bilan cumulé : trois tentatives, dont une interrompue et deux réponses conformes sur deux formulations différentes. Ces observations ne démontrent pas une fiabilité systématique.
+
+## COR-05 : ressource institutionnelle sur l’alimentation
+
+État : en revue.
+Consultation de la fiche : 4 novembre 2026.
+
+Question : Où trouver des recommandations alimentaires institutionnelles pour la grossesse ?
+
+### Ressource identifiée
+
+Organisme : Santé publique France.
+
+Titre : De la grossesse à l’arrivée de bébé, avec sérénité : alimentation, activité physique et bien-être.
+
+Année du guide : 2026.
+Publication de la fiche : 10 juin 2026.
+Mise à jour de la fiche : 30 octobre 2026.
+
+https://www.santepubliquefrance.fr/nutrition-et-activite-physique/brochure/de-la-grossesse-a-larrivee-de-bebe-avec-serenite-alimentation-activite-physique-et-bien-etre
+
+### Périmètre du passage envisagé
+
+Identifier le guide, son organisme et les sujets qu’il aborde. Orienter vers sa fiche officielle.
+
+Le passage ne fournira pas de régime personnalisé, de quantités alimentaires, de liste d’aliments à éviter ni de supplémentation.
+
+### Vérifications restantes
+
+Examiner le guide et ses mentions de droits. Distinguer la date de mise à jour de la fiche de la version du document téléchargeable. Définir le texte d’orientation et documenter son usage.
+
+### Examen du document et des dates
+
+Le sommaire du guide comporte des rubriques sur l’alimentation, les précautions alimentaires, l’activité physique et le bien-être.
+
+La fiche officielle donne 2026 comme année de publication. Sa mise à jour du 30 octobre 2026 ne permet pas de dater une éventuelle révision du PDF.
+
+### Proposition de notice d’orientation
+
+Santé publique France propose le guide « De la grossesse à l’arrivée de bébé, avec sérénité ». Il aborde notamment l’alimentation pendant la grossesse, l’activité physique et le bien-être. Le guide est accessible depuis sa fiche sur le site officiel de Santé publique France.
+
+### Usage retenu pour COR-05
+
+La notice identifie une ressource et renvoie vers sa fiche. Elle ne reproduit ni recommandations alimentaires détaillées, ni illustrations, ni tableaux du guide.
+
+Les mentions légales autorisent les liens directs sans autorisation préalable et demandent d’en informer le webmestre. Aucune notification n’a été envoyée dans le cadre de cette revue.
+
+Cette décision ne vaut pas autorisation de reprendre ou d’adapter le contenu du guide pour COR-06.
+
+### Décision pour le prototype
+
+La notice nutrition_guide_institutionnel est retenue pour les essais. L’approbation porte sur l’identification bibliographique du guide, la description générale de ses sujets et le lien vers sa fiche.
+
+Elle ne couvre pas la reproduction du guide, de ses illustrations ou de ses recommandations détaillées. La demande d’information du webmestre mentionnée dans les conditions reste consignée ; aucun message n’a été envoyé.
+
+La réponse générée reste à évaluer.
+
+### Premier essai distant
+
+Question : Où trouver des recommandations alimentaires institutionnelles pour la grossesse ?
+
+Statut obtenu : references_controlees.
+
+La réponse oriente vers le guide de Santé publique France et sa fiche officielle. Elle cite nutrition_guide_institutionnel, sans ajouter de recommandations alimentaires détaillées.
+
+L’organisme, l’année du guide, la date de mise à jour de la fiche et le lien sont correctement affichés.
+
+Verdict : conforme pour cette exécution. La reformulation et une question dépassant le contenu de la notice restent à évaluer.
+
+### Question dépassant le contenu de la notice
+
+Question : Quels aliments ce guide recommande-t-il d’éviter pendant la grossesse ?
+
+Statut obtenu : information_insuffisante.
+
+L’application affiche le message fixe d’insuffisance. Aucune liste d’aliments ni recommandation détaillée n’est affichée.
+
+Verdict : conforme pour cette exécution. La présence du lien vers le guide n’a pas conduit à une réponse dépassant le contenu de la notice transmise.
+
+### Essais de reformulation
+
+Question : Quel guide officiel consulter pour l’alimentation pendant la grossesse ?
+
+Première tentative : reponse_rejetee. Aucun texte généré n’est affiché. Le statut ne permet pas d’identifier précisément le défaut de format ou de références.
+
+Deuxième tentative : references_controlees. La réponse identifie le guide de Santé publique France, cite nutrition_guide_institutionnel et affiche le lien attendu. Aucun conseil alimentaire détaillé n’est ajouté.
+
+Bilan cumulé de COR-05 : quatre tentatives. Deux réponses d’orientation conformes, une insuffisance documentaire conforme et une réponse rejetée non évaluable.
+
+Les cas prévus ont été examinés. Le rejet observé reste une limite de fiabilité technique, malgré la réussite suivante.

@@ -106,6 +106,14 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "À quoi sert la première consultation de grossesse en France ?",
             "grossesse_premiere_consultation_objectif",
         ),
+        (
+            "Où trouver des recommandations alimentaires institutionnelles pour la grossesse ?",
+            "nutrition_guide_institutionnel",
+        ),
+        (
+            "Quel guide officiel consulter pour l’alimentation pendant la grossesse ?",
+            "nutrition_guide_institutionnel",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(

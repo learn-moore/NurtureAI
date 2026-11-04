@@ -64,6 +64,22 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "nutrition_guide_institutionnel",
+      "topic": "nutrition",
+      "title": "Où trouver des recommandations alimentaires institutionnelles pour la grossesse ?",
+      "content": "Santé publique France propose le guide « De la grossesse à l’arrivée de bébé, avec sérénité ». Il aborde notamment l’alimentation pendant la grossesse, l’activité physique et le bien-être. Le guide est accessible depuis sa fiche sur le site officiel de Santé publique France.",
+      "source": "Santé publique France",
+      "url": "https://www.santepubliquefrance.fr/nutrition-et-activite-physique/brochure/de-la-grossesse-a-larrivee-de-bebe-avec-serenite-alimentation-activite-physique-et-bien-etre",
+      "country": "FR",
+      "publication_date": "2026-06-10",
+      "source_version": "Guide publié en 2026 ; fiche mise à jour le 30 octobre 2026",
+      "retrieved_at": "2026-11-04",
+      "reviewed_at": "2026-11-04",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

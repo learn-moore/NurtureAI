@@ -46,6 +46,9 @@ QUESTIONS_MEDICALES = (
     "Que signifient semaines d’aménorrhée et semaines de grossesse ?",
     "À quoi sert la première consultation de grossesse en France ?",
     "Quel est le rôle du premier rendez-vous de suivi de grossesse ?",
+    "Où trouver des recommandations alimentaires institutionnelles pour la grossesse ?",
+    "Quels aliments ce guide recommande-t-il d’éviter pendant la grossesse ?",
+    "Quel guide officiel consulter pour l’alimentation pendant la grossesse ?",
 )
 
 
@@ -81,8 +84,8 @@ questions = (
 
 if mode == "medical":
     st.caption(
-        "Trois passages utilisables sur la consultation préconceptionnelle et la première consultation de grossesse. Sources HAS : "
-        "versions de 2013 et 2016. Aucune information tarifaire n’est incluse."
+        "Quatre passages utilisables : consultation préconceptionnelle, première consultation de grossesse et orientation vers un guide "
+        "sur l’alimentation. Sources : HAS et Santé publique France. Les recommandations alimentaires détaillées ne sont pas incluses."
     )
 
 question = st.selectbox(

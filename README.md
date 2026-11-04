@@ -246,9 +246,11 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 streamlit run essai_assistant_groq.py
 ```
 
-La page propose un corpus fictif et un corpus médical contenant trois passages utilisables : deux sur la consultation préconceptionnelle et un sur les objectifs de la première consultation de grossesse. Ils s’appuient sur des publications HAS de 2013 et 2016.
+La page propose un corpus fictif et un corpus médical contenant quatre passages utilisables : deux sur la consultation préconceptionnelle, un sur les objectifs de la première consultation de grossesse et une notice orientant vers un guide nutritionnel de Santé publique France.
 
-Un quatrième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
+Les sources HAS correspondent aux versions de 2013 et 2016. Le guide de Santé publique France est publié en 2026. La notice ne contient pas ses recommandations alimentaires détaillées.
+
+Un cinquième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
 
 Le corpus choisi détermine les questions et les consignes. Les messages sont prévisualisés avant autorisation. Changer de corpus ou de question retire l’autorisation d’envoi.
 
@@ -261,6 +263,8 @@ Une insuffisance déclarée produit le statut information_insuffisante et un mes
 Ce mécanisme ne vérifie pas automatiquement si le jugement d’insuffisance est correct ni si chaque affirmation est justifiée.
 
 Les premiers essais ont permis de comparer les réponses aux passages transmis. La question tarifaire reste non couverte. Les contrôles de références ne vérifient pas automatiquement que chaque affirmation est étayée.
+
+Les essais de la notice nutritionnelle ont produit deux réponses d’orientation conformes, une insuffisance documentaire conforme et une réponse rejetée. Ces résultats portent sur les cas examinés et ne garantissent pas un comportement systématiquement correct.
 
 Cette page reste expérimentale et distincte de l’application de suivi. Les conditions de réutilisation, décisions éditoriales et observations sont consignées dans la revue des sources.
 
