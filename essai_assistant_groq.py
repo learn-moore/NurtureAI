@@ -49,6 +49,9 @@ QUESTIONS_MEDICALES = (
     "Où trouver des recommandations alimentaires institutionnelles pour la grossesse ?",
     "Quels aliments ce guide recommande-t-il d’éviter pendant la grossesse ?",
     "Quel guide officiel consulter pour l’alimentation pendant la grossesse ?",
+    "Pendant la grossesse, quels gestes généraux d’hygiène respecter pour préparer les repas ?",
+    "Pendant la grossesse, comment éviter les contacts entre aliments crus et préparés ?",
+    "Pendant la grossesse, combien de jours peut-on conserver les restes au réfrigérateur ?",
 )
 
 
@@ -84,8 +87,8 @@ questions = (
 
 if mode == "medical":
     st.caption(
-        "Quatre passages utilisables : consultation préconceptionnelle, première consultation de grossesse et orientation vers un guide "
-        "sur l’alimentation. Sources : HAS et Santé publique France. Les recommandations alimentaires détaillées ne sont pas incluses."
+        "Cinq passages utilisables : consultations, orientation vers un guide nutritionnel et gestes généraux d’hygiène alimentaire. "
+        "Sources : HAS, Santé publique France et EFSA. Les précautions alimentaires spécifiques à la grossesse ne sont pas toutes couvertes."
     )
 
 question = st.selectbox(
@@ -183,6 +186,11 @@ if executer and autorisation:
         )
 
     st.caption(f"Statut : {resultat['statut']}")
+    if resultat["statut"] == "generation_interrompue":
+        st.caption(f"Étape : {resultat['etape']}")
+        st.caption(
+            f"Motif d’arrêt : {resultat['motif_interruption']}"
+        )
     if resultat["statut"] == "reponse_rejetee":
         st.caption(f"Motif technique : {resultat['motif_rejet']}")
     st.markdown(

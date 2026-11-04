@@ -114,6 +114,14 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "Quel guide officiel consulter pour l’alimentation pendant la grossesse ?",
             "nutrition_guide_institutionnel",
         ),
+        (
+            "Quels gestes d’hygiène respecter pour préparer les repas ?",
+            "nutrition_hygiene_preparation",
+        ),
+        (
+            "Comment éviter les contacts entre aliments crus et préparés ?",
+            "nutrition_hygiene_preparation",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(

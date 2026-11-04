@@ -673,3 +673,147 @@ Deuxième tentative : references_controlees. La réponse identifie le guide de S
 Bilan cumulé de COR-05 : quatre tentatives. Deux réponses d’orientation conformes, une insuffisance documentaire conforme et une réponse rejetée non évaluable.
 
 Les cas prévus ont été examinés. Le rejet observé reste une limite de fiabilité technique, malgré la réussite suivante.
+
+## COR-06 : précautions alimentaires pendant la grossesse
+
+État : en revue.
+
+Question générale : Quelles précautions alimentaires générales sont recommandées pendant la grossesse ?
+
+### Premier passage envisagé
+
+Sujet : hygiène lors de la préparation des repas.
+
+Source candidate : Anses.
+Document : Hygiène dans la cuisine : 10 recommandations pour éviter les intoxications alimentaires.
+
+https://www.anses.fr/fr/system/files/hygiene-cuisine-A4-PRINT.pdf
+
+### Périmètre à documenter
+
+Sélectionner les recommandations concernant le lavage des mains, les ustensiles et la prévention des contaminations entre aliments.
+
+Distinguer les règles générales d’hygiène des recommandations spécifiquement destinées aux femmes enceintes.
+
+### Limites
+
+Ce premier passage ne couvrira pas l’ensemble de COR-06. Il ne permettra pas de dresser une liste exhaustive des aliments à éviter ni d’évaluer le risque après une consommation.
+
+### Vérifications restantes
+
+Lire les sections retenues dans leur contexte. Identifier la date ou la version du document. Rechercher une version plus récente. Vérifier les conditions de réutilisation applicables au document. Recouper les gestes retenus avec une source consacrée à la grossesse.
+
+Aucun nouveau passage n’est encore intégré au corpus.
+
+### Examen de l’article Anses
+
+Titre : Conseils d’hygiène dans la cuisine : dix gestes simples pour prévenir les risques microbiologiques.
+
+Date affichée : 24 décembre 2020.
+Consultation : 4 novembre 2026.
+
+https://www.anses.fr/fr/content/conseils-dhygiene-dans-la-cuisine
+
+Les recommandations examinées portent sur :
+* le lavage des mains à l’eau et au savon avant et pendant la préparation des repas ;
+* l’utilisation de planches distinctes pour les viandes et poissons crus, et pour les produits cuits et légumes propres ;
+* l’absence de réutilisation, pour les aliments cuits, des plats et ustensiles ayant transporté les aliments crus.
+
+Ces règles sont générales. Elles ne constituent pas une liste exhaustive de précautions spécifiques à la grossesse.
+
+### Recoupement
+
+La page Ameli « Les aliments à éviter et les précautions d’hygiène pendant la grossesse », datée du 19 juin 2026, confirme plusieurs mesures de lavage, de nettoyage et de séparation des produits crus et prêts à consommer.
+
+Ce recoupement ne constitue pas une autorisation de reproduire le texte Ameli.
+
+### Conditions de réutilisation à clarifier
+
+Les mentions légales Anses autorisent la réutilisation sous conditions d’attribution, de date et de respect du sens. Elles demandent également une reprise intégrale, sans modification ni ajout.
+
+L’adaptation reformulée destinée au RAG n’est donc pas encore marquée comme approuvée. Aucun nouveau passage n’est activé.
+
+La recherche réalisée n’a pas établi l’existence d’une version plus récente de cet article.
+
+### Source retenue pour le premier passage
+
+Organisme : Autorité européenne de sécurité des aliments (EFSA).
+Titre : Manipulation appropriée des aliments.
+Consultation : 4 novembre 2026.
+
+https://www.efsa.europa.eu/fr/safe2eat/proper-food-handling
+
+Sections examinées : Maintenir la propreté ; Séparer cru et cuit. Aucune date de publication ou de mise à jour n’est affichée dans le contenu consulté.
+
+### Proposition de passage
+
+Pour préparer les repas, les règles générales d’hygiène comprennent le lavage des mains avant de manipuler les aliments et pendant leur préparation, ainsi que le nettoyage et la désinfection des surfaces et du matériel utilisés.
+
+Il faut séparer les viandes, volailles et fruits de mer crus des autres aliments, utiliser du matériel distinct pour les viandes crues et éviter les contacts entre aliments crus et préparés pendant leur conservation.
+
+### Réutilisation
+
+Les conditions EFSA autorisent la réutilisation avec attribution, sous réserve de conditions particulières propres aux documents. Aucune restriction particulière n’a été repérée pour les sections textuelles retenues. Aucun logo, visuel ou témoignage n’est repris.
+
+https://www.efsa.europa.eu/en/legalnotice
+
+### Portée et limites
+
+Le passage concerne l’hygiène alimentaire générale. Les mesures retenues ont été recoupées avec les sources françaises examinées précédemment.
+
+Il ne couvre ni une liste complète d’aliments à éviter pendant la grossesse, ni les températures de cuisson, ni les durées de conservation, ni l’évaluation d’une exposition individuelle.
+
+Ce premier passage ne suffit pas à déclarer COR-06 entièrement couvert.
+
+### Décision pour le premier passage
+
+Le passage nutrition_hygiene_preparation est retenu pour les essais du prototype après examen du contenu EFSA, de ses conditions de réutilisation et du recoupement avec les sources françaises.
+
+La phrase finale précise la limite éditoriale du passage. Aucune date de publication non affichée n’est inventée.
+
+La réponse générée reste à évaluer. COR-06 reste en revue : ce passage couvre uniquement une partie du sujet.
+
+### Essais de la question sans contexte de grossesse
+
+Question : Quels gestes d’hygiène respecter pour préparer les repas ?
+
+Trois tentatives retournent generation_non_autorisee avec le message hors périmètre. La génération documentaire n’est pas autorisée.
+
+La question ne mentionne ni conception ni grossesse. Le classifieur reçoit uniquement cette question, sans le choix de corpus effectué dans l’interface.
+
+Ces essais ne permettent pas d’évaluer la réponse documentaire. La question suivante précise le contexte de grossesse.
+
+### Premier essai avec contexte de grossesse
+
+Question : Pendant la grossesse, quels gestes généraux d’hygiène respecter pour préparer les repas ?
+
+Statut : generation_interrompue.
+Aucun texte partiel affiché. L’étape et la cause précise de l’interruption ne sont pas identifiées. La réponse documentaire n’est pas évaluable.
+
+### Essais du premier passage d’hygiène alimentaire
+
+La question initiale, sans mention de grossesse, a produit trois refus hors périmètre. Elle a été reformulée pour préciser ce contexte.
+
+Question retenue : Pendant la grossesse, quels gestes généraux d’hygiène respecter pour préparer les repas ?
+
+Deux tentatives ont été interrompues sans texte affiché. Un essai supplémentaire avec diagnostic a identifié l’étape generation_documentaire et le motif length, avec un plafond de 512 tokens.
+
+Après passage du plafond à 1 024 tokens, un essai retourne references_controlees. La réponse reprend les gestes du passage nutrition_hygiene_preparation, sans information supplémentaire. La référence, l’organisme et le lien sont correctement affichés.
+
+Verdict : réponse conforme pour cette exécution. La répétabilité reste à examiner. COR-06 demeure partiellement couvert.
+
+### Essais complémentaires du premier passage
+
+Question 1 : Pendant la grossesse, comment éviter les contacts entre aliments crus et préparés ?
+
+Statut : references_controlees.
+La réponse reprend la séparation des aliments, le matériel distinct et la prévention des contacts pendant la conservation. Elle cite nutrition_hygiene_preparation, sans ajout. Verdict : conforme pour cette exécution.
+
+Question 2 : Pendant la grossesse, combien de jours peut-on conserver les restes au réfrigérateur ?
+
+Statut : information_insuffisante.
+Aucune durée de conservation n’est affichée. Verdict : conforme pour cette exécution.
+
+Avec le plafond de 1 024 tokens, les trois essais examinés ont produit deux réponses documentaires conformes et une insuffisance conforme. Cela ne garantit pas leur répétabilité.
+
+Le premier passage d’hygiène est vérifié sur ces cas. COR-06 reste partiellement couvert : les autres précautions alimentaires ne sont pas encore documentées dans le corpus.

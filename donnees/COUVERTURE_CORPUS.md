@@ -24,7 +24,7 @@ Un classement favorable ou une citation reconnue ne suffit pas à déclarer une 
 | COR-03 | suivi_grossesse | Que signifient semaines d’aménorrhée et semaines de grossesse ? | En revue |
 | COR-04 | suivi_grossesse | À quoi sert la première consultation de grossesse en France ? | Vérifié sur les cas prévus |
 | COR-05 | nutrition | Où trouver des recommandations alimentaires institutionnelles pour la grossesse ? | Vérifié sur les cas prévus |
-| COR-06 | nutrition | Quelles précautions alimentaires générales sont recommandées pendant la grossesse ? | À documenter |
+| COR-06 | nutrition | Quelles précautions alimentaires générales sont recommandées pendant la grossesse ? | En revue |
 | COR-07 | habitudes_de_vie | Quels sont les messages généraux de prévention concernant l’alcool pendant la grossesse ? | À documenter |
 | COR-08 | habitudes_de_vie | Quels accompagnements sont proposés pour arrêter le tabac pendant la grossesse ? | À documenter |
 | COR-09 | medicaments | Pourquoi signaler un projet de grossesse lors d’une discussion sur les médicaments ? | À documenter |
@@ -33,6 +33,8 @@ Un classement favorable ou une citation reconnue ne suffit pas à déclarer une 
 | COR-12 | signes_alerte | Quelles limites présente une liste générale de signes d’alerte ? | À documenter |
 
 Pour COR-04, la vérification porte sur la question de référence et une reformulation. Trois tentatives ont produit une interruption et deux réponses conformes aux passages transmis. Ce statut ne constitue pas une validation clinique ni une garantie de répétabilité.
+
+Pour COR-06, le passage nutrition_hygiene_preparation a été vérifié sur une question contextualisée, une reformulation et une question non couverte. La couverture reste limitée aux gestes généraux de préparation et de séparation des aliments.
 
 ## Premier lot proposé
 

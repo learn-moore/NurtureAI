@@ -141,6 +141,14 @@ def test_erreur_fournisseur_interrompt_la_chaine(
     assert resultat["reponse"]
     assert "Détail technique fictif" not in resultat["reponse"]
 
+    if statut == "generation_interrompue":
+        assert resultat["etape"] == (
+            "classification"
+            if appel_en_echec == 1
+            else "generation_documentaire"
+        )
+        assert resultat["motif_interruption"] == "autre"
+
 @pytest.mark.parametrize("mode", ["laboratoire", "medical"])
 def test_branchement_transmet_mode_generation(monkeypatch, mode):
     from classification_intentions import CONSIGNES_CLASSIFICATION

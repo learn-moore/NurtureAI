@@ -20,14 +20,22 @@ def traiter_demande_groq(
     mode: str = "laboratoire",
 ) -> dict:
     """Relie la chaîne documentaire aux adaptateurs distants."""
-    generer = partial(
+    appel_distant = partial(
         generer_reponse_groq,
         cle_api=cle_api,
         modele=modele,
     )
+
+    etape = "classification"
+
+    def generer(messages):
+        nonlocal etape
+        etape = "generation_documentaire"
+        return appel_distant(messages)
+
     classer = partial(
         classer_demande_experimentale,
-        generer=generer,
+        generer=appel_distant,
     )
 
     try:
@@ -47,9 +55,11 @@ def traiter_demande_groq(
             ),
             "sources": (),
         }
-    except GenerationGroqInterrompue:
+    except GenerationGroqInterrompue as erreur:
         return {
             "statut": "generation_interrompue",
+            "etape": etape,
+            "motif_interruption": erreur.raison,
             "reponse": (
                 "Le traitement distant ne s’est pas terminé normalement. Aucun texte partiel n’est affiché."
             ),

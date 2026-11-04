@@ -60,7 +60,7 @@ def test_generation_groq_transmet_parametres_et_ferme_client(monkeypatch):
         {
             "model": "modele-fictif",
             "messages": list(messages),
-            "max_completion_tokens": 512,
+            "max_completion_tokens": 1024,
             "stream": False,
         }
     ]

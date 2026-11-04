@@ -192,7 +192,7 @@ python -m streamlit run essai_groq.py
 
 La page présente les messages avant envoi. L’appel nécessite une autorisation cochée puis un clic explicite. Aucun appel n’est effectué à l’ouverture.
 
-L’adaptateur limite la génération à 512 tokens, configure un délai d’attente réseau de 20 secondes et désactive les nouvelles tentatives automatiques. Les réponses interrompues, vides ou contenant une référence inconnue sont refusées. Une réponse sans citation est accompagnée d’un avertissement.
+L’adaptateur limite la génération à 1024 tokens, configure un délai d’attente réseau de 20 secondes et désactive les nouvelles tentatives automatiques. Les réponses interrompues, vides ou contenant une référence inconnue sont refusées. Une réponse sans citation est accompagnée d’un avertissement.
 
 Les premiers essais distinguent les observations du modèle et les vérifications automatisées de l’application :
 
@@ -246,11 +246,11 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 streamlit run essai_assistant_groq.py
 ```
 
-La page propose un corpus fictif et un corpus médical contenant quatre passages utilisables : deux sur la consultation préconceptionnelle, un sur les objectifs de la première consultation de grossesse et une notice orientant vers un guide nutritionnel de Santé publique France.
+La page propose un corpus fictif et un corpus médical contenant cinq passages utilisables : deux sur la consultation préconceptionnelle, un sur la première consultation de grossesse, une notice orientant vers un guide nutritionnel et un passage sur l’hygiène alimentaire générale.
 
-Les sources HAS correspondent aux versions de 2013 et 2016. Le guide de Santé publique France est publié en 2026. La notice ne contient pas ses recommandations alimentaires détaillées.
+Les sources sont la HAS, Santé publique France et l’EFSA. Le passage EFSA couvre la préparation des repas et la séparation des aliments crus et préparés. Les précautions alimentaires spécifiques à la grossesse restent partiellement couvertes.
 
-Un cinquième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
+Un sixième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
 
 Le corpus choisi détermine les questions et les consignes. Les messages sont prévisualisés avant autorisation. Changer de corpus ou de question retire l’autorisation d’envoi.
 
@@ -261,6 +261,8 @@ En mode médical, la sortie du modèle suit un format JSON contrôlé. Elle dist
 Une insuffisance déclarée produit le statut information_insuffisante et un message fixe sans références. Une réponse documentaire reste soumise au contrôle des citations. Un format invalide est rejeté.
 
 Dans la page expérimentale, une réponse rejetée est accompagnée d’un motif technique : format_invalide ou reference_inconnue. Le texte rejeté et le détail de l’exception ne sont pas affichés. Ce diagnostic ne vérifie pas la fidélité des affirmations aux sources.
+
+Une interruption affiche également l’étape concernée et un motif d’arrêt contrôlé. Un arrêt length a été observé pendant la génération documentaire avec le plafond de 512 tokens. Après passage à 1 024 tokens, trois essais ont produit deux réponses fidèles au passage d’hygiène et une insuffisance documentaire conforme. Le texte partiel reste masqué en cas d’interruption.
 
 Ce mécanisme ne vérifie pas automatiquement si le jugement d’insuffisance est correct ni si chaque affirmation est justifiée.
 

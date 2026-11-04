@@ -80,6 +80,22 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "nutrition_hygiene_preparation",
+      "topic": "nutrition",
+      "title": "Quels gestes d’hygiène respecter pour préparer les repas ?",
+      "content": "Pour préparer les repas, les règles générales d’hygiène comprennent le lavage des mains avant de manipuler les aliments et pendant leur préparation, ainsi que le nettoyage et la désinfection des surfaces et du matériel utilisés. Il faut séparer les viandes, volailles et fruits de mer crus des autres aliments, utiliser du matériel distinct pour les viandes crues et éviter les contacts entre aliments crus et préparés pendant leur conservation. Ces gestes relèvent de l’hygiène alimentaire générale et ne constituent pas une liste complète des précautions spécifiques à la grossesse.",
+      "source": "Autorité européenne de sécurité des aliments (EFSA)",
+      "url": "https://www.efsa.europa.eu/fr/safe2eat/proper-food-handling",
+      "country": "EU",
+      "publication_date": null,
+      "source_version": "Page sans date de publication ou de mise à jour affichée ; consultée le 4 novembre 2026",
+      "retrieved_at": "2026-11-04",
+      "reviewed_at": "2026-11-04",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

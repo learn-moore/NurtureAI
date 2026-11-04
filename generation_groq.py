@@ -10,6 +10,14 @@ class RequeteGroqRefusee(ValueError):
 class GenerationGroqInterrompue(ValueError):
     """Signale une génération qui ne s’est pas terminée normalement."""
 
+    def __init__(self, message: str, *, raison: str = "autre"):
+        super().__init__(message)
+        self.raison = (
+            raison
+            if raison in {"length", "tool_calls", "content_filter"}
+            else "autre"
+        )
+
 
 class ReponseGroqVide(ValueError):
     """Signale une absence de réponse textuelle exploitable."""
@@ -39,7 +47,7 @@ def generer_reponse_groq(
             resultat = client.chat.completions.create(
                 model=modele,
                 messages=list(messages), # type: ignore
-                max_completion_tokens=512,
+                max_completion_tokens=1024,
                 stream=False,
             ) # type: ignore
     except APIConnectionError:
@@ -62,7 +70,10 @@ def generer_reponse_groq(
     choix = resultat.choices[0]
 
     if choix.finish_reason != "stop":
-        raise GenerationGroqInterrompue("La génération ne s’est pas terminée normalement.")
+        raise GenerationGroqInterrompue(
+            "La génération ne s’est pas terminée normalement.",
+            raison=choix.finish_reason,
+        )
 
     texte = choix.message.content
 
