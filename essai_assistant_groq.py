@@ -52,6 +52,8 @@ QUESTIONS_MEDICALES = (
     "Pendant la grossesse, quels gestes généraux d’hygiène respecter pour préparer les repas ?",
     "Pendant la grossesse, comment éviter les contacts entre aliments crus et préparés ?",
     "Pendant la grossesse, combien de jours peut-on conserver les restes au réfrigérateur ?",
+    "Pendant la grossesse, quels repères respecter pour mettre au froid et décongeler les aliments ?",
+    "Pendant la grossesse, quelle méthode privilégier pour décongeler des aliments surgelés ?",
 )
 
 

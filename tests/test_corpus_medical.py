@@ -122,6 +122,10 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "Comment éviter les contacts entre aliments crus et préparés ?",
             "nutrition_hygiene_preparation",
         ),
+        (
+            "Pendant la grossesse, quels repères respecter pour mettre au froid et décongeler les aliments ?",
+            "nutrition_mise_au_froid_decongelation",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(

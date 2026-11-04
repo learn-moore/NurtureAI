@@ -96,6 +96,22 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "nutrition_mise_au_froid_decongelation",
+      "topic": "nutrition",
+      "title": "Quels repères de mise au froid et de décongélation des aliments pendant la grossesse ?",
+      "content": "Les aliments cuits et périssables doivent être réfrigérés rapidement. Les aliments cuits ne doivent pas rester plus de deux heures à température ambiante. Pour décongeler des aliments surgelés, la méthode la plus sûre indiquée par l’EFSA est le réfrigérateur. Les deux heures concernent l’attente à température ambiante avant réfrigération, et non une durée de conservation au réfrigérateur. Ce passage ne fixe pas de nombre de jours de conservation des restes et ne permet pas de décider si un aliment particulier peut encore être consommé.",
+      "source": "Autorité européenne de sécurité des aliments (EFSA)",
+      "url": "https://www.efsa.europa.eu/fr/safe2eat/proper-food-handling",
+      "country": "EU",
+      "publication_date": null,
+      "source_version": "Page sans date de publication ou de mise à jour affichée ; consultée le 4 novembre 2026",
+      "retrieved_at": "2026-11-04",
+      "reviewed_at": "2026-11-04",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

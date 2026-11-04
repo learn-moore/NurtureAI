@@ -34,7 +34,7 @@ Un classement favorable ou une citation reconnue ne suffit pas à déclarer une 
 
 Pour COR-04, la vérification porte sur la question de référence et une reformulation. Trois tentatives ont produit une interruption et deux réponses conformes aux passages transmis. Ce statut ne constitue pas une validation clinique ni une garantie de répétabilité.
 
-Pour COR-06, le passage nutrition_hygiene_preparation a été vérifié sur une question contextualisée, une reformulation et une question non couverte. La couverture reste limitée aux gestes généraux de préparation et de séparation des aliments.
+Pour COR-06, les passages nutrition_hygiene_preparation et nutrition_mise_au_froid_decongelation ont chacun été examinés sur une question principale, une reformulation et une question non couverte. Les essais correspondants sont consignés dans REVUE_SOURCES.md. La couverture reste partielle ; COR-06 conserve l’état En revue.
 
 ## Premier lot proposé
 

@@ -817,3 +817,52 @@ Aucune durée de conservation n’est affichée. Verdict : conforme pour cette e
 Avec le plafond de 1 024 tokens, les trois essais examinés ont produit deux réponses documentaires conformes et une insuffisance conforme. Cela ne garantit pas leur répétabilité.
 
 Le premier passage d’hygiène est vérifié sur ces cas. COR-06 reste partiellement couvert : les autres précautions alimentaires ne sont pas encore documentées dans le corpus.
+
+### Deuxième passage : mise au froid et décongélation
+
+Source : EFSA, Manipulation appropriée des aliments. Sections : Maintenir les aliments à des températures sûres ; Décongeler en toute sécurité.
+
+https://www.efsa.europa.eu/fr/safe2eat/proper-food-handling
+
+### Proposition de contenu
+
+Les aliments cuits et périssables doivent être réfrigérés rapidement. Les aliments cuits ne doivent pas rester plus de deux heures à température ambiante. Pour décongeler des aliments surgelés, la méthode la plus sûre indiquée par l’EFSA est le réfrigérateur.
+
+### Portée
+
+Les deux heures constituent une limite d’attente à température ambiante, pas une durée de conservation au réfrigérateur ni une garantie qu’un aliment est sans risque.
+
+Le passage ne fixe pas de nombre de jours de conservation des restes et ne permet pas de décider si un aliment particulier peut encore être consommé.
+
+La recommandation de décongélation est recoupée avec la page Ameli consacrée aux précautions alimentaires pendant la grossesse.
+
+### Réutilisation
+
+Les conditions EFSA déjà examinées s’appliquent à ces sections. La source sera attribuée ; aucun logo ni visuel ne sera repris. Aucune date de publication non affichée ne sera inventée.
+
+Le passage nutrition_mise_au_froid_decongelation est retenu pour les essais du prototype. Les précisions finales explicitent ses limites éditoriales. La réponse générée reste à évaluer. COR-06 demeure en revue, avec une couverture partielle.
+
+### Essais du passage de mise au froid et décongélation
+
+Question 1 : Pendant la grossesse, quels repères respecter pour mettre au froid et décongeler les aliments ?
+
+Statut : references_controlees.
+La réponse reprend la réfrigération rapide, la limite de deux heures à température ambiante et la décongélation au réfrigérateur. Chaque affirmation cite nutrition_mise_au_froid_decongelation. Aucune information supplémentaire n’est ajoutée.
+Verdict : conforme pour cette exécution.
+
+Question 2 : Pendant la grossesse, combien de jours peut-on conserver les restes au réfrigérateur ?
+
+Statut : information_insuffisante. Aucun nombre de jours n’est affiché.
+Verdict : conforme pour cette exécution.
+
+Ces essais ne montrent pas de confusion entre délai avant réfrigération et durée de conservation des restes. Ils ne démontrent pas une fiabilité systématique. La reformulation de la première question reste à évaluer.
+
+### Essai de reformulation sur la décongélation
+
+Question : Pendant la grossesse, quelle méthode privilégier pour décongeler des aliments surgelés ?
+
+Statut : references_controlees.
+La réponse indique la décongélation au réfrigérateur et cite nutrition_mise_au_froid_decongelation, sans information supplémentaire.
+Verdict : conforme pour cette exécution.
+
+Bilan du deuxième passage : trois essais, comprenant une question principale, une question non couverte et une reformulation. Deux réponses documentaires et une insuffisance ont été jugées conformes. La répétabilité n’est pas établie.
