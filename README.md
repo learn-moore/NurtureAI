@@ -260,6 +260,8 @@ En mode médical, la sortie du modèle suit un format JSON contrôlé. Elle dist
 
 Une insuffisance déclarée produit le statut information_insuffisante et un message fixe sans références. Une réponse documentaire reste soumise au contrôle des citations. Un format invalide est rejeté.
 
+Dans la page expérimentale, une réponse rejetée est accompagnée d’un motif technique : format_invalide ou reference_inconnue. Le texte rejeté et le détail de l’exception ne sont pas affichés. Ce diagnostic ne vérifie pas la fidélité des affirmations aux sources.
+
 Ce mécanisme ne vérifie pas automatiquement si le jugement d’insuffisance est correct ni si chaque affirmation est justifiée.
 
 Les premiers essais ont permis de comparer les réponses aux passages transmis. La question tarifaire reste non couverte. Les contrôles de références ne vérifient pas automatiquement que chaque affirmation est étayée.

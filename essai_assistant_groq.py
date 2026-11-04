@@ -183,6 +183,8 @@ if executer and autorisation:
         )
 
     st.caption(f"Statut : {resultat['statut']}")
+    if resultat["statut"] == "reponse_rejetee":
+        st.caption(f"Motif technique : {resultat['motif_rejet']}")
     st.markdown(
         resultat["reponse"],
         unsafe_allow_html=False,

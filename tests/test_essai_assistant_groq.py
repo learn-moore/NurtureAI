@@ -288,26 +288,34 @@ def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
     assert len(appels) == 2
 
 @pytest.mark.parametrize(
-    "sortie, statut, message",
+    "sortie, statut, message, motif",
     [
         (
             '{"type": "information_insuffisante"}',
             "information_insuffisante",
-            "Les documents disponibles ne permettent pas "
-            "de répondre à cette question.",
+            "Les documents disponibles ne permettent pas de répondre à cette question.",
+            None,
         ),
         (
             '{"type": "information_insuffisante", '
             '"texte": "CONTENU_NON_AFFICHE"}',
             "reponse_rejetee",
-            "La réponse produite n’a pas satisfait les contrôles "
-            "de format ou de références. Elle n’est pas affichée.",
+            "La réponse produite n’a pas satisfait les contrôles de format ou de références. Elle n’est pas affichée.",
+            "format_invalide",
         ),
         (
             "CONTENU_NON_AFFICHE",
             "reponse_rejetee",
             "La réponse produite n’a pas satisfait les contrôles "
             "de format ou de références. Elle n’est pas affichée.",
+            "format_invalide",
+        ),
+        (
+            '{"type": "reponse", '
+            '"texte": "CONTENU_NON_AFFICHE [source_inventee]."}',
+            "reponse_rejetee",
+            "La réponse produite n’a pas satisfait les contrôles de format ou de références. Elle n’est pas affichée.",
+            "reference_inconnue",
         ),
     ],
 )
@@ -316,6 +324,7 @@ def test_sortie_medicale_affiche_message_controle(
     sortie,
     statut,
     message,
+    motif,
 ):
     appels = []
 
@@ -364,6 +373,19 @@ def test_sortie_medicale_affiche_message_controle(
     assert f"Statut : {statut}" in [
         element.value for element in app.caption
     ]
+
+    motifs_affiches = [
+        element.value
+        for element in app.caption
+        if element.value.startswith("Motif technique :")
+    ]
+
+    if motif is None:
+        assert motifs_affiches == []
+    else:
+        assert motifs_affiches == [
+            f"Motif technique : {motif}"
+        ]
 
     textes_markdown = [
         element.value for element in app.markdown

@@ -247,9 +247,15 @@ def traiter_demande(
             ),
             "sources": (),
         }
-    except (ReponseInvalide, CitationInconnue):
+    except (ReponseInvalide, CitationInconnue) as erreur:
+        motif = (
+            "reference_inconnue"
+            if isinstance(erreur, CitationInconnue)
+            else "format_invalide"
+        )
         return {
             "statut": "reponse_rejetee",
+            "motif_rejet": motif,
             "reponse": (
                 "La réponse produite n’a pas satisfait les contrôles de format ou de références. Elle n’est pas affichée."
             ),

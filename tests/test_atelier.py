@@ -458,15 +458,18 @@ def test_traiter_demande_generation_indisponible(corpus):
     }
 
 @pytest.mark.parametrize(
-    "reponse",
+    "reponse, motif",
     [
-        "",
-        "   ",
-        None,
-        "Texte à ne pas afficher [source_inventee].",
+        ("", "format_invalide"),
+        ("   ", "format_invalide"),
+        (None, "format_invalide"),
+        (
+            "Texte à ne pas afficher [source_inventee].",
+            "reference_inconnue",
+        ),
     ],
 )
-def test_traiter_demande_rejette_reponse_invalide(corpus, reponse):
+def test_traiter_demande_rejette_reponse_invalide(corpus, reponse, motif):
     appels = []
 
     def faux_generateur(messages):
@@ -483,6 +486,7 @@ def test_traiter_demande_rejette_reponse_invalide(corpus, reponse):
     assert len(appels) == 1
     assert resultat == {
         "statut": "reponse_rejetee",
+        "motif_rejet": motif,
         "reponse": (
             "La réponse produite n’a pas satisfait les contrôles de format ou de références. Elle n’est pas affichée."
         ),
@@ -603,3 +607,31 @@ def test_sortie_medicale_controlee(corpus, sortie, statut):
         assert resultat["reponse"] == (
             "Les documents disponibles ne permettent pas de répondre à cette question."
         )
+
+@pytest.mark.parametrize(
+    "sortie, motif",
+    [
+        (
+            '{"type": "information_insuffisante", "texte": "Texte interdit"}',
+            "format_invalide",
+        ),
+        (
+            '{"type": "reponse", "texte": "Texte [inconnue]."}',
+            "reference_inconnue",
+        ),
+    ],
+)
+def test_rejet_medical_precise_le_motif(corpus, sortie, motif):
+    resultat = assistant_documentaire.traiter_demande(
+        "calendrier",
+        corpus,
+        classer=lambda question: Intention.GENERAL_INFORMATION,
+        generer=lambda messages: sortie,
+        mode="medical",
+    )
+
+    assert resultat["statut"] == "reponse_rejetee"
+    assert resultat["motif_rejet"] == motif
+    assert resultat["sources"] == ()
+    assert "Texte interdit" not in resultat["reponse"]
+    assert "inconnue" not in resultat["reponse"]
