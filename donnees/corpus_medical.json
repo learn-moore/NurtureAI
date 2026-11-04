@@ -32,6 +32,38 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "grossesse_definitions_sa_sg",
+      "topic": "suivi_grossesse",
+      "title": "Que signifient semaines d’aménorrhée et semaines de grossesse ?",
+      "content": "Les semaines d’aménorrhée (SA) prennent pour point de départ le premier jour des dernières règles. Les semaines de grossesse (SG) sont estimées à partir de la fécondation. La correspondance de deux semaines repose sur une fécondation estimée quatorze jours après le début des dernières règles dans le cas de cycles réguliers.",
+      "source": "Assurance Maladie",
+      "url": "https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/premiers-symptomes-grossesse",
+      "country": "FR",
+      "publication_date": null,
+      "source_version": "Date affichée sur la page : 2 juin 2026",
+      "retrieved_at": "2026-10-23",
+      "reviewed_at": null,
+      "editorial_status": "draft",
+      "reuse_status": "to_review",
+      "usage": "cross_check"
+    },
+    {
+      "id": "grossesse_premiere_consultation_objectif",
+      "topic": "suivi_grossesse",
+      "title": "À quoi sert la première consultation de grossesse en France ?",
+      "content": "La première consultation de grossesse permet au professionnel de santé de confirmer la grossesse et d’en établir la datation. Elle comprend une information sur le suivi et des messages de prévention. Le professionnel recherche également les facteurs pouvant nécessiter une adaptation du suivi.",
+      "source": "Haute Autorité de santé",
+      "url": "https://www.has-sante.fr/upload/docs/application/pdf/suivi_orientation_femmes_enceintes_synthese.pdf",
+      "country": "FR",
+      "publication_date": null,
+      "source_version": "Synthèse mise à jour en mai 2016",
+      "retrieved_at": "2026-10-23",
+      "reviewed_at": "2026-10-23",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

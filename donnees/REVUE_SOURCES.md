@@ -429,3 +429,158 @@ La présence des consignes de sortie JSON a été vérifiée dans l’aperçu av
 Le format JSON n’apparaît pas dans l’interface.
 
 Ces deux essais vérifient un cas couvert et un cas non couvert. Ils ne démontrent pas une détection systématiquement correcte des informations insuffisantes ni une fidélité garantie des réponses.
+
+Un essai complémentaire porte sur la question : « Quels sujets aborder avant une grossesse ? »
+
+Le statut obtenu est references_controlees. La liste reprend les catégories du passage sur la préparation, sans exemples supplémentaires.
+
+La seconde phrase reprend les objectifs de la consultation. Toutefois, l’expression « ces sujets » renvoie à la liste précédente sans citer également le passage sur la préparation.
+
+Le contenu est présent dans le corpus, mais le rattachement des affirmations aux références reste perfectible.
+
+## COR-03 : semaines d’aménorrhée et semaines de grossesse
+
+État : en revue.
+
+Question : Que signifient semaines d’aménorrhée et semaines de grossesse ?
+
+### Source examinée
+
+Organisme : Assurance Maladie.
+Titre : Grossesse : premiers signes et déroulement.
+Date affichée : 2 juin 2026.
+Section : La première échographie de grossesse.
+
+URL : https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/premiers-symptomes-grossesse
+
+### Périmètre du futur passage
+
+Expliquer les deux points de départ du décompte. Préciser les conditions de la correspondance approximative entre les deux unités.
+
+Ne pas transformer cette explication générale en datation individuelle ni en calcul de date d’accouchement.
+
+### Vérifications restantes
+
+Sélectionner une source dont les conditions de réutilisation permettent l’usage prévu et documenter cette décision. Conserver cette page comme source de comparaison à ce stade.
+
+Préparer un passage limité aux définitions et à leurs limites, puis vérifier sa recherche sur plusieurs formulations.
+
+### Proposition de contenu à examiner
+
+Les semaines d’aménorrhée (SA) sont comptées depuis le premier jour des dernières règles. Les semaines de grossesse (SG) correspondent au temps estimé depuis la fécondation.
+
+La correspondance d’environ deux semaines repose sur une fécondation estimée deux semaines après le début des dernières règles. Elle ne permet pas de déterminer une date individuelle de fécondation avec certitude.
+
+État : brouillon documentaire, non intégré au corpus actif. La sélection de la source réutilisable reste à finaliser.
+
+### Questions prévues pour les essais
+
+| Question | Éléments attendus |
+| --- | --- |
+| Que signifient SA et SG ? | Définition des deux sigles et points de départ. |
+| Pourquoi distingue-t-on semaines d’aménorrhée et semaines de grossesse ? | Différence entre les références temporelles. |
+| L’écart entre SA et SG permet-il de connaître exactement la date de fécondation ? | Limite de la correspondance approximative. |
+
+### Éléments exclus du passage
+
+Le passage ne fournit pas de datation personnelle, de date d’accouchement, de seuil d’intervention ni de calendrier d’examens.
+
+### Piste complémentaire examinée
+
+Le site ivg.gouv.fr présente des correspondances entre SA et SG. Ces exemples ne couvrent pas seuls toutes les explications visées.
+
+Les mentions légales présentent des conditions de réutilisation et une demande de contact. La réutilisation n’est pas marquée comme approuvée à ce stade.
+
+### Essai avec le passage exclu du contexte autorisé
+
+Question : Que signifient semaines d’aménorrhée et semaines de grossesse ?
+
+Le passage grossesse_definitions_sa_sg reste en brouillon, avec une réutilisation à examiner et un usage de comparaison. Son exclusion de la recherche autorisée est vérifiée par les tests.
+
+L’essai distant retourne information_insuffisante. L’interface affiche le message fixe, sans définition de SA ou SG.
+
+Ce résultat correspond au comportement attendu pour le corpus actuellement autorisé. Il ne valide pas la couverture de COR-03 ni la capacité du modèle à s’abstenir systématiquement.
+
+## COR-04 : objectif de la première consultation de grossesse
+
+État : en revue.
+
+Question : À quoi sert la première consultation de grossesse en France ?
+
+### Source candidate
+
+Organisme : Haute Autorité de santé.
+
+Titre : Suivi et orientation des femmes enceintes en fonction des situations à risque identifiées.
+
+URL : https://www.has-sante.fr/jcms/c_567727/en/suivi-et-orientation-des-femmes-enceintes-en-fonction-des-situations-a-risque-identifiees
+
+### Périmètre envisagé
+
+Expliquer les objectifs généraux de la consultation et l’organisation du suivi.
+
+Le passage ne devra pas fournir une liste personnalisée d’examens, interpréter des résultats ni déterminer le niveau de risque d’une personne.
+
+### Vérifications avant rédaction
+
+Examiner la publication complète et sa date. Rechercher une actualisation ou un remplacement. Identifier les sections justifiant chaque affirmation. Vérifier les conditions de réutilisation applicables au document.
+
+Aucun passage n’est encore approuvé pour le corpus.
+
+### Document retenu pour préparer le passage
+
+Titre : Suivi et orientation des femmes enceintes en fonction des situations à risque identifiées.
+Document : synthèse des recommandations professionnelles.
+Version : mise à jour de mai 2016.
+
+https://www.has-sante.fr/upload/docs/application/pdf/suivi_orientation_femmes_enceintes_synthese.pdf
+
+Sections examinées :
+* Page 1 : objectifs du suivi et appréciation du niveau de risque.
+* Page 2 : première consultation, information et prévention.
+
+La recommandation de 2007, actualisée en 2016, est encore citée dans un document HAS de 2026 sur les maisons de naissance. Cette citation ne constitue pas une actualisation complète de son contenu.
+
+### Proposition de passage
+
+La première consultation de grossesse permet au professionnel de santé de confirmer la grossesse et d’en établir la datation. Elle comprend une information sur le suivi et des messages de prévention. Le professionnel recherche également les facteurs pouvant nécessiter une adaptation du suivi.
+
+### Limites retenues
+
+Le passage décrit des objectifs généraux. Il ne contient ni liste d’examens à réaliser, ni prescription, ni calendrier détaillé. Il ne permet pas à l’application d’évaluer le risque individuel.
+
+### Réutilisation
+
+Les conditions HAS prévoient la réutilisation de ses informations publiques, sous réserve des droits de tiers, du respect du sens, de la mention de la source et de sa dernière mise à jour.
+
+La proposition est une synthèse rédactionnelle sans logo ni reprise de la mise en page. Elle ne suggère aucune approbation de NurtureAI par la HAS.
+
+### Décision pour le prototype
+
+Le passage grossesse_premiere_consultation_objectif est retenu pour les essais après examen de la synthèse HAS de mai 2016 et des conditions de réutilisation.
+
+Cette décision porte uniquement sur les objectifs généraux décrits dans le passage. Elle ne constitue pas une validation clinique ni une approbation de NurtureAI par la HAS.
+
+La réponse générée reste à évaluer.
+
+### Essais distants du 4 novembre 2026
+
+Question : À quoi sert la première consultation de grossesse en France ?
+
+Première tentative : generation_interrompue. Aucun texte partiel affiché. La cause et l’étape de l’interruption ne sont pas identifiées ; le contenu n’est pas évaluable.
+
+Deuxième tentative : references_controlees. La réponse reprend les trois objectifs du passage grossesse_premiere_consultation_objectif, sans information ajoutée. Chaque phrase cite ce passage. L’organisme, la version de mai 2016 et le lien sont correctement affichés.
+
+Bilan : une réponse conforme sur deux tentatives. La répétabilité et les variantes de formulation restent à évaluer.
+
+### Essai de reformulation du 4 novembre 2026
+
+Question : Quel est le rôle du premier rendez-vous de suivi de grossesse ?
+
+La recherche locale place le passage COR-04 en deuxième position, après un passage préconceptionnel.
+
+Statut obtenu : references_controlees.
+
+La réponse reprend les objectifs du passage grossesse_premiere_consultation_objectif, sans ajout ni confusion avec la consultation préconceptionnelle. La référence et sa version sont correctement affichées.
+
+Bilan cumulé : trois tentatives, dont une interrompue et deux réponses conformes sur deux formulations différentes. Ces observations ne démontrent pas une fiabilité systématique.

@@ -213,7 +213,7 @@ def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
     ).check().run()
 
     app.selectbox(key="corpus_assistant_groq").set_value(
-        "Consultation préconceptionnelle"
+        "Conception et suivi de grossesse"
     ).run()
 
     assert not app.exception
@@ -237,15 +237,14 @@ def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
         apercus[1][1]["content"]
     )["documents"]
 
-    assert {document["id"] for document in documents} == {
-        "conception_consultation_objectif",
-        "conception_consultation_preparation",
-    }
-    assert all(
-        document["source_version"]
-        == "Page mise à jour le 15 février 2013"
+    assert {
+        document["id"]: document["source_version"]
         for document in documents
-    )
+    } == {
+        "conception_consultation_objectif":"Page mise à jour le 15 février 2013",
+        "conception_consultation_preparation":"Page mise à jour le 15 février 2013",
+        "grossesse_premiere_consultation_objectif":"Synthèse mise à jour en mai 2016",
+    }
 
     app.checkbox(
         key="autorisation_assistant_groq"
@@ -288,7 +287,36 @@ def test_corpus_medical_autorisation_apercu_et_attribution(monkeypatch):
     assert app.button(key="executer_assistant_groq").disabled
     assert len(appels) == 2
 
-def test_insuffisance_medicale_affiche_message_fixe(monkeypatch):
+@pytest.mark.parametrize(
+    "sortie, statut, message",
+    [
+        (
+            '{"type": "information_insuffisante"}',
+            "information_insuffisante",
+            "Les documents disponibles ne permettent pas "
+            "de répondre à cette question.",
+        ),
+        (
+            '{"type": "information_insuffisante", '
+            '"texte": "CONTENU_NON_AFFICHE"}',
+            "reponse_rejetee",
+            "La réponse produite n’a pas satisfait les contrôles "
+            "de format ou de références. Elle n’est pas affichée.",
+        ),
+        (
+            "CONTENU_NON_AFFICHE",
+            "reponse_rejetee",
+            "La réponse produite n’a pas satisfait les contrôles "
+            "de format ou de références. Elle n’est pas affichée.",
+        ),
+    ],
+)
+def test_sortie_medicale_affiche_message_controle(
+    monkeypatch,
+    sortie,
+    statut,
+    message,
+):
     appels = []
 
     def faux_appel(messages, *, cle_api, modele):
@@ -299,7 +327,7 @@ def test_insuffisance_medicale_affiche_message_fixe(monkeypatch):
             return "GENERAL_INFORMATION"
 
         assert len(appels) == 2
-        return '{"type": "information_insuffisante"}'
+        return sortie
 
     monkeypatch.setattr(
         assistant_groq,
@@ -312,7 +340,7 @@ def test_insuffisance_medicale_affiche_message_fixe(monkeypatch):
     app.run()
 
     app.selectbox(key="corpus_assistant_groq").set_value(
-        "Consultation préconceptionnelle"
+        "Conception et suivi de grossesse"
     ).run()
 
     app.selectbox(key="question_assistant_groq").set_value(
@@ -333,18 +361,16 @@ def test_insuffisance_medicale_affiche_message_fixe(monkeypatch):
     assert not app.exception
     assert len(appels) == 2
 
-    assert "Statut : information_insuffisante" in [
+    assert f"Statut : {statut}" in [
         element.value for element in app.caption
     ]
 
     textes_markdown = [
         element.value for element in app.markdown
     ]
-    assert (
-        "Les documents disponibles ne permettent pas de répondre à cette question."
-    ) in textes_markdown
+    assert message in textes_markdown
     assert not any(
-        '"type"' in texte
+        "CONTENU_NON_AFFICHE" in texte
         for texte in textes_markdown
     )
 

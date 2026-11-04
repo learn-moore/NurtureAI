@@ -102,6 +102,10 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "Quels sujets aborder avant une grossesse ?",
             "conception_consultation_preparation",
         ),
+        (
+            "À quoi sert la première consultation de grossesse en France ?",
+            "grossesse_premiere_consultation_objectif",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(
@@ -113,3 +117,28 @@ def test_recherche_sur_corpus_retenu(
 
     assert resultats
     assert resultats[0]["passage"]["id"] == premier_attendu
+
+def test_passage_sa_sg_provisoire_exclu():
+    corpus = charger_corpus(CHEMIN)
+    identifiant = "grossesse_definitions_sa_sg"
+    passage = next(
+        passage
+        for passage in corpus
+        if passage["id"] == identifiant
+    )
+
+    assert passage["editorial_status"] == "draft"
+    assert passage["reuse_status"] == "to_review"
+    assert passage["usage"] == "cross_check"
+
+    question = "Que signifient semaines d’aménorrhée et semaines de grossesse ?"
+
+    # Le passage correspond à la question.
+    assert rechercher_passages(question, (passage,))
+
+    # Il reste exclu des résultats utilisables par l’assistant.
+    resultats = rechercher_corpus(question, corpus)
+    assert identifiant not in {
+        resultat["passage"]["id"]
+        for resultat in resultats
+    }

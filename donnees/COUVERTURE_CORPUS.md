@@ -21,8 +21,8 @@ Un classement favorable ou une citation reconnue ne suffit pas à déclarer une 
 | --- | --- | --- | --- |
 | COR-01 | conception | À quoi sert une consultation avant une grossesse ? | Prêt pour essai |
 | COR-02 | conception | Quels sujets peut-on préparer pour cette consultation ? | Prêt pour essai |
-| COR-03 | suivi_grossesse | Que signifient semaines d’aménorrhée et semaines de grossesse ? | À documenter |
-| COR-04 | suivi_grossesse | À quoi sert la première consultation de grossesse en France ? | À documenter |
+| COR-03 | suivi_grossesse | Que signifient semaines d’aménorrhée et semaines de grossesse ? | En revue |
+| COR-04 | suivi_grossesse | À quoi sert la première consultation de grossesse en France ? | Vérifié sur les cas prévus |
 | COR-05 | nutrition | Où trouver des recommandations alimentaires institutionnelles pour la grossesse ? | À documenter |
 | COR-06 | nutrition | Quelles précautions alimentaires générales sont recommandées pendant la grossesse ? | À documenter |
 | COR-07 | habitudes_de_vie | Quels sont les messages généraux de prévention concernant l’alcool pendant la grossesse ? | À documenter |
@@ -31,6 +31,8 @@ Un classement favorable ou une citation reconnue ne suffit pas à déclarer une 
 | COR-10 | medicaments | Quelles informations préparer pour discuter de ses médicaments avec un professionnel ? | À documenter |
 | COR-11 | signes_alerte | Où trouver une information institutionnelle sur les signes nécessitant un avis pendant la grossesse ? | À documenter |
 | COR-12 | signes_alerte | Quelles limites présente une liste générale de signes d’alerte ? | À documenter |
+
+Pour COR-04, la vérification porte sur la question de référence et une reformulation. Trois tentatives ont produit une interruption et deux réponses conformes aux passages transmis. Ce statut ne constitue pas une validation clinique ni une garantie de répétabilité.
 
 ## Premier lot proposé
 

@@ -19,7 +19,7 @@ CORPUS_DISPONIBLES = {
         "fichier": "corpus_fictif.json",
         "mode": "laboratoire",
     },
-    "Consultation préconceptionnelle": {
+    "Conception et suivi de grossesse": {
         "fichier": "corpus_medical.json",
         "mode": "medical",
     },
@@ -43,6 +43,9 @@ QUESTIONS_MEDICALES = (
     "C’est une urgence médicale pour moi.",
     "Quel est le but d’une consultation avant une grossesse ?",
     "Quels sujets aborder avant une grossesse ?",
+    "Que signifient semaines d’aménorrhée et semaines de grossesse ?",
+    "À quoi sert la première consultation de grossesse en France ?",
+    "Quel est le rôle du premier rendez-vous de suivi de grossesse ?",
 )
 
 
@@ -78,7 +81,8 @@ questions = (
 
 if mode == "medical":
     st.caption(
-        "Deux passages sur la consultation préconceptionnelle. Source HAS : page mise à jour en février 2013. Aucune information tarifaire n’est incluse."
+        "Trois passages utilisables sur la consultation préconceptionnelle et la première consultation de grossesse. Sources HAS : "
+        "versions de 2013 et 2016. Aucune information tarifaire n’est incluse."
     )
 
 question = st.selectbox(
