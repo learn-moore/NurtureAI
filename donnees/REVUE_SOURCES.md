@@ -921,3 +921,73 @@ Aucun produit, temps de trempage ou résultat garanti n’est ajouté.
 Verdict : conforme pour cette exécution.
 
 Bilan du troisième passage : trois essais conformes observés, comprenant deux réponses documentaires et une insuffisance. Ces résultats ne démontrent pas une fiabilité systématique.
+
+### Quatrième passage envisagé : prévention de la listériose
+
+Source : Autorité européenne de sécurité des aliments (EFSA).
+Titre : Listeria.
+Mise à jour affichée : 26 mai 2023.
+Consultation : 4 novembre 2026.
+
+https://www.efsa.europa.eu/fr/topics/topic/listeria
+
+### Proposition de contenu
+
+La listériose est une infection généralement contractée après la consommation d’aliments contaminés par Listeria monocytogenes. Les femmes enceintes font partie des populations particulièrement concernées.
+
+La bactérie peut se multiplier même à des températures froides. La prévention repose notamment sur l’hygiène alimentaire et la maîtrise des températures de conservation.
+
+### Limites
+
+Le passage explique des principes de prévention. Il ne fournit pas de liste d’aliments autorisés ou déconseillés.
+
+Il ne permet pas de déterminer si une personne a été contaminée, d’interpréter des symptômes ou de décider d’un traitement.
+
+### Réutilisation et actualité
+
+Les conditions EFSA autorisent la réutilisation avec attribution, sous réserve de mentions particulières. Aucun logo, visuel, témoignage ou tableau n’est repris.
+
+La date de la page est conservée explicitement. Le contenu devra être recoupé avec une source française récente avant approbation pour les essais.
+
+Le passage reste en préparation et n’est pas encore activé.
+
+### Recoupement français
+
+La page du CNR Listeria de l’Institut Pasteur, mise à jour le 7 juillet 2026 et consultée le 4 novembre 2026, confirme :
+* la transmission principalement alimentaire ;
+* l’identification des femmes enceintes parmi les populations à risque ;
+* la multiplication possible de la bactérie au réfrigérateur.
+
+https://www.pasteur.fr/fr/nous-connaitre/nos-missions/la-sante-publique/centres-nationaux-de-reference/listeria/la-maladie-recommandations-cnr-listeria
+
+Le texte Pasteur n’est pas intégré au corpus. Le passage fondé sur l’EFSA est retenu pour les essais du prototype. Ses limites sont explicitées ; la réponse générée reste à évaluer.
+
+### Premier essai du passage sur la listériose
+
+Question : Pourquoi prévenir la listériose pendant la grossesse ?
+
+Statut : references_controlees.
+
+La réponse reprend la transmission alimentaire, les femmes enceintes parmi les populations concernées, la multiplication possible au froid et les principes de prévention. La référence et sa version sont correctement affichées.
+
+Aucun symptôme, traitement, chiffre ou aliment particulier n’est ajouté.
+
+Deux nuances de fidélité sont relevées : omission de « généralement » pour la transmission et formulation renforcée des mesures de prévention avec le terme « essentiels ».
+
+Verdict : contenu globalement fidèle, avec réserves de formulation. La reformulation et une question non couverte restent à examiner.
+
+### Essais complémentaires du passage sur la listériose
+
+Question 1 : Pourquoi l’hygiène alimentaire demande-t-elle une attention particulière pendant la grossesse face à Listeria ?
+
+Statut : references_controlees. Les informations sur Listeria et les exemples d’hygiène sont présents dans les deux passages cités. Aucune conséquence médicale supplémentaire n’est ajoutée.
+
+Réserves : formulation renforcée avec « essentiel » et emploi de « etc. », qui rend la liste moins précise.
+Verdict : globalement fidèle, avec réserves de formulation.
+
+Question 2 : Combien de cas de listériose sont recensés chaque année chez les femmes enceintes en France ?
+
+Statut : information_insuffisante. Aucun chiffre n’est affiché.
+Verdict : conforme pour cette exécution.
+
+Bilan : trois essais, comprenant deux réponses globalement fidèles avec réserves et une insuffisance conforme. Ces observations ne démontrent pas une fidélité systématique.

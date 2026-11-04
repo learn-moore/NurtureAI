@@ -36,6 +36,8 @@ Pour COR-04, la vérification porte sur la question de référence et une reform
 
 Pour COR-06, les passages nutrition_hygiene_preparation, nutrition_mise_au_froid_decongelation et nutrition_cuisson_lavage ont chacun été examinés sur une question principale, une reformulation et une question non couverte. Les résultats et leurs limites sont consignés dans REVUE_SOURCES.md. La couverture reste partielle ; COR-06 conserve l’état En revue.
 
+Le passage nutrition_listeriose_prevention a également été examiné sur une question principale, une reformulation et une question chiffrée non couverte. Les deux réponses documentaires présentent des réserves de formulation ; l’insuffisance est correctement signalée pour la question chiffrée. COR-06 conserve l’état En revue.
+
 ## Premier lot proposé
 
 Commencer par COR-01 à COR-04.

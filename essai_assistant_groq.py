@@ -57,6 +57,9 @@ QUESTIONS_MEDICALES = (
     "Quels gestes de cuisson et de lavage des aliments respecter pendant la grossesse ?",
     "Pendant la grossesse, quelle durée de cuisson en minutes prévoir pour les œufs ?",
     "Pendant la grossesse, que faire avant de consommer des fruits et légumes crus ?",
+    "Pourquoi prévenir la listériose pendant la grossesse ?",
+    "Pourquoi l’hygiène alimentaire demande-t-elle une attention particulière pendant la grossesse face à Listeria ?",
+    "Combien de cas de listériose sont recensés chaque année chez les femmes enceintes en France ?",
 )
 
 

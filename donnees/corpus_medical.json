@@ -128,6 +128,22 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "nutrition_listeriose_prevention",
+      "topic": "nutrition",
+      "title": "Pourquoi prévenir la listériose pendant la grossesse ?",
+      "content": "La listériose est une infection généralement contractée après la consommation d’aliments contaminés par Listeria monocytogenes. Les femmes enceintes font partie des populations particulièrement concernées. La bactérie peut se multiplier même à des températures froides. La prévention repose notamment sur l’hygiène alimentaire et la maîtrise des températures de conservation. Ce passage ne fournit pas de liste d’aliments autorisés ou déconseillés et ne permet pas d’évaluer une exposition individuelle.",
+      "source": "Autorité européenne de sécurité des aliments (EFSA)",
+      "url": "https://www.efsa.europa.eu/fr/topics/topic/listeria",
+      "country": "EU",
+      "publication_date": null,
+      "source_version": "Page mise à jour le 26 mai 2023",
+      "retrieved_at": "2026-11-04",
+      "reviewed_at": "2026-11-04",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

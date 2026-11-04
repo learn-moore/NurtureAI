@@ -130,6 +130,10 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "Quels gestes de cuisson et de lavage des aliments respecter pendant la grossesse ?",
             "nutrition_cuisson_lavage",
         ),
+        (
+            "Pourquoi prévenir la listériose pendant la grossesse ?",
+            "nutrition_listeriose_prevention",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(
