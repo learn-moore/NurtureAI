@@ -78,6 +78,8 @@ def test_remplacement_profil_efface_session_assistant(session_simulee):
         "assistant_autorisation": True,
         "assistant_resultat": {"reponse": "Réponse fictive"},
         "preference_temoin": "à conserver",
+        "preparation_rdv_notes_fictive": True,
+        "preparation_rdv_apercu_fictive": {"messages": []},
     })
     nouveau_profil = UserProfile()
 
@@ -85,7 +87,7 @@ def test_remplacement_profil_efface_session_assistant(session_simulee):
 
     assert session_simulee["profil"] == nouveau_profil
     assert not any(
-        cle.startswith("assistant_")
+        cle.startswith(("assistant_", "preparation_rdv_"))
         for cle in session_simulee
     )
     assert session_simulee["preference_temoin"] == "à conserver"

@@ -25,7 +25,7 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
 | Intentions et sécurité | Partiel | CA-17 à CA-19 | Classifier, orienter et fournir des réponses locales adaptées. |
-| Préparation IA des rendez-vous | Partiel | CA-20 | Ajouter les propositions IA avec conservation des notes et validation manuelle. |
+| Préparation IA des rendez-vous | Partiel | CA-20 | Composants locaux et parcours simulé testés. Ajouter l’autorisation, le contrôle de sécurité distant, l’adaptateur fournisseur et les essais réels. |
 | Accessibilité et déploiement | À réaliser | CA-25, ENF-04, ENF-06, ENF-09 | Tester les navigateurs, les petits écrans, les performances et l’hébergement. |
 
 ## Décisions à finaliser

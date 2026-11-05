@@ -294,6 +294,14 @@ Les essais de la notice nutritionnelle ont produit deux réponses d’orientatio
 
 Cette page reste expérimentale et distincte de l’application de suivi. Les conditions de réutilisation, décisions éditoriales et observations sont consignées dans la revue des sources.
 
+## Préparation assistée des rendez-vous
+
+Chaque fiche enregistrée propose une sélection explicite des notes et des questions pour préparer un aperçu local.
+
+Les composants de génération, de validation du format, de relecture et d’ajout confirmé sont testés avec un générateur fictif. Les notes et questions originales sont conservées. Une fiche modifiée depuis la préparation ne peut pas recevoir une proposition obsolète.
+
+La génération distante n’est pas encore configurée pour cette fonction. Le bouton de proposition reste désactivé dans l’application. La création, la modification et l’export manuels restent disponibles.
+
 ## Organisation
 
 * `app.py` : interface Streamlit.
@@ -340,6 +348,7 @@ Cette page reste expérimentale et distincte de l’application de suivi. Les co
 * `donnees/COUVERTURE_CORPUS.md` : questions générales visées, passages associés et état de vérification de la couverture documentaire.
 * `donnees/corpus_medical.json` : passages médicaux et métadonnées de revue ; les brouillons sont exclus de la recherche.
 * `interface_assistant.py` : aperçu local, autorisation d’envoi et affichage des réponses de l’assistant intégré.
+* `preparation_rendez_vous.py` : coordination de la proposition de questions, validation du format et traitement des erreurs, sans modification de la fiche.
 
 
 ## Limites

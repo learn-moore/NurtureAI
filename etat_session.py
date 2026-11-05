@@ -168,6 +168,7 @@ def effacer_saisies_rendez_vous():
         "enregistrer_edition_rdv_",
         "confirmer_suppression_rdv_",
         "supprimer_rdv_",
+        "preparation_rdv_",
     )
     messages = {
         "message_modification_rdv",

@@ -18,7 +18,10 @@ from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mo
 from timeline import construire_timeline, choisir_etape_a_mettre_en_avant, calculer_jours_sa_timeline
 from fiches_hebdomadaires import charger_fiches_hebdomadaires, selectionner_fiche_semaine
 from intentions import MESSAGE_URGENCE
-from interface_assistant import afficher_assistant
+from interface_assistant import (
+    afficher_assistant,
+    afficher_preparation_rendez_vous,
+)
 
 
 st.title("NurtureAI")
@@ -1073,6 +1076,15 @@ else:
                 key=f"telecharger_rdv_{fiche.id}",
                 on_click="ignore",
             )
+
+            nouveau_profil = afficher_preparation_rendez_vous(
+                fiche,
+                profil=st.session_state["profil"],
+            )
+
+            if nouveau_profil is not None:
+                st.session_state["profil"] = nouveau_profil
+                st.rerun()
 
             cle_edition = (
                 f"edition_rdv_{fiche.id}_{fiche.updated_at.isoformat()}"

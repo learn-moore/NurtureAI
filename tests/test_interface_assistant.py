@@ -572,3 +572,325 @@ def test_configuration_invalide_bloque_envoi(
     assert "Suite de la page accessible." in [
         element.value for element in app.text
     ]
+
+def page_preparation_rendez_vous():
+    import streamlit as st
+    from interface_assistant import afficher_preparation_rendez_vous
+
+    for fiche in st.session_state["fiches_rdv_test"]:
+        afficher_preparation_rendez_vous(fiche)
+
+    st.text("Suite de la page accessible.")
+
+
+def test_apercus_rendez_vous_independants(monkeypatch):
+    import json
+    from uuid import uuid4
+
+    import assistant_groq
+    from modeles import Appointment
+
+    def appel_interdit(*args, **kwargs):
+        pytest.fail("Les aperçus doivent rester locaux.")
+
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        appel_interdit,
+    )
+
+    premiere = Appointment(
+        journey_id=str(uuid4()),
+        notes="Notes fictives de la première fiche.",
+        questions=("Question de la première fiche ?",),
+    )
+    seconde = Appointment(
+        journey_id=str(uuid4()),
+        notes="Notes fictives de la seconde fiche.",
+    )
+
+    app = AppTest.from_function(page_preparation_rendez_vous)
+    app.session_state["fiches_rdv_test"] = (premiere, seconde)
+    app.run()
+
+    assert not app.exception
+    assert not app.json
+
+    app.checkbox(
+        key=f"preparation_rdv_notes_{premiere.id}"
+    ).check().run()
+    app.button(
+        key=f"preparation_rdv_preparer_{premiere.id}"
+    ).click().run()
+
+    assert not app.exception
+    assert len(app.json) == 1
+    assert not app.checkbox(
+        key=f"preparation_rdv_notes_{seconde.id}"
+    ).value
+
+    app.checkbox(
+        key=f"preparation_rdv_notes_{seconde.id}"
+    ).check().run()
+    app.button(
+        key=f"preparation_rdv_preparer_{seconde.id}"
+    ).click().run()
+
+    assert not app.exception
+    assert len(app.json) == 2
+    apercu_seconde = app.json[1].value
+
+    # Modifier la sélection de la première retire seulement son aperçu.
+    app.checkbox(
+        key=f"preparation_rdv_questions_{premiere.id}"
+    ).check().run()
+
+    assert not app.exception
+    assert len(app.json) == 1
+    assert app.json[0].value == apercu_seconde
+
+    messages = json.loads(app.json[0].value)
+    assert json.loads(messages[1]["content"]) == {
+        "contenu_selectionne": {"notes": seconde.notes},
+    }
+    assert f"preparation_rdv_apercu_{premiere.id}" not in (
+        app.session_state
+    )
+    assert "Suite de la page accessible." in [
+        element.value for element in app.text
+    ]
+
+@pytest.mark.parametrize(
+    "modification",
+    [
+        {"notes": "Notes fictives modifiées."},
+        {"questions": ("Question fictive modifiée ?",)},
+    ],
+)
+def test_modifier_fiche_retire_ancien_apercu(monkeypatch, modification):
+    import json
+    from dataclasses import replace
+    from uuid import uuid4
+
+    import assistant_groq
+    from modeles import Appointment
+
+    def appel_interdit(*args, **kwargs):
+        pytest.fail("Cette préparation doit rester locale.")
+
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        appel_interdit,
+    )
+
+    fiche = Appointment(
+        journey_id=str(uuid4()),
+        notes="Notes fictives initiales.",
+        questions=("Question fictive initiale ?",),
+    )
+
+    app = AppTest.from_function(page_preparation_rendez_vous)
+    app.session_state["fiches_rdv_test"] = (fiche,)
+    app.run()
+
+    app.checkbox(
+        key=f"preparation_rdv_notes_{fiche.id}"
+    ).check().run()
+    app.checkbox(
+        key=f"preparation_rdv_questions_{fiche.id}"
+    ).check().run()
+    app.button(
+        key=f"preparation_rdv_preparer_{fiche.id}"
+    ).click().run()
+
+    assert not app.exception
+    assert len(app.json) == 1
+
+    fiche_modifiee = replace(fiche, **modification)
+    app.session_state["fiches_rdv_test"] = (fiche_modifiee,)
+    app.run()
+
+    assert not app.exception
+    assert not app.json
+    assert f"preparation_rdv_apercu_{fiche.id}" not in app.session_state
+
+    app.button(
+        key=f"preparation_rdv_preparer_{fiche.id}"
+    ).click().run()
+
+    assert not app.exception
+    messages = json.loads(app.json[0].value)
+    assert json.loads(messages[1]["content"]) == {
+        "contenu_selectionne": {
+            "notes": fiche_modifiee.notes,
+            "questions": list(fiche_modifiee.questions),
+        },
+    }
+
+def page_relecture_rendez_vous():
+    import streamlit as st
+    from interface_assistant import afficher_relecture_rendez_vous
+
+    nouveau_profil = afficher_relecture_rendez_vous(
+        st.session_state["profil_relecture_test"],
+        st.session_state["fiche_relecture_test"],
+        st.session_state["proposition_relecture_test"],
+    )
+
+    if nouveau_profil is not None:
+        st.session_state["profil_relecture_test"] = nouveau_profil
+
+    st.text("Suite de la page accessible.")
+
+def test_relecture_exige_confirmation_apres_modification():
+    from datetime import date
+
+    from modeles import Appointment, UserProfile
+
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 11, 1),
+    )
+    fiche = Appointment(
+        journey_id=profil.active_journey_id,
+        notes="Notes originales à conserver.",
+        questions=("Question initiale ?",),
+    )
+    profil = profil.ajouter_rendez_vous(fiche)
+    base = f"preparation_rdv_relecture_{fiche.id}"
+
+    app = AppTest.from_function(page_relecture_rendez_vous)
+    app.session_state["profil_relecture_test"] = profil
+    app.session_state["fiche_relecture_test"] = fiche
+    app.session_state["proposition_relecture_test"] = (
+        "Question proposée ?",
+    )
+    app.run()
+
+    assert not app.exception
+    assert app.button(key=f"{base}_ajouter").disabled
+    assert app.session_state["profil_relecture_test"] == profil
+
+    app.checkbox(key=f"{base}_confirmation").check().run()
+
+    assert not app.exception
+    assert not app.button(key=f"{base}_ajouter").disabled
+    assert app.session_state["profil_relecture_test"] == profil
+
+    app.text_area(key=f"{base}_texte").set_value(
+        "Question modifiée après relecture ?"
+    ).run()
+
+    assert not app.exception
+    assert not app.checkbox(key=f"{base}_confirmation").value
+    assert app.button(key=f"{base}_ajouter").disabled
+    assert app.session_state["profil_relecture_test"] == profil
+
+    app.checkbox(key=f"{base}_confirmation").check().run()
+    app.button(key=f"{base}_ajouter").click().run()
+
+    assert not app.exception
+    nouveau_profil = app.session_state["profil_relecture_test"]
+    nouvelle_fiche = nouveau_profil.appointments[0]
+
+    assert nouvelle_fiche.questions == (
+        "Question initiale ?",
+        "Question modifiée après relecture ?",
+    )
+    assert nouvelle_fiche.notes == fiche.notes
+    assert nouvelle_fiche.id == fiche.id
+    assert profil.appointments[0] == fiche
+    assert "Suite de la page accessible." in [
+        element.value for element in app.text
+    ]
+
+def page_proposition_rendez_vous():
+    import json
+    import streamlit as st
+    from interface_assistant import afficher_preparation_rendez_vous
+
+    st.session_state.setdefault("nombre_propositions_test", 0)
+
+    def generer(messages):
+        st.session_state["nombre_propositions_test"] += 1
+        return json.dumps({
+            "questions": ["Question proposée fictive ?"],
+        })
+
+    nouveau_profil = afficher_preparation_rendez_vous(
+        st.session_state["fiche_proposition_test"],
+        profil=st.session_state["profil_proposition_test"],
+        generer=generer,
+    )
+
+    if nouveau_profil is not None:
+        st.session_state["profil_proposition_test"] = nouveau_profil
+
+def test_proposition_puis_ajout_confirme():
+    from datetime import date
+    from modeles import Appointment, UserProfile
+
+    profil = UserProfile().demarrer_parcours(
+        "conception",
+        date(2026, 11, 1),
+    )
+    fiche = Appointment(
+        journey_id=profil.active_journey_id,
+        notes="Notes originales.",
+        questions=("Question initiale ?",),
+    )
+    profil = profil.ajouter_rendez_vous(fiche)
+    base = f"preparation_rdv_relecture_{fiche.id}"
+
+    app = AppTest.from_function(page_proposition_rendez_vous)
+    app.session_state["fiche_proposition_test"] = fiche
+    app.session_state["profil_proposition_test"] = profil
+    app.run()
+
+    app.checkbox(
+        key=f"preparation_rdv_notes_{fiche.id}"
+    ).check().run()
+    app.button(
+        key=f"preparation_rdv_preparer_{fiche.id}"
+    ).click().run()
+
+    assert not app.exception
+    assert app.session_state["nombre_propositions_test"] == 0
+
+    app.button(
+        key=f"preparation_rdv_proposer_{fiche.id}"
+    ).click().run()
+
+    assert not app.exception
+    assert app.session_state["nombre_propositions_test"] == 1
+    assert app.session_state["profil_proposition_test"] == profil
+
+    app.run()
+    assert app.session_state["nombre_propositions_test"] == 1
+
+    app.checkbox(key=f"{base}_confirmation").check().run()
+
+    # Une nouvelle proposition retire la confirmation précédente.
+    app.button(
+        key=f"preparation_rdv_proposer_{fiche.id}"
+    ).click().run()
+
+    assert not app.exception
+    assert app.session_state["nombre_propositions_test"] == 2
+    assert not app.checkbox(key=f"{base}_confirmation").value
+    assert app.session_state["profil_proposition_test"] == profil
+
+    app.checkbox(key=f"{base}_confirmation").check().run()
+    app.button(key=f"{base}_ajouter").click().run()
+
+    assert not app.exception
+    nouvelle_fiche = (
+        app.session_state["profil_proposition_test"].appointments[0]
+    )
+    assert nouvelle_fiche.questions == (
+        "Question initiale ?",
+        "Question proposée fictive ?",
+    )
+    assert nouvelle_fiche.notes == fiche.notes
+    assert app.session_state["nombre_propositions_test"] == 2

@@ -2,12 +2,17 @@ from pathlib import Path
 
 import streamlit as st
 
+from datetime import datetime, timezone
+
 from corpus_documentaire import charger_corpus
 from intentions import MESSAGE_URGENCE, reperer_declaration_urgence
 from messages_assistant import preparer_messages
 from recherche_documentaire import rechercher_corpus
 from classification_intentions import CONSIGNES_CLASSIFICATION
 from assistant_groq import traiter_demande_groq
+from fiches_rendez_vous import PreparationRendezVousUrgente
+from messages_assistant import preparer_messages_rendez_vous
+from preparation_rendez_vous import enregistrer_questions_relues, proposer_questions_rendez_vous
 
 
 CHEMIN_CORPUS = (
@@ -219,3 +224,218 @@ def afficher_assistant():
             st.caption(
                 "La présence des références ne prouve pas que chaque affirmation est étayée."
             )
+
+def effacer_apercu_rendez_vous(identifiant):
+    cles = {
+        f"preparation_rdv_apercu_{identifiant}",
+        f"preparation_rdv_resultat_{identifiant}",
+    }
+    prefixe_relecture = f"preparation_rdv_relecture_{identifiant}_"
+
+    for cle in list(st.session_state):
+        if cle in cles or cle.startswith(prefixe_relecture):
+            del st.session_state[cle]
+
+
+def afficher_preparation_rendez_vous(
+    fiche,
+    *,
+    profil=None,
+    generer=None,
+):
+    cle_apercu = f"preparation_rdv_apercu_{fiche.id}"
+    apercu = st.session_state.get(cle_apercu)
+
+    if apercu is not None and apercu["fiche"] != fiche:
+        effacer_apercu_rendez_vous(fiche.id)
+
+    st.write("**Préparer mes questions**")
+    st.caption(
+        "Sélectionnez les champs à utiliser. Cette étape prépare uniquement un aperçu local, sans envoi IA."
+    )
+
+    inclure_notes = st.checkbox(
+        "Utiliser les notes de cette fiche",
+        key=f"preparation_rdv_notes_{fiche.id}",
+        disabled=not fiche.notes.strip(),
+        on_change=effacer_apercu_rendez_vous,
+        args=(fiche.id,),
+    )
+    inclure_questions = st.checkbox(
+        "Utiliser les questions de cette fiche",
+        key=f"preparation_rdv_questions_{fiche.id}",
+        disabled=not fiche.questions,
+        on_change=effacer_apercu_rendez_vous,
+        args=(fiche.id,),
+    )
+
+    preparer = st.button(
+        "Préparer l’aperçu des questions",
+        key=f"preparation_rdv_preparer_{fiche.id}",
+        on_click=effacer_apercu_rendez_vous,
+        args=(fiche.id,),
+    )
+
+    if preparer:
+        try:
+            messages = preparer_messages_rendez_vous(
+                fiche,
+                inclure_notes=inclure_notes,
+                inclure_questions=inclure_questions,
+            )
+        except PreparationRendezVousUrgente:
+            st.warning(MESSAGE_URGENCE)
+            return
+        except ValueError:
+            st.warning(
+                "Sélectionnez au moins un champ non vide à préparer."
+            )
+            return
+
+        st.session_state[cle_apercu] = {
+            "fiche": fiche,
+            "messages": messages,
+            "inclure_notes": inclure_notes,
+            "inclure_questions": inclure_questions,
+        }
+
+    apercu = st.session_state.get(cle_apercu)
+
+    if apercu is None:
+        return None
+
+    st.json(list(apercu["messages"]))
+
+    proposer = st.button(
+        "Proposer des questions",
+        key=f"preparation_rdv_proposer_{fiche.id}",
+        disabled=generer is None,
+    )
+
+    if generer is None:
+        st.caption(
+            "La proposition automatique n’est pas disponible pour le moment. Vous pouvez continuer à préparer la fiche manuellement."
+        )
+        return None
+
+    cle_resultat = f"preparation_rdv_resultat_{fiche.id}"
+
+    if proposer:
+        st.session_state.pop(cle_resultat, None)
+
+        prefixe = f"preparation_rdv_relecture_{fiche.id}_"
+        for cle in list(st.session_state):
+            if cle.startswith(prefixe):
+                del st.session_state[cle]
+
+        def generer_apercu_verifie(messages):
+            if messages != apercu["messages"]:
+                raise ValueError("L’aperçu doit être préparé à nouveau.")
+            return generer(messages)
+
+        try:
+            resultat = proposer_questions_rendez_vous(
+                apercu["fiche"],
+                generer=generer_apercu_verifie,
+                inclure_notes=apercu["inclure_notes"],
+                inclure_questions=apercu["inclure_questions"],
+            )
+        except ValueError:
+            st.error("Préparez un nouvel aperçu avant de réessayer.")
+            return None
+
+        st.session_state[cle_resultat] = resultat
+
+    resultat = st.session_state.get(cle_resultat)
+
+    if resultat is None:
+        return None
+
+    st.caption(f"Statut : {resultat['statut']}")
+
+    if resultat["statut"] == "urgence_locale":
+        st.warning(resultat["message"])
+        return None
+
+    st.info(resultat["message"])
+
+    if (
+        resultat["statut"] == "proposition_disponible"
+        and profil is not None
+    ):
+        return afficher_relecture_rendez_vous(
+            profil,
+            apercu["fiche"],
+            resultat["questions"],
+        )
+
+    return None
+
+def retirer_confirmation_rendez_vous(cle):
+    st.session_state[cle] = False
+
+
+def afficher_relecture_rendez_vous(
+    profil,
+    fiche_reference,
+    questions_proposees,
+):
+    """Retourne un nouveau profil après ajout explicitement confirmé."""
+    base = f"preparation_rdv_relecture_{fiche_reference.id}"
+    cle_texte = f"{base}_texte"
+    cle_confirmation = f"{base}_confirmation"
+    cle_reference = f"{base}_reference"
+
+    reference = (fiche_reference, questions_proposees)
+
+    if st.session_state.get(cle_reference) != reference:
+        st.session_state[cle_reference] = reference
+        st.session_state[cle_texte] = "\n".join(questions_proposees)
+        st.session_state[cle_confirmation] = False
+
+    st.write("**Relire la proposition**")
+    st.caption(
+        "Modifiez ou retirez les questions proposées avant de confirmer. L’ajout conserve vos notes et vos questions déjà enregistrées."
+    )
+
+    texte = st.text_area(
+        "Questions proposées, une par ligne",
+        key=cle_texte,
+        max_chars=15030,
+        on_change=retirer_confirmation_rendez_vous,
+        args=(cle_confirmation,),
+    )
+    confirmation = st.checkbox(
+        "J’ai relu ces questions et je souhaite les ajouter à ma fiche.",
+        key=cle_confirmation,
+    )
+    ajouter = st.button(
+        "Ajouter les questions relues",
+        key=f"{base}_ajouter",
+        disabled=not confirmation,
+    )
+
+    if not ajouter or not confirmation:
+        return None
+
+    questions = tuple(
+        ligne.strip()
+        for ligne in texte.splitlines()
+        if ligne.strip()
+    )
+
+    if not questions:
+        st.warning("Conservez au moins une question à ajouter.")
+        return None
+
+    try:
+        return enregistrer_questions_relues(
+            profil,
+            fiche_reference,
+            questions,
+            modifie_le=datetime.now(timezone.utc),
+            confirmer=True,
+        )
+    except ValueError as erreur:
+        st.error(str(erreur))
+        return None
