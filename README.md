@@ -246,17 +246,21 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 streamlit run essai_assistant_groq.py
 ```
 
-La page propose un corpus fictif et un corpus médical contenant onze passages utilisables : consultations, orientation nutritionnelle, sécurité alimentaire, prévention concernant l’alcool et accompagnement à l’arrêt du tabac.
+La page propose un corpus fictif et un corpus médical contenant quinze passages utilisables, répartis sur six thèmes : conception, suivi de grossesse, nutrition, habitudes de vie, médicaments et signes d’alerte.
 
-Les sources sont la HAS, Santé publique France, l’EFSA et Service Public / DILA. La couverture reste limitée aux passages documentés. Les réserves de fidélité et les défauts de recherche observés sont consignés dans la revue des sources.
+Les documents originaux proviennent de la HAS, de Santé publique France, de l’EFSA, de Service Public / DILA, de l’ANSM et du ministère chargé de la Santé. Le corpus comprend également une adaptation française sous Open Government Licence v3.0, dont l’origine et les conditions sont documentées dans la revue des sources.
 
-Un douzième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
+Un seizième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
 
-COR-07 et COR-08 sont évalués avec réserves : certaines formulations ne retrouvent pas le passage pertinent parmi les trois résultats. La revue du moteur de recherche est reportée.
+Sur les douze questions de couverture, sept sont vérifiées sur les cas prévus, trois sont évaluées avec réserves et deux restent en revue. Ces résultats ne constituent pas une validation clinique ni une couverture complète des six thèmes.
+
+Les réserves concernent notamment l’attribution des citations et la recherche de certaines formulations. La nutrition reste partiellement couverte. La revue du moteur de recherche est reportée.
 
 Le corpus choisi détermine les questions et les consignes. Les messages sont prévisualisés avant autorisation. Changer de corpus ou de question retire l’autorisation d’envoi.
 
-Les références affichent l’organisme, le lien et la version de la source. Un rappel de portée générale accompagne systématiquement les réponses médicales avec références reconnues.
+Les références affichent la source, le lien et la version du document. Une mention facultative précise les conditions de réutilisation et le caractère adapté d’un passage. Elle provient des métadonnées et reste indépendante du texte généré par le modèle.
+
+Un rappel de portée générale accompagne les réponses médicales avec références reconnues. La reconnaissance des références ne vérifie pas automatiquement la pertinence ou la fidélité des réponses.
 
 En mode médical, la sortie du modèle suit un format JSON contrôlé. Elle distingue une réponse documentaire d’une déclaration d’insuffisance des informations.
 

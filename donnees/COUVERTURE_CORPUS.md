@@ -28,12 +28,12 @@ Un classement favorable ou une citation reconnue ne suffit pas à déclarer une 
 | COR-06 | nutrition | Quelles précautions alimentaires générales sont recommandées pendant la grossesse ? | En revue |
 | COR-07 | habitudes_de_vie | Quels sont les messages généraux de prévention concernant l’alcool pendant la grossesse ? | Évalué avec réserves |
 | COR-08 | habitudes_de_vie | Quels accompagnements sont proposés pour arrêter le tabac pendant la grossesse ? | Évalué avec réserves |
-| COR-09 | medicaments | Pourquoi signaler un projet de grossesse lors d’une discussion sur les médicaments ? | À documenter |
-| COR-10 | medicaments | Quelles informations préparer pour discuter de ses médicaments avec un professionnel ? | À documenter |
-| COR-11 | signes_alerte | Où trouver une information institutionnelle sur les signes nécessitant un avis pendant la grossesse ? | À documenter |
-| COR-12 | signes_alerte | Quelles limites présente une liste générale de signes d’alerte ? | À documenter |
+| COR-09 | medicaments | Pourquoi signaler un projet de grossesse lors d’une discussion sur les médicaments ? | Vérifié sur les cas prévus |
+| COR-10 | medicaments | Quelles informations préparer pour discuter de ses médicaments avec un professionnel ? | Vérifié sur les cas prévus |
+| COR-11 | signes_alerte | Où trouver une information institutionnelle sur les signes nécessitant un avis pendant la grossesse ? | Vérifié sur les cas prévus |
+| COR-12 | signes_alerte | Quelles limites présente une liste générale de signes d’alerte ? | Vérifié sur les cas prévus |
 
-COR-01 et COR-02 ont fait l’objet d’essais sur les questions initiales et leurs variantes. Les résultats couvrent plusieurs versions des consignes et du format de sortie. Des réserves d’attribution des citations subsistent dans les observations consignées. Une vérification finale avec la configuration actuelle reste à effectuer.
+COR-01 et COR-02 ont été réévalués sur les questions initiales et leurs variantes. COR-01 est vérifié sur les cas examinés. COR-02 conserve une réserve sur la délimitation des citations, détaillée dans la vérification complémentaire en fin de document.
 
 Pour COR-04, la vérification porte sur la question de référence et une reformulation. Trois tentatives ont produit une interruption et deux réponses conformes aux passages transmis. Ce statut ne constitue pas une validation clinique ni une garantie de répétabilité.
 

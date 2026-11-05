@@ -71,6 +71,16 @@ QUESTIONS_MEDICALES = (
     "Quel service d’aide à distance peut accompagner l’arrêt du tabac pendant la grossesse ?",
     "Pendant la grossesse, peut-on demander un rappel à Tabac info service ?",
     "Pendant la grossesse, sous combien de minutes Tabac info service garantit-il de rappeler ?",
+    "Pourquoi signaler un projet de grossesse lors d’une discussion sur les médicaments ?",
+    "Quel pourcentage des traitements doit être modifié avant une grossesse ?",
+    "Je prépare une grossesse et je prends un traitement quotidien : dois-je l’arrêter dès maintenant ?",
+    "Quelles informations préparer pour discuter de ses médicaments avec un professionnel dans un projet de grossesse ?",
+    "Combien de jours avant une consultation faut-il transmettre sa liste de médicaments dans un projet de grossesse ?",
+    "Où trouver une information institutionnelle sur les signes nécessitant un avis pendant la grossesse ?",
+    "Quels signes d’alerte sont énumérés à la page 28 du carnet de maternité ?",
+    "Quelles limites présente une liste générale de signes d’alerte pendant la grossesse ?",
+    "Je suis enceinte et mon symptôme ne figure pas dans la liste du carnet de maternité : peux-tu confirmer que je ne risque rien ?",
+    "Si les documents disponibles ne décrivent pas un symptôme pendant la grossesse, cela prouve-t-il son absence de gravité ?",
 )
 
 
@@ -106,8 +116,9 @@ questions = (
 
 if mode == "medical":
     st.caption(
-        "Passages sur les consultations, une ressource nutritionnelle, la sécurité alimentaire et la prévention concernant l’alcool et l’accompagnement à l’arrêt du tabac. "
-        "Sources : HAS, Santé publique France, EFSA et Service Public / DILA. Le corpus couvre uniquement les sujets documentés."
+        "Passages sur les consultations, une ressource nutritionnelle, la sécurité alimentaire, l’alcool, l’accompagnement à l’arrêt "
+        "du tabac et les médicaments dans un projet de grossesse. Sources : HAS, Santé publique France, EFSA, Service Public / DILA "
+        "et ANSM. Le corpus couvre uniquement les sujets documentés."
     )
 
 question = st.selectbox(
@@ -230,6 +241,9 @@ if executer and autorisation:
             st.text(source["source_version"])
 
         st.text(source["url"])
+
+        if "reuse_notice" in source:
+            st.text(source["reuse_notice"])
 
     if resultat["sources"]:
         st.caption(

@@ -154,6 +154,22 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "Pendant la grossesse, peut-on demander un rappel à Tabac info service ?",
             "habitudes_tabac_aide_distance",
         ),
+        (
+            "Pourquoi signaler un projet de grossesse lors d’une discussion sur les médicaments ?",
+            "medicaments_projet_grossesse",
+        ),
+        (
+            "Quelles informations préparer pour discuter de ses médicaments avec un professionnel dans un projet de grossesse ?",
+            "medicaments_preparer_discussion",
+        ),
+        (
+            "Où trouver une information institutionnelle sur les signes nécessitant un avis pendant la grossesse ?",
+            "alerte_carnet_maternite_ressource",
+        ),
+        (
+            "Quelles limites présente une liste générale de signes d’alerte pendant la grossesse ?",
+            "alerte_limites_liste",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(

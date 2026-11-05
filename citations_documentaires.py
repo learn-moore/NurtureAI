@@ -65,8 +65,9 @@ def retrouver_sources_citees(
             "url": document["url"],
         }
 
-        if "source_version" in document:
-            source["source_version"] = document["source_version"]
+        for champ in ("source_version", "reuse_notice"):
+            if champ in document:
+                source[champ] = document[champ]
 
         sources.append(source)
 

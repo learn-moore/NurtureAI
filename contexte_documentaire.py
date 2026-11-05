@@ -23,8 +23,9 @@ def construire_contexte(
             "url": passage["url"],
         }
 
-        if "source_version" in passage:
-            document["source_version"] = passage["source_version"]
+        for champ in ("source_version", "reuse_notice"):
+            if champ in passage:
+                document[champ] = passage[champ]
 
         candidat = json.dumps(
             [*documents, document],

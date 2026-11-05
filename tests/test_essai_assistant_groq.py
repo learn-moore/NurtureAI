@@ -403,3 +403,68 @@ def test_sortie_medicale_affiche_message_controle(
 
     assert not app.exception
     assert len(appels) == 2
+
+def test_mention_reutilisation_conservee_et_affichee(monkeypatch):
+    import corpus_documentaire
+
+    mention = "Adaptation fictive. Attribution réservée au test."
+    charger_original = corpus_documentaire.charger_corpus
+    appels = []
+
+    def charger_avec_mention(chemin):
+        corpus = charger_original(chemin)
+
+        return tuple(
+            {**passage, "reuse_notice": mention}
+            if passage["id"] == "calendrier"
+            else passage
+            for passage in corpus
+        )
+
+    def faux_appel(messages, *, cle_api, modele):
+        assert cle_api == "cle-fictive"
+        appels.append(messages)
+
+        if len(appels) == 1:
+            return "GENERAL_INFORMATION"
+
+        assert len(appels) == 2
+        documents = json.loads(messages[1]["content"])["documents"]
+        calendrier = next(
+            document
+            for document in documents
+            if document["id"] == "calendrier"
+        )
+        assert calendrier["reuse_notice"] == mention
+
+        return "Le calendrier présente les rendez-vous [calendrier]."
+
+    monkeypatch.setattr(
+        corpus_documentaire,
+        "charger_corpus",
+        charger_avec_mention,
+    )
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        faux_appel,
+    )
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+
+    assert not app.exception
+    assert appels == []
+
+    app.checkbox(
+        key="autorisation_assistant_groq"
+    ).check().run()
+    app.button(key="executer_assistant_groq").click().run()
+
+    assert not app.exception
+    assert len(appels) == 2
+
+    textes = [element.value for element in app.text]
+    assert mention in textes
+    assert "https://example.org/calendrier" in textes

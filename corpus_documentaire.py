@@ -61,10 +61,13 @@ def valider_passage(passage: dict) -> None:
     if passage["id"] != passage["id"].strip():
         raise ValueError("L’identifiant ne doit pas avoir d’espaces aux extrémités.")
 
-    if "source_version" in passage:
-        version_source = passage["source_version"]
-        if not isinstance(version_source, str) or not version_source.strip():
-            raise ValueError("Le champ source_version doit contenir du texte.")
+    for champ in ("source_version", "reuse_notice"):
+        if champ in passage:
+            valeur = passage[champ]
+            if not isinstance(valeur, str) or not valeur.strip():
+                raise ValueError(
+                    f"Le champ {champ} doit contenir du texte."
+                )
 
     if passage["topic"] not in THEMES_CORPUS:
         raise ValueError("Thème topic non pris en charge.")

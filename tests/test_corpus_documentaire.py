@@ -303,3 +303,21 @@ def test_valider_passage_refuse_theme_inconnu(passage, theme):
 
     with pytest.raises(ValueError, match="topic"):
         valider_passage(passage)
+
+def test_valider_passage_accepte_mention_reutilisation(passage):
+    passage["reuse_notice"] = (
+        "Adaptation fictive. Attribution réservée au test."
+    )
+
+    assert valider_passage(passage) is None
+
+
+@pytest.mark.parametrize(
+    "valeur",
+    ["", "   ", None, 42, [], {}],
+)
+def test_valider_passage_refuse_mention_invalide(passage, valeur):
+    passage["reuse_notice"] = valeur
+
+    with pytest.raises(ValueError, match="reuse_notice"):
+        valider_passage(passage)
