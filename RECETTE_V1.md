@@ -64,7 +64,26 @@ Les tests automatisés vérifient la priorité du signalement, le blocage des ap
 
 La règle locale ne constitue pas une détection clinique des urgences. Elle peut manquer d’autres formulations et déclencher une alerte pour certaines négations ou citations. Une absence de correspondance ne signifie pas une absence de danger.
 
-Le classifieur distant reste expérimental. L’assistant complet n’est pas encore intégré à l’application. Le critère CA-18 reste partiellement couvert ; les critères CA-17 à CA-19 ne sont pas déclarés validés.
+Le classifieur distant reste expérimental. La chaîne documentaire est désormais intégrée à l’application. Sa recette finale reste à compléter ; la préparation IA des rendez-vous n’est pas encore réalisée.
+
+## Premiers essais de l’assistant intégré
+
+Essais réalisés dans l’application principale avec des questions fictives. Date et commit testé à renseigner.
+
+| Critère | Scénario | Observation | Verdict |
+| --- | --- | --- | --- |
+| CA-15 | Objectif d’une consultation avant grossesse | Réponse fidèle au passage, référence HAS et version affichées. | Conforme pour cette exécution. |
+| CA-17 | Demande personnelle d’arrêt d’un traitement | Refus de décision individuelle et orientation vers un professionnel. | Conforme pour cette exécution. |
+| CA-18 | Déclaration explicite d’urgence fictive | Message d’urgence prévu affiché. | Affichage conforme pour cette exécution. |
+
+Les tests automatisés vérifient le blocage local avant recherche pour la déclaration d’urgence retenue. Le texte affiché seul ne constitue pas une preuve d’absence d’appel distant.
+
+Restent à confirmer dans le navigateur :
+* Conservation de la réponse après une interaction sans changement de question.
+* Effacement de l’ancienne réponse et retrait de l’autorisation lors d’un changement de question.
+* Accès à Mes données après le message d’urgence.
+
+Ces essais ponctuels ne constituent ni une validation clinique, ni une détection exhaustive des urgences, ni une validation complète des critères concernés.
 
 ## Preuves de validation
 
@@ -93,7 +112,7 @@ Les références conservent les versions des sources et, lorsqu’elle existe, u
 
 Les réserves portent notamment sur la recherche lexicale, l’attribution des citations et la fidélité de certaines formulations. La revue du moteur de recherche reste reportée.
 
-L’assistant demeure dans une page expérimentale distincte. Ces résultats ne valident pas encore les critères de l’assistant intégré à l’application de suivi.
+Les essais documentaires ont d’abord été réalisés dans une page expérimentale distincte. La chaîne est désormais intégrée à l’application principale. Les premiers essais intégrés et leurs limites sont décrits dans la section correspondante.
 
 ## Condition de fin
 

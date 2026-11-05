@@ -70,3 +70,22 @@ def test_effacement_global_apres_succes_reinitialise_session(
     etat_session.finaliser_effacement_global()
 
     assert session_simulee == apres
+
+def test_remplacement_profil_efface_session_assistant(session_simulee):
+    session_simulee.update({
+        "assistant_question": "Question personnelle fictive",
+        "assistant_apercu": {"question": "Question fictive"},
+        "assistant_autorisation": True,
+        "assistant_resultat": {"reponse": "Réponse fictive"},
+        "preference_temoin": "à conserver",
+    })
+    nouveau_profil = UserProfile()
+
+    etat_session.remplacer_profil_session(nouveau_profil)
+
+    assert session_simulee["profil"] == nouveau_profil
+    assert not any(
+        cle.startswith("assistant_")
+        for cle in session_simulee
+    )
+    assert session_simulee["preference_temoin"] == "à conserver"

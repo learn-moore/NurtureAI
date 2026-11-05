@@ -2949,3 +2949,88 @@ def test_aide_urgence_accessible_pendant_lecture_profil(monkeypatch):
     ]
 
     assert len(app.radio) == 0
+
+def test_assistant_integre_conserve_et_efface_reponse(monkeypatch):
+    import json
+    import assistant_groq
+    from intentions import MESSAGE_URGENCE
+
+    appels = []
+    reponse = "Réponse fictive [conception_consultation_objectif]."
+
+    def faux_appel(messages, *, cle_api, modele):
+        assert cle_api == "cle-fictive"
+        appels.append(messages)
+
+        if len(appels) == 1:
+            return "GENERAL_INFORMATION"
+
+        assert len(appels) == 2
+        return json.dumps({
+            "type": "reponse",
+            "texte": reponse,
+        })
+
+    monkeypatch.setattr(
+        assistant_groq,
+        "generer_reponse_groq",
+        faux_appel,
+    )
+
+    app = AppTest.from_file("../app.py")
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+    assert not app.exception
+    profil_initial = app.session_state["profil"]
+
+    app.text_area(key="assistant_question").set_value(
+        "À quoi sert une consultation avant une grossesse ?"
+    )
+    app.button(key="assistant_preparer").click().run()
+    app.checkbox(key="assistant_autorisation").check().run()
+    app.button(key="assistant_envoyer").click().run()
+
+    assert not app.exception
+    assert len(appels) == 2
+    assert reponse in [element.value for element in app.markdown]
+
+    # Changer d’écran ne doit ni effacer ni régénérer la réponse.
+    app.radio(key="ecran_consulte").set_value(
+        "Grossesse en cours"
+    ).run()
+
+    assert not app.exception
+    assert len(appels) == 2
+    assert reponse in [element.value for element in app.markdown]
+
+    # Une nouvelle question retire la réponse et l’autorisation.
+    app.text_area(key="assistant_question").set_value(
+        "Quels sujets préparer avant une grossesse ?"
+    ).run()
+
+    assert not app.exception
+    assert "assistant_resultat" not in app.session_state
+    assert reponse not in [
+        element.value for element in app.markdown
+    ]
+
+    app.button(key="assistant_preparer").click().run()
+
+    assert not app.exception
+    assert not app.checkbox(key="assistant_autorisation").value
+
+    # Le traitement local d’urgence laisse la page accessible.
+    app.text_area(key="assistant_question").set_value(
+        "C’est une urgence médicale pour moi."
+    ).run()
+    app.button(key="assistant_preparer").click().run()
+
+    assert not app.exception
+    assert len(appels) == 2
+    assert MESSAGE_URGENCE in [
+        element.value for element in app.warning
+    ]
+    assert "Mes données" in [
+        element.value for element in app.subheader
+    ]
+    assert app.session_state["profil"] == profil_initial

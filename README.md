@@ -38,7 +38,9 @@ Une première fiche hebdomadaire est disponible entre 9 SA et 9 SA + 6 jours. Po
 
 Un premier moteur de recherche documentaire est développé et testé sur des passages fictifs. Il valide les fichiers JSON et les métadonnées, exclut les passages non autorisés pour le RAG et classe les résultats selon les mots communs avec leur titre et leur contenu.
 
-Le moteur est accessible dans un laboratoire Streamlit indépendant de l’application de suivi. Le corpus médical destiné au RAG, la classification des intentions et la génération par LLM ne sont pas encore intégrés. La préparation des rendez-vous repose sur les informations saisies par l’utilisateur.
+Un assistant documentaire est désormais accessible dans l’application de suivi. Il utilise le corpus médical, la classification des intentions et la génération via Groq, après aperçu local et autorisation explicite. Les laboratoires indépendants restent disponibles pour les essais.
+
+La préparation des rendez-vous repose encore sur les informations saisies par l’utilisateur ; elle n’utilise pas encore l’IA.
 
 La démonstration documentaire charge un corpus fictif depuis JSON. Le moteur valide les métadonnées, les dates, les statuts et l’unicité des identifiants avant de filtrer les autorisations et, si demandé, le thème. Il classe les passages par mots communs dans leur titre et leur contenu, avec une explication du score. Un rapport texte peut être produit à partir des résultats retenus. Aucun LLM ni service externe n’est utilisé dans cette démonstration.
 
@@ -240,6 +242,20 @@ Le traitement remplace les réponses rejetées par un message préétabli. La pa
 
 Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qualité d’un modèle distant, ni la détection clinique des urgences, ni l’adéquation des affirmations aux sources. L’assistant documentaire reste distinct de l’application de suivi.
 
+## Assistant dans l’application principale
+
+Dans app.py, ouvrir Assistant documentaire, puis Préparer une question.
+
+La préparation de l’aperçu est locale. Elle présente les messages documentaires et les consignes de classification sans appel distant. Le profil et les rendez-vous ne sont pas ajoutés automatiquement. Les données personnelles saisies dans la question font toutefois partie du contenu destiné au fournisseur.
+
+L’envoi utilise Groq et nécessite une autorisation cochée, puis un clic sur Envoyer à Groq. Chaque clic autorisé peut déclencher jusqu’à deux appels : classification, puis génération documentaire si elle est autorisée. La configuration GROQ_API_KEY décrite plus haut s’applique également à cet écran.
+
+L’aperçu et la réponse sont conservés dans la session. Une interaction sans changement de question ne relance pas la génération. Modifier la question ou préparer un nouvel aperçu retire l’autorisation et efface l’ancienne réponse. Remplacer le profil par import ou restauration efface également la session de l’assistant.
+
+Une déclaration explicite d’urgence reconnue par la règle locale affiche le message d’aide avant la recherche documentaire. Cette règle ne détecte pas toutes les urgences.
+
+Les premiers essais intégrés ont produit une réponse documentaire fidèle, un refus de décision thérapeutique individuelle et le message local d’urgence attendu. La recette navigateur reste à compléter. La démonstration utilise des questions et des profils fictifs.
+
 ## Essai documentaire : conception et suivi de grossesse
 
 ```bash
@@ -323,6 +339,7 @@ Cette page reste expérimentale et distincte de l’application de suivi. Les co
 * `essai_assistant_groq.py` : essai distant sur corpus fictif ou médical, aperçu des messages, autorisation réinitialisée lors des changements et priorité au contrôle local.
 * `donnees/COUVERTURE_CORPUS.md` : questions générales visées, passages associés et état de vérification de la couverture documentaire.
 * `donnees/corpus_medical.json` : passages médicaux et métadonnées de revue ; les brouillons sont exclus de la recherche.
+* `interface_assistant.py` : aperçu local, autorisation d’envoi et affichage des réponses de l’assistant intégré.
 
 
 ## Limites

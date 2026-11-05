@@ -178,10 +178,16 @@ def effacer_saisies_rendez_vous():
         if cle.startswith(prefixes) or cle in messages: # type: ignore
             del st.session_state[cle]
 
+def effacer_session_assistant():
+    for cle in list(st.session_state):
+        if cle.startswith("assistant_"): # type: ignore
+            del st.session_state[cle]
+
 def remplacer_profil_session(profil: UserProfile):
     effacer_reperes_conception()
     effacer_reperes_grossesse()
     effacer_saisies_rendez_vous()
+    effacer_session_assistant()
 
     st.session_state["profil"] = profil
     st.session_state["confirmer_fin_parcours"] = False

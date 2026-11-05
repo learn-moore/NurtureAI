@@ -18,6 +18,7 @@ from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mo
 from timeline import construire_timeline, choisir_etape_a_mettre_en_avant, calculer_jours_sa_timeline
 from fiches_hebdomadaires import charger_fiches_hebdomadaires, selectionner_fiche_semaine
 from intentions import MESSAGE_URGENCE
+from interface_assistant import afficher_assistant
 
 
 st.title("NurtureAI")
@@ -1354,6 +1355,8 @@ else:
                 f"{fiche_mois.date:%d/%m/%Y} : "
                 f"{types_rdv[fiche_mois.appointment_type]}"
             )
+
+afficher_assistant()
 
 st.subheader("Mes données")
 
