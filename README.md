@@ -246,11 +246,13 @@ Ces essais vérifient le fonctionnement de la chaîne. Ils ne valident ni la qua
 streamlit run essai_assistant_groq.py
 ```
 
-La page propose un corpus fictif et un corpus médical contenant huit passages utilisables : deux sur la consultation préconceptionnelle, un sur la première consultation de grossesse, une notice orientant vers un guide nutritionnel et quatre passages de sécurité alimentaire.
+La page propose un corpus fictif et un corpus médical contenant onze passages utilisables : consultations, orientation nutritionnelle, sécurité alimentaire, prévention concernant l’alcool et accompagnement à l’arrêt du tabac.
 
-Les sources sont la HAS, Santé publique France et l’EFSA. Les passages alimentaires couvrent des gestes de préparation, de conservation et de cuisson, ainsi que des principes de prévention de la listériose. Les précautions propres à la grossesse restent partiellement couvertes. Les essais sur la listériose ont notamment révélé des formulations renforcées, consignées dans la revue des sources.
+Les sources sont la HAS, Santé publique France, l’EFSA et Service Public / DILA. La couverture reste limitée aux passages documentés. Les réserves de fidélité et les défauts de recherche observés sont consignés dans la revue des sources.
 
-Un neuvième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
+Un douzième passage, consacré aux définitions SA et SG, reste en brouillon et est exclu des documents transmis au modèle.
+
+COR-07 et COR-08 sont évalués avec réserves : certaines formulations ne retrouvent pas le passage pertinent parmi les trois résultats. La revue du moteur de recherche est reportée.
 
 Le corpus choisi détermine les questions et les consignes. Les messages sont prévisualisés avant autorisation. Changer de corpus ou de question retire l’autorisation d’envoi.
 

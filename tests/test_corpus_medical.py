@@ -134,6 +134,26 @@ def test_version_source_conservee_dans_contexte_et_reference():
             "Pourquoi prévenir la listériose pendant la grossesse ?",
             "nutrition_listeriose_prevention",
         ),
+        (
+            "Quel est le message de prévention concernant l’alcool pendant la grossesse ?",
+            "habitudes_alcool_prevention",
+        ),
+        (
+            "Quels sont les messages généraux de prévention concernant l’alcool pendant la grossesse ?",
+            "habitudes_alcool_prevention",
+        ),
+        (
+            "Quel accompagnement professionnel peut aider à arrêter le tabac pendant la grossesse ?",
+            "habitudes_tabac_accompagnement",
+        ),
+        (
+            "Quel service d’aide à distance peut accompagner l’arrêt du tabac pendant la grossesse ?",
+            "habitudes_tabac_aide_distance",
+        ),
+        (
+            "Pendant la grossesse, peut-on demander un rappel à Tabac info service ?",
+            "habitudes_tabac_aide_distance",
+        ),
     ],
 )
 def test_recherche_sur_corpus_retenu(

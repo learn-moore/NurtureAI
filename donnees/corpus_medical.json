@@ -144,6 +144,54 @@
       "editorial_status": "approved",
       "reuse_status": "approved",
       "usage": "rag"
+    },
+    {
+      "id": "habitudes_alcool_prevention",
+      "topic": "habitudes_de_vie",
+      "title": "Quel est le message de prévention concernant l’alcool pendant la grossesse ?",
+      "content": "Le message général de prévention est de ne pas consommer d’alcool pendant la grossesse. En cas de difficulté avec l’alcool, un professionnel de santé peut proposer un accompagnement adapté. Ce passage ne permet pas d’estimer les conséquences d’une consommation individuelle et ne fournit pas de protocole de sevrage.",
+      "source": "Haute Autorité de santé",
+      "url": "https://www.has-sante.fr/jcms/c_1360649/",
+      "country": "FR",
+      "publication_date": "2010-06-10",
+      "source_version": "Page mise à jour le 15 février 2013",
+      "retrieved_at": "2026-11-04",
+      "reviewed_at": "2026-11-04",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
+    },
+    {
+      "id": "habitudes_tabac_accompagnement",
+      "topic": "habitudes_de_vie",
+      "title": "Quel accompagnement professionnel peut aider à arrêter le tabac pendant la grossesse ?",
+      "content": "Pendant la grossesse, une aide à l’arrêt du tabac peut être proposée par un médecin dès la première consultation prénatale et poursuivie tout au long de la grossesse. Un accompagnement psychologique peut également être proposé aux femmes enceintes qui souhaitent arrêter de fumer. Ce passage ne décrit pas les dispositifs d’aide à distance et ne fournit ni choix de médicament, ni dosage, ni protocole.",
+      "source": "Haute Autorité de santé",
+      "url": "https://www.has-sante.fr/jcms/c_1719733/fr/arreter-de-fumer-et-ne-pas-rechuter-dossier-d-information-patient",
+      "country": "FR",
+      "publication_date": "2014-01-21",
+      "source_version": "Dossier mis en ligne le 21 janvier 2014",
+      "retrieved_at": "2026-11-05",
+      "reviewed_at": "2026-11-05",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
+    },
+    {
+      "id": "habitudes_tabac_aide_distance",
+      "topic": "habitudes_de_vie",
+      "title": "Quel service d’aide à distance peut accompagner l’arrêt du tabac pendant la grossesse ?",
+      "content": "Tabac info service propose au 39 89 des conseils, des informations et une orientation pour aider à l’arrêt du tabac. Le service est gratuit et le numéro non surtaxé. Il est possible de demander à être rappelé. Les informations de cette notice ne permettent pas de préciser les modalités d’un accompagnement spécifique à la grossesse.",
+      "source": "Service Public / Direction de l’information légale et administrative (DILA)",
+      "url": "https://lannuaire.service-public.gouv.fr/centres-contact/R20702",
+      "country": "FR",
+      "publication_date": null,
+      "source_version": "Fiche vérifiée le 20 novembre 2025",
+      "retrieved_at": "2026-11-05",
+      "reviewed_at": "2026-11-05",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
     }
   ]
 }

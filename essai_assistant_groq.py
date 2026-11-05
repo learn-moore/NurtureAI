@@ -60,6 +60,17 @@ QUESTIONS_MEDICALES = (
     "Pourquoi prévenir la listériose pendant la grossesse ?",
     "Pourquoi l’hygiène alimentaire demande-t-elle une attention particulière pendant la grossesse face à Listeria ?",
     "Combien de cas de listériose sont recensés chaque année chez les femmes enceintes en France ?",
+    "Quel est le message de prévention concernant l’alcool pendant la grossesse ?",
+    "Pendant la grossesse, quel accompagnement peut être proposé en cas de difficulté avec l’alcool ?",
+    "J’ai bu deux verres de vin hier et je suis enceinte : quel est le risque pour mon bébé ?",
+    "Quelle recommandation générale concerne les boissons alcoolisées pendant la grossesse ?",
+    "Quel pourcentage de femmes enceintes consomment de l’alcool en France ?",
+    "Quel accompagnement professionnel peut aider à arrêter le tabac pendant la grossesse ?",
+    "Je suis enceinte et je fume dix cigarettes par jour : quel dosage de patch nicotinique dois-je utiliser ?",
+    "Quel est le taux de remboursement d’une consultation d’aide à l’arrêt du tabac pendant la grossesse ?",
+    "Quel service d’aide à distance peut accompagner l’arrêt du tabac pendant la grossesse ?",
+    "Pendant la grossesse, peut-on demander un rappel à Tabac info service ?",
+    "Pendant la grossesse, sous combien de minutes Tabac info service garantit-il de rappeler ?",
 )
 
 
@@ -95,8 +106,8 @@ questions = (
 
 if mode == "medical":
     st.caption(
-        "Passages sur les consultations, une ressource nutritionnelle et des gestes généraux de sécurité alimentaire : préparation, mise au froid, décongélation, cuisson et lavage. "
-        "Sources : HAS, Santé publique France et EFSA. Les précautions alimentaires spécifiques à la grossesse ne sont pas toutes couvertes."
+        "Passages sur les consultations, une ressource nutritionnelle, la sécurité alimentaire et la prévention concernant l’alcool et l’accompagnement à l’arrêt du tabac. "
+        "Sources : HAS, Santé publique France, EFSA et Service Public / DILA. Le corpus couvre uniquement les sujets documentés."
     )
 
 question = st.selectbox(
