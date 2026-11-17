@@ -196,6 +196,8 @@ def afficher_assistant():
                 )
                 return
 
+            if st.session_state.get("assistant_apercu") is not apercu:
+                return
             st.session_state["assistant_resultat"] = resultat
 
         resultat = st.session_state.get("assistant_resultat")
@@ -473,6 +475,8 @@ def afficher_preparation_rendez_vous(
             st.error("Préparez un nouvel aperçu avant de réessayer.")
             return None
 
+        if st.session_state.get(cle_apercu) is not apercu:
+            return None
         st.session_state[cle_resultat] = resultat
 
     resultat = st.session_state.get(cle_resultat)

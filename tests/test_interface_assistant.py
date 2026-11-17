@@ -838,7 +838,15 @@ def page_proposition_rendez_vous():
         st.session_state["nombre_verifications_test"] = (
             st.session_state.get("nombre_verifications_test", 0) + 1
         )
-        return st.session_state["verdict_fidelite_test"]
+        verdict = st.session_state["verdict_fidelite_test"]
+
+        if st.session_state.get("effacer_pendant_fidelite_test"):
+            import etat_session
+
+            st.session_state["stockage_profil"] = {"effacement": True}
+            etat_session.finaliser_effacement_global()
+
+        return verdict
 
     nouveau_profil = afficher_preparation_rendez_vous(
         st.session_state["fiche_proposition_test"],
@@ -1401,3 +1409,81 @@ def test_fid08_meme_requete_en_essai_isole_et_dans_interface(monkeypatch):
         "contenu_selectionne": cas["contenu_selectionne"],
         "questions_proposees": cas["questions_proposees"],
     }
+
+def test_reponse_tardive_ignoree_apres_effacement(monkeypatch):
+    import streamlit as st
+
+    import etat_session
+
+    def repondre_apres_effacement(apercu, *, cle_api):
+        assert cle_api == "cle-fictive"
+
+        # Simule la confirmation d’effacement pendant l’appel.
+        st.session_state["stockage_profil"] = {"effacement": True}
+        etat_session.finaliser_effacement_global()
+
+        return {
+            "statut": "references_controlees",
+            "reponse": "REPONSE_TARDIVE_FICTIVE",
+            "sources": (),
+        }
+
+    monkeypatch.setattr(
+        interface_assistant,
+        "executer_apercu_assistant",
+        repondre_apres_effacement,
+    )
+
+    app = AppTest.from_function(page_assistant)
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+
+    app.text_area(key="assistant_question").set_value(
+        "À quoi sert une consultation avant une grossesse ?"
+    )
+    app.button(key="assistant_preparer").click().run()
+    app.checkbox(key="assistant_autorisation").check().run()
+    app.button(key="assistant_envoyer").click().run()
+
+    assert not app.exception
+    assert "assistant_apercu" not in app.session_state
+    assert "assistant_resultat" not in app.session_state
+    assert "REPONSE_TARDIVE_FICTIVE" not in [
+        element.value for element in app.markdown
+    ]
+
+    assert "assistant_question" not in app.session_state
+    assert "assistant_autorisation" not in app.session_state
+
+def test_proposition_rendez_vous_tardive_ignoree_apres_effacement():
+    from datetime import date
+
+    from modeles import Appointment, UserProfile
+
+    profil = UserProfile().demarrer_parcours("conception", date(2026, 11, 1))
+    identifiant_parcours = profil.active_journey_id
+    assert identifiant_parcours is not None
+
+    fiche = Appointment(
+        journey_id=identifiant_parcours,
+        notes="Sujet fictif à préparer.",
+    )
+    profil = profil.ajouter_rendez_vous(fiche)
+
+    app = AppTest.from_function(page_proposition_rendez_vous)
+    app.session_state["fiche_proposition_test"] = fiche
+    app.session_state["profil_proposition_test"] = profil
+    app.session_state["verdict_fidelite_test"] = "FIDELE"
+    app.session_state["effacer_pendant_fidelite_test"] = True
+    app.run()
+
+    app.checkbox(key=f"preparation_rdv_notes_{fiche.id}").check().run()
+    app.button(key=f"preparation_rdv_preparer_{fiche.id}").click().run()
+    app.checkbox(key=f"preparation_rdv_autorisation_{fiche.id}").check().run()
+    app.button(key=f"preparation_rdv_proposer_{fiche.id}").click().run()
+
+    assert not app.exception
+    assert f"preparation_rdv_apercu_{fiche.id}" not in app.session_state
+    assert f"preparation_rdv_resultat_{fiche.id}" not in app.session_state
+    assert not app.text_area
+    assert app.session_state["profil"].appointments == ()

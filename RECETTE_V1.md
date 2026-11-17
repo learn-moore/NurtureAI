@@ -21,7 +21,7 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 | Conception | Partiel | CA-03, CA-04 | Définir les conventions et réaliser les estimations d’ovulation et de fenêtre fertile. |
 | Repères grossesse | À vérifier | CA-05, CA-06 | Finaliser les conventions et vérifier les changements de datation. |
 | Transitions et historique | Partiel | CA-07 à CA-11 | Vérifier la sauvegarde confirmée, les annulations et les échecs. |
-| Persistance et échanges | Partiel | CA-02, CA-12 à CA-14, CA-23, CA-24 | Compléter les limites d’import et la recette réelle du stockage. |
+| Persistance et échanges | Partiel | CA-02, CA-12 à CA-14, CA-23, CA-24 | Scénarios de stockage vérifiés dans Safari et Chrome ; retours tardifs vérifiés par simulation. |
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
 | Intentions et sécurité | Partiel | CA-17 à CA-19 | Classifier, orienter et fournir des réponses locales adaptées. |
@@ -281,3 +281,105 @@ Question fictive : « Comment annuler un commit Git dont le message est “cons
 Un aperçu documentaire a pu être préparé. Après autorisation, l’assistant a affiché le statut `generation_non_autorisee` et le message de hors périmètre. Aucun conseil Git ni réponse médicale n’a été affiché.
 
 Verdict : conforme pour cette exécution. La présence de passages liés à la grossesse n’a pas suffi à autoriser la génération.
+
+### CA-25 : accès aux boutons au clavier dans Safari
+
+Au premier essai, Tab atteignait les sections dépliables, les cases à cocher et le calendrier, mais sautait les boutons. Après activation de la navigation par Tab sur tous les éléments dans les réglages avancés de Safari, les boutons sont atteignables et actionnables au clavier. Aucun changement du code n’a été nécessaire.
+
+Verdict : accès aux boutons conforme avec ce réglage.
+
+### CA-25 : zoom à 200 % et fenêtre étroite dans Safari
+
+Deux essais ont été effectués séparément sur un profil fictif : zoom à 200 % en fenêtre large, puis fenêtre étroite à 100 %.
+
+Dans les deux conditions, les repères de suivi sont lisibles, la modification d’une fiche peut être enregistrée et les commandes d’export et d’effacement restent accessibles. Les événements du calendrier peuvent être identifiés sans se fier uniquement à la couleur. L’effacement n’a pas été déclenché.
+
+Verdict : conforme sur les scénarios testés dans Safari. La largeur exacte de la fenêtre étroite n’a pas été relevée.
+
+### CA-25 : vérification dans Chrome
+
+Le parcours de recette a été rejoué dans Chrome avec un profil fictif. La navigation au clavier, y compris l’accès aux boutons et leur activation, est conforme. Le zoom à 200 % en fenêtre large et l’affichage en fenêtre étroite à 100 % sont également conformes sur les actions testées.
+
+Verdict CA-25 : conforme sur les scénarios testés dans Safari et Chrome. Ces essais ne constituent pas un audit complet d’accessibilité.
+
+### CA-02 : restauration automatique dans Safari et Chrome
+
+Essai effectué dans chaque navigateur avec un profil fictif et une sauvegarde locale confirmée. Après fermeture et réouverture à la même adresse, le profil, le parcours actif et la fiche de rendez-vous sont restaurés sans intervention manuelle.
+
+La comparaison des exports avant et après réouverture confirme la conservation des identifiants et des données métier.
+
+Verdict : conforme dans Safari et Chrome pour ce scénario.
+
+### CA-12 : restauration depuis un export JSON
+
+Essai réalisé dans Safari et Chrome avec un profil fictif contenant un parcours actif et une fiche de rendez-vous.
+
+Dans les deux navigateurs, l’effacement de la sauvegarde et de la session retire le profil. L’aperçu d’import affiche les nombres attendus de parcours et de rendez-vous, ainsi que le parcours actif. Après confirmation, le parcours et la fiche sont restaurés.
+
+La comparaison du champ `profil` dans les exports avant et après confirme que les identifiants, les références et les données métier sont identiques. L’horodatage `exported_at` est exclu de la comparaison.
+
+Verdict : conforme dans Safari et Chrome pour ce scénario.
+
+### CA-13 : refus des imports invalides
+
+Essai réalisé dans Safari et Chrome sur un profil fictif. Les quatre fichiers ont été refusés dans les deux navigateurs : JSON malformé, version d’export inconnue, référence vers un parcours actif absent et fichier dépassant 1 Mio.
+
+Chaque refus est expliqué et le bouton « Remplacer mon profil » n’est pas disponible. Le suivi reste consultable. La comparaison du champ `profil` dans les exports avant et après les essais confirme que les données sont inchangées.
+
+Verdict : conforme dans Safari et Chrome pour les quatre cas testés.
+
+### CA-14 : effacement confirmé puis rechargement
+
+Essai effectué dans Safari et Chrome sur un profil fictif. Après effacement de la sauvegarde et de la session, le parcours actif, la fiche, la question et l’aperçu de l’assistant disparaissent. Le rechargement à la même adresse ne restaure aucun de ces éléments.
+
+Verdict : conforme dans les deux navigateurs pour ce scénario. La présence d’une réponse affichée avant l’effacement n’a pas été précisée. L’arrivée tardive d’une réponse IA reste à vérifier.
+
+### CA-23 : conflit de sauvegarde entre deux onglets
+
+Essai réalisé dans Safari et Chrome, à la même adresse et avec un profil fictif partagé entre deux onglets du même navigateur.
+
+Après confirmation de la sauvegarde dans l’onglet A, l’onglet B conserve sa propre version en session. Sa tentative d’écraser la sauvegarde est refusée et un message signale le conflit. Après rechargement de B, la version enregistrée dans A est restaurée.
+
+Verdict : conforme dans les deux navigateurs pour ce scénario.
+
+### CA-23 : isolation entre deux profils navigateur
+
+Essai réalisé dans Safari et Chrome, à la même adresse, avec deux profils navigateur distincts contenant des données fictives.
+
+À sa première ouverture, le profil B ne restaure aucune donnée du profil A. Après création et sauvegarde de données distinctes, chaque profil restaure uniquement sa propre fiche au rechargement.
+
+Verdict CA-23 : conforme dans Safari et Chrome sur les scénarios d’isolation entre profils et de conflit entre onglets.
+
+### CA-24 : sauvegarde locale illisible
+
+Essai effectué dans Safari et Chrome sur une origine de test, avec une sauvegarde fictive invalide.
+
+Dans les deux navigateurs, l’application signale que la sauvegarde ne peut pas être restaurée. La poursuite sans restauration ouvre une session temporaire dans laquelle un parcours peut être créé et exporté.
+
+La valeur invalide reste inchangée dans le stockage du navigateur. Aucune sauvegarde réussie n’est annoncée pour le nouveau parcours.
+
+Verdict : conforme dans les deux navigateurs pour ce scénario. Le refus d’écriture et le dépassement du quota local restent à vérifier.
+
+### CA-24 : quota local simulé
+
+Dans Safari et Chrome, le refus d’écriture est signalé sans confirmation de sauvegarde. La modification reste exportable et la valeur stockée reste inchangée avant rechargement.
+
+Après rechargement, les deux navigateurs signalent que la sauvegarde ne peut pas être restaurée et proposent une session temporaire. La restauration de l’ancienne fiche n’est donc pas confirmée.
+
+Verdict : refus d’écriture conforme ; restauration après rechargement à investiguer. CA-24 reste ouvert.
+
+### CA-24 : nouvel essai de quota sur une sauvegarde valide
+
+Le premier essai avait conservé le marqueur invalide de l’essai précédent, ce qui expliquait l’échec de restauration.
+
+Le scénario a été rejoué dans Safari et Chrome après avoir confirmé qu’une sauvegarde fictive valide se restaurait automatiquement. Lors du dépassement de quota simulé, l’écriture est refusée, aucune sauvegarde réussie n’est annoncée et la modification reste exportable depuis la session. La sauvegarde précédente reste intacte.
+
+Après rechargement, l’ancienne fiche est restaurée, sans la question non sauvegardée ni avertissement de restauration.
+
+Verdict CA-24 : conforme dans Safari et Chrome pour la sauvegarde illisible et le refus d’écriture par quota simulé. La capacité réelle de stockage des navigateurs n’a pas été mesurée.
+
+### CA-14 : retour tardif après effacement
+
+Deux tests automatisés simulent un effacement confirmé avant le retour d’une réponse de l’assistant ou d’une proposition de rendez-vous. Dans les deux cas, le résultat tardif est ignoré : il n’est ni affiché ni réintroduit dans la session.
+
+Verdict : conforme pour les deux scénarios simulés, sans appel réel à Groq. L’effacement suivi d’un rechargement a été vérifié séparément dans Safari et Chrome.
