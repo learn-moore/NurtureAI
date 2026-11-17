@@ -9,6 +9,9 @@ from corpus_documentaire import charger_corpus
 from intentions import MESSAGE_URGENCE, reperer_declaration_urgence
 from messages_assistant import preparer_messages
 from recherche_documentaire import rechercher_corpus
+from assistant_documentaire import traiter_demande
+from generation_groq import creer_appel_groq_rendez_vous
+from intentions import Intention
 
 
 MODELE = "openai/gpt-oss-20b"
@@ -21,6 +24,10 @@ CORPUS_DISPONIBLES = {
     },
     "Conception et suivi de grossesse": {
         "fichier": "corpus_medical.json",
+        "mode": "medical",
+    },
+    "Sources contradictoires fictives (CA-16)": {
+        "fichier": "corpus_contradiction_fictif.json",
         "mode": "medical",
     },
 }
@@ -105,6 +112,9 @@ choix_corpus = st.selectbox(
     on_change=changer_corpus,
 )
 configuration = CORPUS_DISPONIBLES[choix_corpus]
+essai_contradiction = (
+    choix_corpus == "Sources contradictoires fictives (CA-16)"
+)
 mode = configuration["mode"]
 chemin_corpus = DOSSIER_DONNEES / configuration["fichier"]
 
@@ -114,7 +124,12 @@ questions = (
     else QUESTIONS
 )
 
-if mode == "medical":
+if choix_corpus == "Sources contradictoires fictives (CA-16)":
+    questions = (
+        "À quelle heure commence l’atelier fictif de préparation à la naissance du 20 novembre ?",
+    )
+    st.caption("Deux documents fictifs décrivent le même atelier. Aucun horaire réel.")
+elif mode == "medical":
     st.caption(
         "Passages sur les consultations, une ressource nutritionnelle, la sécurité alimentaire, l’alcool, l’accompagnement à l’arrêt "
         "du tabac et les médicaments dans un projet de grossesse. Sources : HAS, Santé publique France, EFSA, Service Public / DILA "
@@ -160,22 +175,32 @@ messages_classification = (
     },
 )
 
-with st.expander("Premier appel : classification"):
-    st.json(list(messages_classification))
+if essai_contradiction:
+    st.info(
+        "Essai fictif CA-16 : l’intention est prédéfinie. Un seul appel transmet la question et les passages ci-dessous "
+        "pour tester la génération face à une contradiction."
+    )
+else:
+    with st.expander("Premier appel : classification"):
+        st.json(list(messages_classification))
 
-with st.expander("Second appel éventuel : génération"):
+titre_generation = (
+    "Appel unique : génération"
+    if essai_contradiction
+    else "Second appel éventuel : génération"
+)
+
+with st.expander(titre_generation):
     if messages_generation:
         st.json(list(messages_generation))
     else:
-        st.info(
-            "Aucun contexte disponible : le second appel ne sera pas effectué."
-        )
+        st.info("Aucun contexte disponible pour la génération.")
 
-st.write(
-    "Le premier appel transmet les consignes de classification et la question sélectionnée. Si la demande est classée comme "
-    "information générale et qu’un contexte est disponible, un second appel transmet les consignes documentaires, "
-    "la question et les passages affichés."
-)
+if not essai_contradiction:
+    st.write(
+        "Le premier appel transmet les consignes de classification et la question. Si la demande est classée comme information générale et qu’un contexte "
+        "est disponible, un second appel transmet les consignes documentaires, la question et les passages affichés."
+    )
 st.caption(
     "L’aperçu est préparé localement. Il ne déclenche aucun appel. Aucun profil utilisateur n’est chargé."
 )
@@ -184,7 +209,11 @@ st.markdown(
 )
 
 autorisation = st.checkbox(
-    "J’autorise ces envois à Groq, jusqu’à deux appels.",
+    (
+        "J’autorise un appel à Groq pour ce scénario fictif."
+        if essai_contradiction
+        else "J’autorise ces envois à Groq, jusqu’à deux appels."
+    ),
     key="autorisation_assistant_groq",
     value=False,
 )
@@ -207,13 +236,25 @@ if executer and autorisation:
         st.stop()
 
     with st.spinner("Traitement en cours…"):
-        resultat = traiter_demande_groq(
-            question,
-            corpus,
-            cle_api=cle,
-            modele=MODELE,
-            mode=mode,
-        )
+        if essai_contradiction:
+            resultat = traiter_demande(
+                question,
+                corpus,
+                classer=lambda _: Intention.GENERAL_INFORMATION,
+                generer=creer_appel_groq_rendez_vous(
+                    cle_api=cle,
+                    modele=MODELE,
+                ),
+                mode=mode,
+            )
+        else:
+            resultat = traiter_demande_groq(
+                question,
+                corpus,
+                cle_api=cle,
+                modele=MODELE,
+                mode=mode,
+            )
 
     st.caption(f"Statut : {resultat['statut']}")
     if resultat["statut"] == "generation_interrompue":

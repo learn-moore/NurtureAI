@@ -2950,7 +2950,7 @@ def test_aide_urgence_accessible_pendant_lecture_profil(monkeypatch):
 
     assert len(app.radio) == 0
 
-def test_assistant_integre_conserve_et_efface_reponse(monkeypatch):
+def test_assistant_integre_conserve_et_efface_reponse(monkeypatch, fiche_pour_edition):
     import json
     import assistant_groq
     from intentions import MESSAGE_URGENCE
@@ -2981,17 +2981,42 @@ def test_assistant_integre_conserve_et_efface_reponse(monkeypatch):
     app.secrets["GROQ_API_KEY"] = "cle-fictive"
     app.run()
     assert not app.exception
-    profil_initial = app.session_state["profil"]
+    profil_initial, fiche_fictive = fiche_pour_edition
+    app.session_state["profil"] = profil_initial
+    app.run()
+    assert not app.exception
 
-    app.text_area(key="assistant_question").set_value(
-        "À quoi sert une consultation avant une grossesse ?"
-    )
+    question = "À quoi sert une consultation avant une grossesse ?"
+    app.text_area(key="assistant_question").set_value(question)
     app.button(key="assistant_preparer").click().run()
+
+    assert not app.exception
+    assert len(app.json) == 1
+    apercu = json.loads(app.json[0].value)
+
     app.checkbox(key="assistant_autorisation").check().run()
+    assert appels == []
+
     app.button(key="assistant_envoyer").click().run()
 
     assert not app.exception
     assert len(appels) == 2
+    assert json.loads(appels[0][1]["content"]) == {"question": question}
+    assert list(appels[1]) == apercu
+
+    contenu = json.loads(appels[1][1]["content"])
+    assert set(contenu) == {"question", "documents"}
+    assert contenu["question"] == question
+
+    messages_transmis = json.dumps(appels, ensure_ascii=False)
+    for valeur in (
+        profil_initial.id,
+        fiche_fictive.id,
+        fiche_fictive.notes,
+        *fiche_fictive.questions,
+        "cle-fictive",
+    ):
+        assert valeur not in messages_transmis
     assert reponse in [element.value for element in app.markdown]
 
     # Changer d’écran ne doit ni effacer ni régénérer la réponse.
@@ -3034,3 +3059,82 @@ def test_assistant_integre_conserve_et_efface_reponse(monkeypatch):
         element.value for element in app.subheader
     ]
     assert app.session_state["profil"] == profil_initial
+
+def test_quota_rendez_vous_preserve_edition_manuelle(
+    monkeypatch, fiche_pour_edition
+):
+    from types import SimpleNamespace
+
+    import httpx
+    import generation_groq
+
+    appels = []
+    requete = httpx.Request("POST", "https://example.org/generation")
+
+    class FauxClientGroq:
+        def __init__(self, **options):
+            self.chat = SimpleNamespace(
+                completions=SimpleNamespace(create=self.creer)
+            )
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def creer(self, **parametres):
+            appels.append(parametres)
+            raise generation_groq.APIStatusError(
+                "DETAIL_TECHNIQUE_NON_PUBLIC",
+                response=httpx.Response(429, request=requete),
+                body=None,
+            )
+
+    monkeypatch.setattr(generation_groq, "Groq", FauxClientGroq)
+
+    profil, fiche = fiche_pour_edition
+    app = AppTest.from_file("../app.py")
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+    app.session_state["profil"] = profil
+    app.run()
+
+    app.checkbox(key=f"preparation_rdv_notes_{fiche.id}").check().run()
+    app.button(key=f"preparation_rdv_preparer_{fiche.id}").click().run()
+    app.checkbox(key=f"preparation_rdv_autorisation_{fiche.id}").check().run()
+    assert appels == []
+
+    app.button(key=f"preparation_rdv_proposer_{fiche.id}").click().run()
+
+    assert not app.exception
+    assert len(appels) == 1
+    assert app.session_state["profil"] == profil
+    assert "Statut : controle_indisponible" in [
+        element.value for element in app.caption
+    ]
+    assert any(
+        "Aucune reformulation n’a été effectuée" in element.value
+        for element in app.info
+    )
+    assert all(
+        not (champ.key or "").startswith("preparation_rdv_relecture_")
+        for champ in app.text_area
+    )
+
+    cle = f"edition_rdv_{fiche.id}_{fiche.updated_at.isoformat()}"
+    app.checkbox(key=cle).check().run()
+    app.text_area(key=f"questions_{cle}").set_value(
+        "Question initiale ?\nQuestion ajoutée manuellement ?"
+    )
+    app.button(key=f"enregistrer_{cle}").click().run()
+
+    assert not app.exception
+    modifiee = app.session_state["profil"].appointments[0]
+    assert modifiee.id == fiche.id
+    assert modifiee.notes == fiche.notes
+    assert modifiee.questions == (
+        "Question initiale ?",
+        "Question ajoutée manuellement ?",
+    )
+    assert len(appels) == 1

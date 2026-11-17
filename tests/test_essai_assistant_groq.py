@@ -468,3 +468,46 @@ def test_mention_reutilisation_conservee_et_affichee(monkeypatch):
     textes = [element.value for element in app.text]
     assert mention in textes
     assert "https://example.org/calendrier" in textes
+
+def test_contradiction_transmet_les_deux_passages_en_un_appel(monkeypatch):
+    import generation_groq
+
+    appels = []
+
+    def faux_appel(messages, *, cle_api, modele):
+        assert cle_api == "cle-fictive"
+        appels.append(list(messages))
+        return '{"type": "information_insuffisante"}'
+
+    monkeypatch.setattr(generation_groq, "generer_reponse_groq", faux_appel)
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+    app.selectbox(key="corpus_assistant_groq").set_value(
+        "Sources contradictoires fictives (CA-16)"
+    ).run()
+
+    assert not app.exception
+    assert len(app.json) == 1
+    assert app.button(key="executer_assistant_groq").disabled
+    assert appels == []
+
+    apercu = json.loads(app.json[0].value)
+    documents = json.loads(apercu[1]["content"])["documents"]
+    assert {document["id"] for document in documents} == {
+        "atelier_horaire_a",
+        "atelier_horaire_b",
+    }
+
+    app.checkbox(key="autorisation_assistant_groq").check().run()
+    assert not app.exception
+    assert appels == []
+
+    app.button(key="executer_assistant_groq").click().run()
+
+    assert not app.exception
+    assert appels == [apercu]
+    assert "Statut : information_insuffisante" in [
+        element.value for element in app.caption
+    ]

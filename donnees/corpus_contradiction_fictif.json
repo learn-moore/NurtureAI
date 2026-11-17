@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "passages": [
+    {
+      "id": "atelier_horaire_a",
+      "topic": "suivi_grossesse",
+      "title": "Horaire de l’atelier fictif de préparation à la naissance",
+      "content": "Le même atelier fictif du 20 novembre commence à 9 h.",
+      "source": "Document fictif A",
+      "url": "https://example.org/atelier-a",
+      "country": "FR",
+      "publication_date": null,
+      "retrieved_at": "2026-11-17",
+      "reviewed_at": "2026-11-17",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
+    },
+    {
+      "id": "atelier_horaire_b",
+      "topic": "suivi_grossesse",
+      "title": "Horaire de l’atelier fictif de préparation à la naissance",
+      "content": "Le même atelier fictif du 20 novembre commence à 14 h.",
+      "source": "Document fictif B",
+      "url": "https://example.org/atelier-b",
+      "country": "FR",
+      "publication_date": null,
+      "retrieved_at": "2026-11-17",
+      "reviewed_at": "2026-11-17",
+      "editorial_status": "approved",
+      "reuse_status": "approved",
+      "usage": "rag"
+    }
+  ]
+}

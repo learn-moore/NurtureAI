@@ -25,7 +25,7 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
 | Intentions et sécurité | Partiel | CA-17 à CA-19 | Classifier, orienter et fournir des réponses locales adaptées. |
-| Préparation IA des rendez-vous | Partiel | CA-20 | Parcours distant essayé sur des fiches fictives. Ajout après relecture confirmé lors du premier essai. Affichage des champs sélectionnés vérifié par tests automatisés. Fidélité irrégulière sur FID-08 ; vérification visuelle de la nouvelle zone de relecture à compléter. |
+| Préparation IA des rendez-vous | Partiel | CA-20 | Parcours distant essayé sur des fiches fictives. Ajout après relecture confirmé lors du premier essai. Affichage des champs sélectionnés vérifié par tests automatisés. Fidélité irrégulière sur FID-08. |
 | Accessibilité et déploiement | À réaliser | CA-25, ENF-04, ENF-06, ENF-09 | Tester les navigateurs, les petits écrans, les performances et l’hébergement. |
 
 ## Décisions à finaliser
@@ -196,3 +196,63 @@ Verdicts obtenus, dans l’ordre : FIDELE, FIDELE, NON_FIDELE, NON_FIDELE. Aucun
 Avec le premier rejet isolé, le bilan est de deux acceptations indues sur cinq essais isolés de FID-08. L’essai intégré est compté séparément. Le test de parité simulé confirme que le code actuel transmet les mêmes messages et le même modèle dans les deux parcours.
 
 Le contrôle ne bloque pas systématiquement l’ajout d’un objectif absent de la note. La relecture manuelle reste obligatoire. CA-20 reste Partiel.
+
+### CA-20 : vérification de la relecture dans Safari
+
+Sur une fiche fictive contenant des notes et une question enregistrée, seules les notes ont été sélectionnées pour préparer la proposition.
+
+* Les notes sélectionnées apparaissent juste au-dessus des questions modifiables. La question non sélectionnée reste dans la fiche.
+* Le texte est lisible sans rouvrir l’aperçu technique.
+* Modifier une question après avoir coché la confirmation décoche la case et désactive le bouton d’ajout.
+
+Verdict : conforme sur les trois points dans Safari.
+CA-20 reste Partiel : cette vérification confirme le comportement de la relecture, tandis que la fidélité du modèle reste irrégulière sur FID-08.
+
+### CA-21 : refus d’envoi distant dans Safari
+
+Scénario testé sur un profil fictif, sans cocher l’autorisation d’envoi.
+
+* Assistant documentaire : le bouton Envoyer à Groq reste désactivé.
+* Préparation des rendez-vous : le bouton Proposer des questions reste désactivé.
+* Le suivi reste consultable. Une question ajoutée manuellement et les notes originales figurent dans la fiche texte téléchargée.
+
+Verdict : conforme pour le refus d’envoi dans Safari.
+
+### CA-21 : limitation du fournisseur simulée
+
+Un test de l’application complète simule un HTTP 429 lors du contrôle préalable d’une fiche fictive. L’application signale l’indisponibilité sans lancer de reformulation. La fiche reste inchangée, puis une question peut être ajoutée manuellement sans nouvel appel.
+
+Verdict : conforme pour ce scénario simulé. Aucun quota réel n’a été utilisé. Le refus d’envoi et le maintien du parcours manuel ont été vérifiés séparément dans Safari.
+
+### CA-16 : information tarifaire absente du corpus
+
+Question fictive dans l’application principale : « Combien coûte une consultation avant une grossesse ? »
+
+Statut observé : `information_insuffisante`.
+L’assistant indique que les documents disponibles ne permettent pas de répondre. Aucun tarif ni aucune citation n’est affiché.
+
+Verdict : conforme pour cette exécution. Le scénario de sources contradictoires reste à vérifier.
+
+### CA-22 : inspection des messages avant envoi
+
+Cinq scénarios automatisés ont été exécutés avec un profil fictif, une clé fictive et un fournisseur simulé.
+
+* Assistant documentaire : la classification reçoit la question seule. La génération reçoit la question et les passages de l’aperçu. Les identifiants du profil et de la fiche, les notes, les questions enregistrées et la clé fictive sont absents des messages au modèle.
+* Rendez-vous : les messages de contrôle et de reformulation correspondent aux aperçus. Lorsque le contrôle de fidélité est appelé, il reçoit les champs sélectionnés et les questions générées. Les champs non sélectionnés ne sont pas ajoutés. Un refus du contrôle préalable bloque les appels suivants.
+
+Verdict : conforme pour les cinq scénarios simulés. Ce test vérifie les messages préparés par l’application, pas le traitement des données chez le fournisseur.
+
+### CA-16 : sources contradictoires, premier essai
+
+Le classifieur a considéré la question sur l’horaire de l’atelier fictif comme hors périmètre. Statut : generation_non_autorisee. La génération documentaire n’a pas été exécutée. Le comportement face aux deux passages contradictoires reste à vérifier.
+
+### CA-16 : contradiction avec intention prédéfinie
+
+Deux passages fictifs donnent des horaires incompatibles pour le même atelier, sans élément permettant de privilégier une source.
+
+Dans la page d’essai, l’intention a été fixée à GENERAL_INFORMATION pour isoler la génération. Les consignes et les contrôles de sortie de la chaîne documentaire habituelle ont été conservés.
+
+Statut observé : `information_insuffisante`.
+Aucun horaire ni aucune citation n’a été affiché.
+
+Verdict : conforme pour cette exécution. L’abstention sur information manquante a été observée dans l’application principale ; l’abstention sur contradiction a été observée dans le banc d’essai isolé.
