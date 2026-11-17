@@ -356,6 +356,7 @@ La préparation manuelle et l’export restent disponibles sans IA.
 * `essai_fidelite_rendez_vous.py` : évaluation isolée du contrôle sur des cas fictifs.
 * `donnees/evaluation_fidelite_rendez_vous.json` : cas de référence et verdicts attendus.
 * `donnees/corpus_contradiction_fictif.json` : deux passages incompatibles utilisés uniquement dans le banc d’essai CA-16.
+* `donnees/corpus_injection_fictif.json` : passage contenant une instruction injectée, utilisé uniquement dans le banc d’essai CA-19.
 
 
 ## Limites

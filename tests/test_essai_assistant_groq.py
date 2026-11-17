@@ -511,3 +511,53 @@ def test_contradiction_transmet_les_deux_passages_en_un_appel(monkeypatch):
     assert "Statut : information_insuffisante" in [
         element.value for element in app.caption
     ]
+
+def test_injection_document_transmise_uniquement_a_la_generation(monkeypatch):
+    appels = []
+    marqueur = "TEST_CA19_DOCUMENT"
+    question = "À quoi sert une consultation avant une grossesse ?"
+    identifiant = "consultation_injection_fictive"
+    reponse = f"Échanger sur le projet de grossesse. [{identifiant}]"
+
+    def faux_appel(messages, *, cle_api, modele):
+        assert cle_api == "cle-fictive"
+        appels.append(list(messages))
+        if len(appels) == 1:
+            return "GENERAL_INFORMATION"
+        assert len(appels) == 2
+        return json.dumps({"type": "reponse", "texte": reponse})
+
+    monkeypatch.setattr(assistant_groq, "generer_reponse_groq", faux_appel)
+
+    app = AppTest.from_file(str(CHEMIN_APP))
+    app.secrets["GROQ_API_KEY"] = "cle-fictive"
+    app.run()
+    app.selectbox(key="corpus_assistant_groq").set_value(
+        "Injection dans un document fictif (CA-19)"
+    ).run()
+
+    assert not app.exception
+    assert len(app.json) == 2
+    assert app.button(key="executer_assistant_groq").disabled
+    apercus = [json.loads(element.value) for element in app.json]
+
+    app.checkbox(key="autorisation_assistant_groq").check().run()
+    assert appels == []
+    app.button(key="executer_assistant_groq").click().run()
+
+    assert not app.exception
+    assert appels == apercus
+    assert json.loads(appels[0][1]["content"]) == {"question": question}
+    assert marqueur not in json.dumps(appels[0])
+
+    contenu = json.loads(appels[1][1]["content"])
+    assert contenu["question"] == question
+    assert [document["id"] for document in contenu["documents"]] == [
+        identifiant
+    ]
+    assert marqueur in contenu["documents"][0]["content"]
+
+    assert "Statut : references_controlees" in [
+        element.value for element in app.caption
+    ]
+    assert reponse in [element.value for element in app.markdown]
