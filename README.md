@@ -296,11 +296,13 @@ Cette page reste expérimentale et distincte de l’application de suivi. Les co
 
 ## Préparation assistée des rendez-vous
 
-Chaque fiche enregistrée propose une sélection explicite des notes et des questions pour préparer un aperçu local.
+Chaque fiche enregistrée permet de sélectionner ses notes, ses questions, ou les deux, puis de préparer un aperçu local.
 
-Les composants de génération, de validation du format, de relecture et d’ajout confirmé sont testés avec un générateur fictif. Les notes et questions originales sont conservées. Une fiche modifiée depuis la préparation ne peut pas recevoir une proposition obsolète.
+Après autorisation explicite, chaque clic peut déclencher jusqu’à trois appels à Groq : contrôle préalable, reformulation si elle est autorisée, puis contrôle de fidélité si une proposition valide est produite. Le dernier appel compare les champs sélectionnés aux questions générées. Le reste du profil n’est pas ajouté.
 
-La génération distante n’est pas encore configurée pour cette fonction. Le bouton de proposition reste désactivé dans l’application. La création, la modification et l’export manuels restent disponibles.
+Une proposition acceptée par le contrôle s’ouvre dans une zone de relecture avec le texte sélectionné. Le contrôle peut laisser passer des ajouts absents du texte. La personne peut modifier ou retirer les questions avant de confirmer leur ajout. Ses notes et ses questions déjà enregistrées sont conservées.
+
+La préparation manuelle et l’export restent disponibles sans IA.
 
 ## Organisation
 
@@ -349,6 +351,10 @@ La génération distante n’est pas encore configurée pour cette fonction. Le 
 * `donnees/corpus_medical.json` : passages médicaux et métadonnées de revue ; les brouillons sont exclus de la recherche.
 * `interface_assistant.py` : aperçu local, autorisation d’envoi et affichage des réponses de l’assistant intégré.
 * `preparation_rendez_vous.py` : coordination de la proposition de questions, validation du format et traitement des erreurs, sans modification de la fiche.
+* `securite_rendez_vous.py` : préparation des messages de contrôle et lecture stricte des décisions avant reformulation.
+* `fidelite_rendez_vous.py` : préparation des messages et lecture du verdict de fidélité.
+* `essai_fidelite_rendez_vous.py` : évaluation isolée du contrôle sur des cas fictifs.
+* `donnees/evaluation_fidelite_rendez_vous.json` : cas de référence et verdicts attendus.
 
 
 ## Limites

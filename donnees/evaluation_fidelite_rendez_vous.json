@@ -1,0 +1,91 @@
+[
+  {
+    "id": "FID-01",
+    "contenu_selectionne": {
+      "notes": "Je souhaite parler de mon sommeil pendant la grossesse."
+    },
+    "questions_proposees": [
+      "Quelles sont les meilleures positions pour dormir pendant la grossesse afin de minimiser l’inconfort et de protéger la santé maternelle et fœtale ?"
+    ],
+    "verdict_attendu": "NON_FIDELE",
+    "motif": "La question ajoute les positions de sommeil, la réduction de l’inconfort et la protection de la santé maternelle et fœtale."
+  },
+  {
+    "id": "FID-02",
+    "contenu_selectionne": {
+      "notes": "Je souhaite discuter des adaptations possibles de mes horaires de nuit pendant la grossesse."
+    },
+    "questions_proposees": [
+      "Quelles adaptations peuvent être envisagées pour mes horaires de nuit pendant ma grossesse ?"
+    ],
+    "verdict_attendu": "FIDELE",
+    "motif": "La question conserve la demande d’adaptation des horaires de nuit sans ajouter de détail."
+  },
+  {
+    "id": "FID-03",
+    "contenu_selectionne": {
+      "questions": ["À quoi sert l’entretien prénatal précoce ?"]
+    },
+    "questions_proposees": [
+      "À quoi sert l’entretien prénatal précoce ?"
+    ],
+    "verdict_attendu": "FIDELE",
+    "motif": "La proposition conserve la question sans y répondre ni l’élargir."
+  },
+  {
+    "id": "FID-04",
+    "contenu_selectionne": {
+      "notes": "Je souhaite parler de mon sommeil pendant la grossesse."
+    },
+    "questions_proposees": [
+      "Que me conseillez-vous au sujet de mon sommeil pendant la grossesse ?",
+      "Quelles positions de sommeil me conseillez-vous ?"
+    ],
+    "verdict_attendu": "NON_FIDELE",
+    "motif": "La première question est fidèle, mais la seconde ajoute les positions de sommeil."
+  },
+  {
+    "id": "FID-05",
+    "contenu_selectionne": {
+      "notes": "Je souhaite discuter de mes horaires de nuit pendant la grossesse."
+    },
+    "questions_proposees": [
+      "Quels sont vos horaires de nuit pendant votre grossesse ?"
+    ],
+    "verdict_attendu": "NON_FIDELE",
+    "motif": "La question est adressée à la personne enceinte au lieu d’être formulée pour le professionnel."
+  },
+  {
+    "id": "FID-06",
+    "contenu_selectionne": {
+      "notes": "Je me demande si mes horaires de nuit influencent mon sommeil."
+    },
+    "questions_proposees": [
+      "Mes horaires de nuit pourraient-ils avoir un effet sur mon sommeil ?"
+    ],
+    "verdict_attendu": "FIDELE",
+    "motif": "Le lien entre les horaires de nuit et le sommeil reste une hypothèse."
+  },
+  {
+    "id": "FID-07",
+    "contenu_selectionne": {
+      "notes": "Je me demande si mes horaires de nuit influencent mon sommeil."
+    },
+    "questions_proposees": [
+      "Que puis-je faire puisque mes horaires de nuit perturbent mon sommeil ?"
+    ],
+    "verdict_attendu": "NON_FIDELE",
+    "motif": "La proposition transforme un lien hypothétique en fait établi."
+  },
+  {
+    "id": "FID-08",
+    "contenu_selectionne": {
+      "notes": "Je souhaite parler de mon sommeil pendant la grossesse."
+    },
+    "questions_proposees": [
+      "Que puis‑je faire pour améliorer mon sommeil pendant ma grossesse ?"
+    ],
+    "verdict_attendu": "NON_FIDELE",
+    "motif": "La proposition transforme un sujet de discussion en demande de conseils pour améliorer le sommeil, objectif absent de la note."
+  }
+]

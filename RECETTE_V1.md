@@ -25,7 +25,7 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
 | Intentions et sécurité | Partiel | CA-17 à CA-19 | Classifier, orienter et fournir des réponses locales adaptées. |
-| Préparation IA des rendez-vous | Partiel | CA-20 | Composants locaux et parcours simulé testés. Ajouter l’autorisation, le contrôle de sécurité distant, l’adaptateur fournisseur et les essais réels. |
+| Préparation IA des rendez-vous | Partiel | CA-20 | Parcours distant essayé sur des fiches fictives. Ajout après relecture confirmé lors du premier essai. Affichage des champs sélectionnés vérifié par tests automatisés. Fidélité irrégulière sur FID-08 ; vérification visuelle de la nouvelle zone de relecture à compléter. |
 | Accessibilité et déploiement | À réaliser | CA-25, ENF-04, ENF-06, ENF-09 | Tester les navigateurs, les petits écrans, les performances et l’hébergement. |
 
 ## Décisions à finaliser
@@ -119,3 +119,80 @@ Les essais documentaires ont d’abord été réalisés dans une page expérimen
 La V1 peut être déclarée terminée lorsque les critères retenus sont vérifiés, les écarts bloquants corrigés et les limites documentées.
 
 Les résultats expérimentaux du laboratoire ne valent pas validation de l’assistant médical intégré.
+
+### CA-20 : premier essai distant sur une fiche fictive
+
+* Ajout après relecture : conforme. Les notes et la question existante sont conservées. Le texte modifié est enregistré à la place de la proposition initiale.
+* Fidélité au contenu sélectionné : non conforme. La proposition introduit des sous-thèmes et un symptôme absents des notes.
+* CA-20 reste partiel. La fidélité doit être réévaluée.
+
+* Nouvel essai avec les mêmes notes fictives : deux questions proposées. La question sur l’alimentation reste générale. Celle sur l’activité physique ajoute les types d’exercices et leur fréquence, absents des notes. Verdict : amélioration observée, fidélité encore partielle.
+
+### CA-20 : nouvel essai de fidélité des propositions
+
+Trois cas fictifs ont été réessayés après modification de la consigne de reformulation. Le critère est de conserver le sens et le niveau de précision du texte sélectionné, sans ajouter de détail ni répondre à la question.
+
+| Cas | Résultat observé | Verdict |
+| --- | --- | --- |
+| Note générale sur le sommeil pendant la grossesse | La proposition ajoute un objectif d’amélioration et introduit les positions de sommeil, absents de la note. | Partiellement conforme |
+| Note sur l’adaptation des horaires de nuit pendant la grossesse | La proposition conserve la demande d’adaptation des horaires, mais ajoute un objectif de bien-être pour la personne enceinte et le bébé. | Partiellement conforme |
+| Question sur le rôle de l’entretien prénatal précoce | La reformulation conserve le sens de la question, sans y répondre ni ajouter de sujet. | Conforme |
+
+Les propositions sont formulées comme des questions à poser au professionnel. La fidélité au texte sélectionné reste irrégulière dans deux cas sur trois. L’ajout après relecture n’a pas été réévalué lors de cet essai ; il avait été vérifié lors du premier essai distant.
+
+CA-20 reste Partiel. Clarifier la règle de reformulation, puis reprendre les mêmes cas pour comparer les résultats. Si les écarts persistent, évaluer un contrôle de fidélité séparé.
+
+### CA-20 : essai après clarification de la consigne
+
+Les trois cas fictifs ont été réessayés avec la consigne qui exige une question ouverte lorsqu’un seul thème général est mentionné. Les trois propositions ont reçu le statut `proposition_disponible`.
+
+| Cas | Résultat observé | Verdict |
+| --- | --- | --- |
+| Sommeil pendant la grossesse | Une seule question, mais elle introduit les positions de sommeil, la réduction de l’inconfort et la protection de la santé maternelle et fœtale. | Non conforme |
+| Adaptation des horaires de nuit | La question conserve la demande d’adaptation, sans ajouter de conséquence ni d’objectif de santé. | Conforme |
+| Rôle de l’entretien prénatal précoce | La question est conservée sans ajout ni réponse médicale. | Conforme |
+
+CA-20 reste Partiel. Le nombre de questions est conforme sur ces cas, mais le statut `proposition_disponible` ne garantit pas la fidélité. L’ajout après relecture n’a pas été réévalué lors de cet essai.
+
+### CA-20 : premier essai isolé du contrôle de fidélité
+
+Trois cas fictifs ont été évalués une fois chacun via Groq, avec le modèle openai/gpt-oss-20b. Les propositions ont été reprises telles quelles, sans relancer leur génération.
+
+FID-01 : NON_FIDELE attendu et obtenu. FID-02 et FID-03 : FIDELE attendu et obtenu.
+
+Bilan : trois verdicts conformes, aucune acceptation indue et aucun verdict invalide observé. Le contrôle reste hors de l’application. CA-20 reste Partiel : ces trois cas ne suffisent pas à évaluer sa fiabilité.
+
+### CA-20 : extension de l’essai isolé de fidélité
+
+Les cas FID-04 à FID-07 ont été évalués une fois chacun, avec les mêmes consignes que les trois premiers cas.
+
+* FID-04 : rejet de la proposition mixte, malgré une question fidèle.
+* FID-05 : rejet de la question adressée à la personne enceinte.
+* FID-06 : acceptation de la reformulation qui conserve l’incertitude.
+* FID-07 : rejet de la reformulation qui présente l’hypothèse comme un fait établi.
+
+Bilan cumulé : sept verdicts conformes sur sept, sans acceptation indue ni verdict invalide observé. Chaque cas n’a été exécuté qu’une fois. Le contrôle reste isolé et CA-20 reste Partiel.
+
+### CA-20 : premier essai intégré avec contrôle de fidélité
+
+Note fictive : « Je souhaite parler de mon sommeil pendant la grossesse. »
+Statut observé : `proposition_disponible`.
+Proposition : « Que puis-je faire pour améliorer mon sommeil pendant ma grossesse ? »
+
+Verdict de recette : non conforme sur la fidélité. Le contrôle a laissé passer une question qui ajoute un objectif d’amélioration absent de la note.
+La proposition a été affichée pour relecture. L’ajout à la fiche n’a pas été évalué lors de cet essai. CA-20 reste Partiel.
+
+### CA-20 : réévaluation isolée de FID-08
+
+La note et la proposition observées dans l’application ont été réévaluées sans régénération. Verdict attendu et obtenu : NON_FIDELE. Aucune acceptation indue ni erreur lors de cet appel.
+
+Ce rejet isolé n’annule pas l’acceptation observée dans l’application. La cause de la divergence n’est pas établie. CA-20 reste Partiel.
+
+### CA-20 : répétition de FID-08 à entrée fixe
+
+Verdict attendu : NON_FIDELE.
+Verdicts obtenus, dans l’ordre : FIDELE, FIDELE, NON_FIDELE, NON_FIDELE. Aucune erreur technique. Deux acceptations indues sur quatre nouveaux essais.
+
+Avec le premier rejet isolé, le bilan est de deux acceptations indues sur cinq essais isolés de FID-08. L’essai intégré est compté séparément. Le test de parité simulé confirme que le code actuel transmet les mêmes messages et le même modèle dans les deux parcours.
+
+Le contrôle ne bloque pas systématiquement l’ajout d’un objectif absent de la note. La relecture manuelle reste obligatoire. CA-20 reste Partiel.

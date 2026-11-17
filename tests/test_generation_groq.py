@@ -295,3 +295,46 @@ def test_generation_groq_refuse_configuration_avant_client(
             modele=modele,
         )
 
+def test_appel_rendez_vous_differe_et_transmet_messages(monkeypatch):
+    appels = []
+    messages = ({"role": "user", "content": "Notes fictives."},)
+
+    def faux_appel(messages, *, cle_api, modele):
+        appels.append((messages, cle_api, modele))
+        return "PREPARATION_AUTORISEE"
+
+    monkeypatch.setattr(generation_groq, "generer_reponse_groq", faux_appel)
+
+    appeler = generation_groq.creer_appel_groq_rendez_vous(
+        cle_api="cle-fictive",
+        modele="modele-fictif",
+    )
+
+    assert appels == []
+    assert appeler(messages) == "PREPARATION_AUTORISEE"
+    assert appels == [(messages, "cle-fictive", "modele-fictif")]
+
+
+@pytest.mark.parametrize(
+    "type_erreur",
+    [
+        generation_groq.RequeteGroqRefusee,
+        generation_groq.GenerationGroqInterrompue,
+        generation_groq.ReponseGroqVide,
+    ],
+)
+def test_appel_rendez_vous_masque_erreur_fournisseur(monkeypatch, type_erreur):
+    def faux_appel(*args, **kwargs):
+        raise type_erreur("DETAIL_TECHNIQUE_NON_PUBLIC")
+
+    monkeypatch.setattr(generation_groq, "generer_reponse_groq", faux_appel)
+
+    appeler = generation_groq.creer_appel_groq_rendez_vous(
+        cle_api="cle-fictive",
+        modele="modele-fictif",
+    )
+
+    with pytest.raises(GenerationIndisponible) as erreur:
+        appeler(({"role": "user", "content": "Notes fictives."},))
+
+    assert "DETAIL_TECHNIQUE_NON_PUBLIC" not in str(erreur.value)

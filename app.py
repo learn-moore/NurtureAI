@@ -1080,6 +1080,8 @@ else:
             nouveau_profil = afficher_preparation_rendez_vous(
                 fiche,
                 profil=st.session_state["profil"],
+                activer_groq=True,
+                activer_fidelite_groq=True,
             )
 
             if nouveau_profil is not None:

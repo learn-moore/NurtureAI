@@ -1,7 +1,7 @@
-from pathlib import Path
-
+import json
 import streamlit as st
 
+from pathlib import Path
 from datetime import datetime, timezone
 
 from corpus_documentaire import charger_corpus
@@ -12,7 +12,11 @@ from classification_intentions import CONSIGNES_CLASSIFICATION
 from assistant_groq import traiter_demande_groq
 from fiches_rendez_vous import PreparationRendezVousUrgente
 from messages_assistant import preparer_messages_rendez_vous
-from preparation_rendez_vous import enregistrer_questions_relues, proposer_questions_rendez_vous
+from preparation_rendez_vous import enregistrer_questions_relues, controler_et_proposer_questions
+from securite_rendez_vous import preparer_controle_rendez_vous
+from generation_groq import creer_appel_groq_rendez_vous
+from fidelite_rendez_vous import CONSIGNES_FIDELITE_RENDEZ_VOUS
+from preparation_rendez_vous import controler_proposer_et_verifier_questions
 
 
 CHEMIN_CORPUS = (
@@ -229,11 +233,12 @@ def effacer_apercu_rendez_vous(identifiant):
     cles = {
         f"preparation_rdv_apercu_{identifiant}",
         f"preparation_rdv_resultat_{identifiant}",
+        f"preparation_rdv_autorisation_{identifiant}",
     }
     prefixe_relecture = f"preparation_rdv_relecture_{identifiant}_"
 
     for cle in list(st.session_state):
-        if cle in cles or cle.startswith(prefixe_relecture):
+        if cle in cles or cle.startswith(prefixe_relecture): # type: ignore
             del st.session_state[cle]
 
 
@@ -242,11 +247,31 @@ def afficher_preparation_rendez_vous(
     *,
     profil=None,
     generer=None,
+    controler=None,
+    activer_groq=False,
+    verifier_fidelite=None,
+    activer_fidelite_groq=False,
 ):
     cle_apercu = f"preparation_rdv_apercu_{fiche.id}"
     apercu = st.session_state.get(cle_apercu)
 
-    if apercu is not None and apercu["fiche"] != fiche:
+    simuler_fidelite = not activer_groq and verifier_fidelite is not None
+
+    fidelite_groq = activer_groq and activer_fidelite_groq
+    verifier_proposition = simuler_fidelite or fidelite_groq
+    consignes_fidelite = (
+        CONSIGNES_FIDELITE_RENDEZ_VOUS if verifier_proposition else None
+    )
+
+    if apercu is not None and (
+        apercu["fiche"] != fiche
+        or "messages_controle" not in apercu
+        or apercu.get("modele") != MODELE
+        or apercu.get("simuler_fidelite", False) != simuler_fidelite
+        or apercu.get("activer_groq") != activer_groq
+        or apercu.get("fidelite_groq", False) != fidelite_groq
+        or apercu.get("consignes_fidelite") != consignes_fidelite
+    ):
         effacer_apercu_rendez_vous(fiche.id)
 
     st.write("**Préparer mes questions**")
@@ -278,6 +303,12 @@ def afficher_preparation_rendez_vous(
 
     if preparer:
         try:
+            messages_controle = preparer_controle_rendez_vous(
+                fiche,
+                inclure_notes=inclure_notes,
+                inclure_questions=inclure_questions,
+            )
+
             messages = preparer_messages_rendez_vous(
                 fiche,
                 inclure_notes=inclure_notes,
@@ -295,8 +326,14 @@ def afficher_preparation_rendez_vous(
         st.session_state[cle_apercu] = {
             "fiche": fiche,
             "messages": messages,
+            "messages_controle": messages_controle,
             "inclure_notes": inclure_notes,
             "inclure_questions": inclure_questions,
+            "modele": MODELE,
+            "simuler_fidelite": simuler_fidelite,
+            "activer_groq": activer_groq,
+            "fidelite_groq": fidelite_groq,
+            "consignes_fidelite": consignes_fidelite,
         }
 
     apercu = st.session_state.get(cle_apercu)
@@ -304,15 +341,70 @@ def afficher_preparation_rendez_vous(
     if apercu is None:
         return None
 
+    st.caption("Premier appel éventuel : contrôle préalable.")
+    st.code(
+        json.dumps(
+            list(apercu["messages_controle"]),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        language="json",
+    )
+
+    st.caption("Second appel éventuel : reformulation.")
     st.json(list(apercu["messages"]))
+
+    st.caption(f"Fournisseur : Groq. Modèle : {apercu['modele']}.")
+    st.write(
+        "Un premier appel transmet les consignes de contrôle et les champs sélectionnés. Si le contrôle autorise la préparation, "
+        "un second appel transmet les consignes de reformulation et ces mêmes champs."
+    )
+    st.caption(
+        "Les notes et questions sélectionnées peuvent contenir des données personnelles. Les autres champs de la fiche et "
+        "le reste du profil ne sont pas ajoutés."
+    )
+    st.markdown(
+        "[Conditions de traitement des données par Groq](https://console.groq.com/docs/your-data)"
+    )
+
+    libelle_autorisation = (
+        "J’autorise ces envois à Groq, jusqu’à deux appels par clic de proposition."
+    )
+
+    if simuler_fidelite:
+        st.caption(
+            "Simulation sans envoi distant. Si une proposition valide est produite, le troisième contrôle reçoit les champs sélectionnés "
+            "et les questions générées. Ces questions ne sont pas encore disponibles dans l’aperçu."
+        )
+        st.code(CONSIGNES_FIDELITE_RENDEZ_VOUS, language="text")
+        libelle_autorisation = "J’autorise la simulation des trois étapes."
+
+    if fidelite_groq:
+        st.caption(
+            "Si la reformulation produit une proposition valide, un troisième appel transmet à Groq les champs sélectionnés "
+            "et les questions générées pour vérifier leur fidélité. Ces questions n’existent pas encore au moment de l’aperçu."
+        )
+        st.code(apercu["consignes_fidelite"], language="text")
+        libelle_autorisation = (
+            "J’autorise ces envois à Groq, jusqu’à trois appels par clic de proposition."
+        )
+
+    autorisation = st.checkbox(
+        libelle_autorisation,
+        key=f"preparation_rdv_autorisation_{fiche.id}",
+    )
+
+    proposition_disponible = activer_groq or (
+        generer is not None and controler is not None
+    )
 
     proposer = st.button(
         "Proposer des questions",
         key=f"preparation_rdv_proposer_{fiche.id}",
-        disabled=generer is None,
+        disabled=not proposition_disponible or not autorisation,
     )
 
-    if generer is None:
+    if not proposition_disponible:
         st.caption(
             "La proposition automatique n’est pas disponible pour le moment. Vous pouvez continuer à préparer la fiche manuellement."
         )
@@ -320,26 +412,63 @@ def afficher_preparation_rendez_vous(
 
     cle_resultat = f"preparation_rdv_resultat_{fiche.id}"
 
-    if proposer:
+    if proposer and autorisation:
         st.session_state.pop(cle_resultat, None)
 
         prefixe = f"preparation_rdv_relecture_{fiche.id}_"
         for cle in list(st.session_state):
-            if cle.startswith(prefixe):
+            if cle.startswith(prefixe): # type: ignore
                 del st.session_state[cle]
+
+        if activer_groq:
+            try:
+                cle = st.secrets["GROQ_API_KEY"]
+            except (FileNotFoundError, KeyError):
+                st.error("Le service de préparation IA n’est pas configuré.")
+                return None
+
+            if not isinstance(cle, str) or not cle.strip():
+                st.error("La configuration du service IA est invalide.")
+                return None
+
+            appel = creer_appel_groq_rendez_vous(
+                cle_api=cle,
+                modele=apercu["modele"],
+            )
+            controler = appel
+            generer = appel
+            if fidelite_groq:
+                verifier_fidelite = appel
+
+        def controler_apercu_verifie(messages):
+            if messages != apercu["messages_controle"]:
+                raise ValueError("L’aperçu doit être préparé à nouveau.")
+            return controler(messages) # type: ignore
 
         def generer_apercu_verifie(messages):
             if messages != apercu["messages"]:
                 raise ValueError("L’aperçu doit être préparé à nouveau.")
-            return generer(messages)
+            return generer(messages) # type: ignore
 
         try:
-            resultat = proposer_questions_rendez_vous(
-                apercu["fiche"],
-                generer=generer_apercu_verifie,
-                inclure_notes=apercu["inclure_notes"],
-                inclure_questions=apercu["inclure_questions"],
-            )
+            options = {
+                "controler": controler_apercu_verifie,
+                "generer": generer_apercu_verifie,
+                "inclure_notes": apercu["inclure_notes"],
+                "inclure_questions": apercu["inclure_questions"],
+            }
+
+            if verifier_proposition:
+                resultat = controler_proposer_et_verifier_questions(
+                    apercu["fiche"],
+                    verifier_fidelite=verifier_fidelite, # type: ignore
+                    **options,
+                )
+            else:
+                resultat = controler_et_proposer_questions(
+                    apercu["fiche"],
+                    **options,
+                )
         except ValueError:
             st.error("Préparez un nouvel aperçu avant de réessayer.")
             return None
@@ -353,7 +482,7 @@ def afficher_preparation_rendez_vous(
 
     st.caption(f"Statut : {resultat['statut']}")
 
-    if resultat["statut"] == "urgence_locale":
+    if resultat["statut"] in ("urgence_locale", "urgence_detectee"):
         st.warning(resultat["message"])
         return None
 
@@ -367,6 +496,9 @@ def afficher_preparation_rendez_vous(
             profil,
             apercu["fiche"],
             resultat["questions"],
+            contenu_selectionne=json.loads(
+                apercu["messages"][1]["content"]
+            )["contenu_selectionne"],
         )
 
     return None
@@ -379,6 +511,8 @@ def afficher_relecture_rendez_vous(
     profil,
     fiche_reference,
     questions_proposees,
+    *,
+    contenu_selectionne=None,
 ):
     """Retourne un nouveau profil après ajout explicitement confirmé."""
     base = f"preparation_rdv_relecture_{fiche_reference.id}"
@@ -394,6 +528,21 @@ def afficher_relecture_rendez_vous(
         st.session_state[cle_confirmation] = False
 
     st.write("**Relire la proposition**")
+    if contenu_selectionne:
+        st.caption("Texte sélectionné pour cette proposition")
+
+        if "notes" in contenu_selectionne:
+            st.write("**Notes sélectionnées**")
+            st.text(contenu_selectionne["notes"])
+
+        if "questions" in contenu_selectionne:
+            st.write("**Questions sélectionnées**")
+            for question in contenu_selectionne["questions"]:
+                st.text(question)
+
+        st.caption(
+            "Comparez les questions proposées à ce texte. Modifiez ou retirez tout détail que vous ne souhaitez pas aborder."
+        )
     st.caption(
         "Modifiez ou retirez les questions proposées avant de confirmer. L’ajout conserve vos notes et vos questions déjà enregistrées."
     )

@@ -81,3 +81,23 @@ def generer_reponse_groq(
         raise ReponseGroqVide("Groq n’a retourné aucun texte exploitable.")
 
     return texte
+
+def creer_appel_groq_rendez_vous(*, cle_api: str, modele: str):
+    """Prépare un appel Groq sans contacter le fournisseur."""
+    def appeler(messages: tuple[dict[str, str], ...]) -> str:
+        try:
+            return generer_reponse_groq(
+                messages,
+                cle_api=cle_api,
+                modele=modele,
+            )
+        except (
+            RequeteGroqRefusee,
+            GenerationGroqInterrompue,
+            ReponseGroqVide,
+        ):
+            raise GenerationIndisponible(
+                "Groq n’a pas fourni de réponse exploitable."
+            ) from None
+
+    return appeler
