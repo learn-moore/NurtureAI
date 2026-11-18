@@ -2953,6 +2953,9 @@ def test_aide_urgence_accessible_pendant_lecture_profil(monkeypatch):
     app = AppTest.from_file("../app.py").run()
 
     assert not app.exception
+    assert "À propos de NurtureAI" in [
+        element.label for element in app.expander
+    ]
 
     assert "Lecture de votre sauvegarde locale…" in [
         element.value for element in app.info

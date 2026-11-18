@@ -17,10 +17,10 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 
 | Lot | État initial | Critères concernés | Travail restant |
 | --- | --- | --- | --- |
-| Accueil et navigation | Partiel | CA-01, CA-25 | Finaliser les écrans, À propos et la navigation accessible. |
-| Conception | Partiel | CA-03, CA-04 | Définir les conventions et réaliser les estimations d’ovulation et de fenêtre fertile. |
-| Repères grossesse | À vérifier | CA-05, CA-06 | Finaliser les conventions et vérifier les changements de datation. |
-| Transitions et historique | Partiel | CA-07 à CA-11 | Vérifier la sauvegarde confirmée, les annulations et les échecs. |
+| Accueil et navigation | Vérifié sur les scénarios testés | CA-01, CA-25 | Premier accès, navigation et rubrique « À propos » vérifiés dans Safari et Chrome. Numéro de version applicative à renseigner. |
+| Conception | Partiel | CA-03, CA-04 | Jour du cycle, estimation des prochaines règles et avertissement vérifiés dans Safari et Chrome. Convention RM-04 à valider pour l’ovulation et la fenêtre fertile. |
+| Repères grossesse | Vérifié sur les scénarios testés | CA-05, CA-06 | Calcul à partir des dernières règles et conservation de la DPA vérifiés dans Safari et Chrome. |
+| Transitions et historique | Partiel | CA-07 à CA-11 | 	Comportements vérifiés dans Safari et Chrome avec les commandes actuelles. Les choix « Oui » et « Pas maintenant » décrits dans le cadrage restent à aligner avec l’interface. |
 | Persistance et échanges | Partiel | CA-02, CA-12 à CA-14, CA-23, CA-24 | Scénarios de stockage vérifiés dans Safari et Chrome ; retours tardifs vérifiés par simulation. |
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
@@ -425,3 +425,45 @@ Essai réalisé dans Safari et Chrome sur un profil fictif avec un parcours acti
 Les repères et la fiche archivée restent lisibles. La fiche est téléchargeable sans commande de modification ou de suppression dans l’historique. Ouvrir et rouvrir le parcours archivé ne change pas le parcours actif.
 
 Le champ `profil` est identique dans les exports avant et après consultation. Verdict conforme dans les deux navigateurs.
+
+### CA-05 · Repères de grossesse à partir des dernières règles
+
+Essai réalisé dans Safari et Chrome avec une date fictive de dernières règles située 65 jours avant le jour du test.
+
+Après validation, l’application affiche 9 SA + 2 jours et 7 SG + 2 jours. Les mêmes valeurs restent affichées après un aller-retour vers l’écran « Projet de conception ». Le calcul a été effectué localement, sans appel à une API.
+
+Verdict conforme dans les deux navigateurs pour ce scénario.
+
+### CA-06 · Conservation de la DPA lors d’une modification
+
+Essai réalisé dans Safari et Chrome sur un parcours grossesse fictif. Le passage de la durée de référence de 40 à 41 SA conserve la DPA saisie et augmente l’âge calculé de 7 jours à date de calcul identique.
+
+Après sauvegarde et rechargement, la reprise des repères restitue la méthode DPA, la date saisie et la durée de référence de 41 SA.
+
+Verdict conforme dans les deux navigateurs pour ce scénario.
+
+### CA-03 · Jour du cycle et prochaines règles estimées
+
+Essai réalisé dans Safari et Chrome avec un cycle fictif de 28 jours et une date de dernières règles située 11 jours avant le test. L’application affiche le jour 12 et estime les prochaines règles à 28 jours après la date saisie.
+
+Verdict conforme dans les deux navigateurs pour ces deux repères. Le volet ovulation et fenêtre fertile reste ouvert, dans l’attente de la validation de la convention RM-04.
+
+### CA-04 · Cycle irrégulier ou de régularité inconnue
+
+Les choix « Irrégulier » et « Je ne sais pas » ont été testés dans Safari et Chrome. Dans les deux cas, un avertissement invite à interpréter la date avec davantage de prudence. Elle reste présentée comme une estimation, sans certitude ni probabilité individuelle affichée.
+
+Verdict conforme dans les deux navigateurs pour les deux choix.
+
+### CA-01 · Premier accès sans sauvegarde
+
+Essai réalisé dans Safari et Chrome sur une origine de test sans sauvegarde préalable. L’accueil présente la portée générale de NurtureAI et rappelle la limite de ses estimations.
+
+Les écrans « Projet de conception » et « Grossesse en cours » sont accessibles sans création de compte. Aucun parcours n’est actif avant un clic sur « Démarrer le parcours ».
+
+Verdict conforme dans les deux navigateurs.
+
+### Accueil · Rubrique « À propos »
+
+Dans Safari et Chrome, la rubrique s’ouvre et se referme au clavier avant le démarrage d’un parcours. Les sections Calculs, Sources, Confidentialité et Limites sont lisibles dans les deux navigateurs.
+
+Le test automatisé confirme aussi que la rubrique est disponible pendant la lecture de la sauvegarde. Le libellé « Prototype en développement » est provisoire, en attendant un numéro de version applicative.

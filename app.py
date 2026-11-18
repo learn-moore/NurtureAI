@@ -27,8 +27,30 @@ from interface_assistant import (
 st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
 
+with st.expander("À propos de NurtureAI"):
+    st.caption("Prototype en développement.")
+
+    st.markdown(
+        "**Calculs.** Les repères de conception sont estimés à partir des dates et durées saisies. Les repères de grossesse utilisent "
+        "la date des dernières règles ou la date prévue d’accouchement, selon la méthode choisie."
+    )
+    st.markdown(
+        "**Sources.** Les fiches de suivi indiquent leurs sources. L’assistant documentaire affiche les références qu’il cite. "
+        "Le contrôle des références vérifie leur présence dans les documents transmis. La fidélité de chaque affirmation "
+        "reste à apprécier."
+    )
+    st.markdown(
+        "**Confidentialité.** Le profil est sauvegardé dans ce navigateur lorsque l’enregistrement réussit. En cas d’utilisation de l’IA, "
+        "l’aperçu présente les données qui peuvent être transmises à Groq après autorisation. « Mes données » permet d’exporter le profil "
+        "ou de l’effacer."
+    )
+    st.markdown(
+        "**Limites.** Les repères affichés sont indicatifs. Pour une décision concernant votre situation personnelle, "
+        "adressez-vous à un professionnel de santé."
+    )
+
 st.info(
-    "NurtureAI fournit des informations générales et des estimations. Il ne remplace pas une professionnel de santé."
+    "NurtureAI fournit des informations générales et des estimations. Il ne remplace pas un professionnel de santé."
 )
 
 with st.expander("Besoin d’aide en urgence ?"):
@@ -204,7 +226,7 @@ if parcours == "Projet de conception":
         )
 
         st.write(
-            "Prochaine règles estimées : ",
+            "Prochaines règles estimées : ",
             prochaines_regles.strftime("%d/%m/%Y"),
         )
 
@@ -217,11 +239,11 @@ if parcours == "Projet de conception":
 
         if suivi["regularite_cycle"] == "Régulier":
             st.caption(
-                "Cette date est une estimation basée sur les informations reneignées. La durée réelle du cycle peut varier."
+                "Cette date est une estimation basée sur les informations renseignées. La durée réelle du cycle peut varier."
             )
         else:
             st.warning(
-                "Laa régularité de votre cycle est inconnue ou vous avez indiqué un cycle irrégulier. " \
+                "La régularité de votre cycle est inconnue ou vous avez indiqué un cycle irrégulier. " \
                 "La date estimée des prochaines règles est donc à interpréter avec davantage de prudence."
             )
 
