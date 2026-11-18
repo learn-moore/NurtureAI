@@ -383,3 +383,45 @@ Verdict CA-24 : conforme dans Safari et Chrome pour la sauvegarde illisible et l
 Deux tests automatisés simulent un effacement confirmé avant le retour d’une réponse de l’assistant ou d’une proposition de rendez-vous. Dans les deux cas, le résultat tardif est ignoré : il n’est ni affiché ni réintroduit dans la session.
 
 Verdict : conforme pour les deux scénarios simulés, sans appel réel à Groq. L’effacement suivi d’un rechargement a été vérifié séparément dans Safari et Chrome.
+
+### CA-07 : transition de conception vers grossesse
+
+Essai réalisé dans Safari et Chrome sur un profil fictif. La transition nécessite une confirmation. Le parcours conception est terminé et conservé dans l’historique avec ses repères et sa fiche. Ses identifiants sont préservés ; le nouveau parcours grossesse possède un identifiant distinct.
+
+Après confirmation de sauvegarde et rechargement, le parcours grossesse reste le seul parcours actif.
+
+Verdict : conforme dans les deux navigateurs pour ce scénario.
+
+### CA-08 : transition de grossesse vers conception
+
+Essai réalisé dans Safari et Chrome via « Changer de parcours », avec un ancien parcours conception archivé.
+
+La transition ne demande aucun motif médical. La grossesse est terminée et conservée avec ses repères et sa fiche. Un nouveau parcours conception distinct devient actif, sans réutilisation des anciennes dates de cycle ni estimation avant nouvelle saisie.
+
+Après sauvegarde confirmée et rechargement, ce nouveau parcours reste le seul actif, toujours sans estimation.
+
+Verdict : conforme dans les deux navigateurs sur ce chemin. Le choix « Oui » après clôture décrit dans le cadrage n’a pas été testé ; l’interface utilise « Changer de parcours ».
+
+### CA-09 · Clôture sans reprise immédiate
+
+Essai réalisé dans Safari et Chrome sur un profil fictif. La clôture exige une confirmation. Après clôture, l’application affiche « Aucun parcours actif » et l’historique reste consultable.
+
+Après sauvegarde et rechargement, `profil.active_journey_id` vaut `null` dans l’export. Un démarrage ultérieur crée un nouveau parcours conception sans reprendre les anciens repères.
+
+Verdict conforme dans les deux navigateurs pour le parcours « Terminer ce parcours » suivi d’un démarrage ultérieur.
+
+### CA-10 · Annulation, double clic et refus d’écriture
+
+Essais réalisés dans Safari et Chrome sur un profil fictif. L’annulation laisse le profil inchangé. Le double clic ne crée qu’un seul parcours.
+
+Un dépassement de quota simulé bloque l’écriture. Le parcours conception reste actif, aucun parcours grossesse n’est ajouté à l’historique et la sauvegarde précédente reste intacte. Après rechargement et retrait du blocage, une nouvelle tentative crée et sauvegarde un seul parcours grossesse.
+
+Les six tests automatisés ciblés passent. Verdict conforme dans les deux navigateurs pour les scénarios testés.
+
+### CA-11 · Consultation d’un parcours archivé
+
+Essai réalisé dans Safari et Chrome sur un profil fictif avec un parcours actif et un parcours archivé contenant des repères et une fiche de rendez-vous.
+
+Les repères et la fiche archivée restent lisibles. La fiche est téléchargeable sans commande de modification ou de suppression dans l’historique. Ouvrir et rouvrir le parcours archivé ne change pas le parcours actif.
+
+Le champ `profil` est identique dans les exports avant et après consultation. Verdict conforme dans les deux navigateurs.

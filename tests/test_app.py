@@ -33,6 +33,19 @@ def simuler_stockage_navigateur(monkeypatch):
 
     return reponse
 
+def confirmer_ecriture_transition(app, stockage):
+    candidat, export_candidat = app.session_state["transition_en_attente"]
+    assert app.session_state["profil"].active_journey_id != (
+        candidat.active_journey_id
+    )
+
+    stockage["texte"] = export_candidat
+    app.run()
+
+    assert not app.exception
+    assert "transition_en_attente" not in app.session_state
+    assert app.session_state["profil"] == candidat
+
 def test_reperes_grossesse_conserves_apres_changement_parcours():
     app = AppTest.from_file("../app.py").run()
     assert not app.exception
@@ -321,7 +334,7 @@ def test_terminer_parcours_conserve_historique():
         ),
     ],
 )
-def test_transition_depuis_parcours_actif(ecran_depart, ecran_consulte, ancien_type, nouveau_type,):
+def test_transition_depuis_parcours_actif(ecran_depart, ecran_consulte, ancien_type, nouveau_type, simuler_stockage_navigateur,):
     app = AppTest.from_file("../app.py").run()
 
     # Démarrer le parcours choisi.
@@ -342,6 +355,7 @@ def test_transition_depuis_parcours_actif(ecran_depart, ecran_consulte, ancien_t
     assert not app.button(key="changer_parcours_actif").disabled
 
     app.button(key="changer_parcours_actif").click().run()
+    confirmer_ecriture_transition(app, simuler_stockage_navigateur)
 
     assert not app.exception
 
@@ -365,7 +379,7 @@ def test_transition_depuis_parcours_actif(ecran_depart, ecran_consulte, ancien_t
     assert not app.checkbox(key="confirmer_changement_parcours").value
     assert app.button(key="changer_parcours_actif").disabled
 
-def test_transition_ouvre_ecran_du_nouveau_parcours():
+def test_transition_ouvre_ecran_du_nouveau_parcours(simuler_stockage_navigateur,):
     app = AppTest.from_file("../app.py").run()
 
     # Démarrer en conception et rester sur cet écran.
@@ -376,6 +390,7 @@ def test_transition_ouvre_ecran_du_nouveau_parcours():
     # Passer à la grossesse.
     app.checkbox(key="confirmer_changement_parcours").check().run()
     app.button(key="changer_parcours_actif").click().run()
+    confirmer_ecriture_transition(app, simuler_stockage_navigateur)
 
     assert not app.exception
     assert app.radio(key="ecran_consulte").value == "Grossesse en cours"
@@ -383,11 +398,12 @@ def test_transition_ouvre_ecran_du_nouveau_parcours():
     # Revenir à un nouveau parcours conception.
     app.checkbox(key="confirmer_changement_parcours").check().run()
     app.button(key="changer_parcours_actif").click().run()
+    confirmer_ecriture_transition(app, simuler_stockage_navigateur)
 
     assert not app.exception
     assert app.radio(key="ecran_consulte").value == "Projet de conception"
 
-def test_reperes_conception_conserves_apres_transition():
+def test_reperes_conception_conserves_apres_transition(simuler_stockage_navigateur,):
     app = AppTest.from_file("../app.py").run()
 
     # Démarrer le parcours conception.
@@ -422,6 +438,7 @@ def test_reperes_conception_conserves_apres_transition():
     # Passer au parcours grossesse.
     app.checkbox(key="confirmer_changement_parcours").check().run()
     app.button(key="changer_parcours_actif").click().run()
+    confirmer_ecriture_transition(app, simuler_stockage_navigateur)
 
     assert not app.exception
 
@@ -760,7 +777,7 @@ def test_effacement_complet_apres_import():
     assert app.session_state["profil"] == profil_vide
     assert app.file_uploader(key="fichier_import").value is None
 
-def test_nouveau_parcours_conception_demarre_sans_anciens_reperes():
+def test_nouveau_parcours_conception_demarre_sans_anciens_reperes(simuler_stockage_navigateur,):
     app = AppTest.from_file("../app.py").run()
 
     # Créer un premier parcours conception et enregistrer ses repères.
@@ -787,6 +804,7 @@ def test_nouveau_parcours_conception_demarre_sans_anciens_reperes():
     for _ in range(2):
         app.checkbox(key="confirmer_changement_parcours").check().run()
         app.button(key="changer_parcours_actif").click().run()
+        confirmer_ecriture_transition(app, simuler_stockage_navigateur)
 
         assert not app.exception
 
@@ -3138,3 +3156,21 @@ def test_quota_rendez_vous_preserve_edition_manuelle(
         "Question ajoutée manuellement ?",
     )
     assert len(appels) == 1
+
+def test_transition_refusee_preserve_profil_actif(simuler_stockage_navigateur):
+    app = AppTest.from_file("../app.py").run()
+    app.radio(key="ecran_consulte").set_value("Projet de conception").run()
+    app.button(key="demarrer_parcours").click().run()
+
+    profil_avant = app.session_state["profil"]
+    simuler_stockage_navigateur["texte"] = exporter_profil(profil_avant)
+    app.run()
+
+    app.checkbox(key="confirmer_changement_parcours").check().run()
+    erreur = "Le profil proposé n’a pas pu être enregistré."
+    simuler_stockage_navigateur["erreur_operation"] = erreur
+    app.button(key="changer_parcours_actif").click().run()
+
+    assert not app.exception
+    assert erreur in [element.value for element in app.error]
+    assert app.session_state["profil"] == profil_avant

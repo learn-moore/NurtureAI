@@ -11,7 +11,7 @@ from calculs import (
     calculer_age_depuis_dpa, convertir_sa_en_sg, determiner_trimestre, calculer_progression_grossesse, estimer_dpa
 )
 from modeles import ConceptionJourney, PregnancyJourney, Appointment, THEMES_RENDEZ_VOUS
-from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire
+from persistance import exporter_profil, importer_profil, lire_export, sauvegarde_automatique_necessaire, etat_ecriture_transition
 from stockage_navigateur import afficher_stockage_navigateur, lire_sauvegarde_initiale
 from fiches_rendez_vous import exporter_fiche_texte, LIBELLES_TYPES as types_rdv, LIBELLES_THEMES as libelles_themes_rdv
 from calendrier import rendez_vous_du_mois, construire_grille_mois, regles_du_mois, dpa_du_mois, prochaines_regles_du_mois
@@ -81,6 +81,40 @@ if "profil" not in st.session_state:
         st.session_state["mode_temporaire"] = True
 
 initialiser_session()
+
+transition = st.session_state.get("transition_en_attente")
+
+if transition is not None:
+    candidat, export_candidat = transition
+    st.info("Enregistrement du changement de parcours en cours…")
+
+    retour = afficher_stockage_navigateur(
+        export_candidat,
+        cle_stockage="nurtureai:profil:v1",
+        key="stockage_profil",
+        on_effacement=finaliser_effacement_global,
+        sauvegarde_auto=True,
+    )
+    etat = etat_ecriture_transition(export_candidat, retour)
+
+    if etat == "en_attente":
+        st.stop()
+
+    st.session_state.pop("transition_en_attente", None)
+
+    if etat == "confirmee":
+        remplacer_profil_session(candidat)
+    else:
+        st.session_state["erreur_transition"] = (
+            retour.get("erreur_operation")
+            or "Le changement de parcours n’a pas pu être enregistré."
+        )
+
+    st.rerun()
+
+erreur_transition = st.session_state.pop("erreur_transition", None)
+if erreur_transition:
+    st.error(erreur_transition)
 
 if st.session_state.get("mode_temporaire", False):
     st.warning(

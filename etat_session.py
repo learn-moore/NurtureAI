@@ -2,6 +2,7 @@ import streamlit as st
 from datetime import date
 
 from modeles import UserProfile, ConceptionJourney, PregnancyJourney
+from persistance import exporter_profil
 from calendrier import decaler_mois
 
 
@@ -41,36 +42,30 @@ def terminer_parcours_actif():
     st.session_state["confirmer_fin_parcours"] = False
 
 def changer_parcours_actif():
-    profil = st.session_state["profil"]
+    if (
+        st.session_state.get("transition_en_attente") is not None
+        or not st.session_state.get("confirmer_changement_parcours")
+    ):
+        return
 
+    profil = st.session_state["profil"]
     parcours_actif = next(
-        journey
-        for journey in profil.journeys
-        if journey.id == profil.active_journey_id
+        (journey for journey in profil.journeys
+         if journey.id == profil.active_journey_id),
+        None,
     )
+    if parcours_actif is None:
+        return
 
     nouveau_type = (
-        "pregnancy"
-        if parcours_actif.type == "conception"
-        else "conception"
+        "pregnancy" if parcours_actif.type == "conception" else "conception"
     )
-
-    st.session_state["profil"] = profil.changer_parcours(
-        nouveau_type,
-        date.today(),
+    candidat = profil.changer_parcours(nouveau_type, date.today())
+    st.session_state["transition_en_attente"] = (
+        candidat,
+        exporter_profil(candidat),
     )
-
-    effacer_reperes_conception()
-    effacer_reperes_grossesse()
-
     st.session_state["confirmer_changement_parcours"] = False
-    st.session_state["confirmer_fin_parcours"] = False
-
-    st.session_state["ecran_consulte"] = (
-        "Grossesse en cours"
-        if nouveau_type == "pregnancy"
-        else "Projet de conception"
-    )
 
 def reprendre_reperes_conception():
     profil = st.session_state["profil"]

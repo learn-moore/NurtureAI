@@ -267,6 +267,20 @@ def lire_parcours(donnees: object) -> Journey:
         details=details,
     )
 
+def etat_ecriture_transition(
+    export_candidat: str,
+    resultat_stockage: dict,
+) -> str:
+    """Interprète le retour du navigateur pour une transition en attente."""
+    lecture = resultat_stockage.get("lecture")
+    if resultat_stockage.get("erreur_operation") or lecture == "erreur":
+        return "refusee"
+
+    if lecture == "ok" and resultat_stockage.get("texte") == export_candidat:
+        return "confirmee"
+
+    return "en_attente"
+
 def sauvegarde_automatique_necessaire(
     profil: UserProfile,
     etat_stockage: dict,
