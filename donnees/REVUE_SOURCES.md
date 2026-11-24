@@ -1,5 +1,21 @@
 # Revue des sources
 
+## RM-04 : revue du 24 novembre 2026
+
+Statut : revue documentaire suivie d’une décision produit. Le porteur du projet a retenu le simulateur fictif indépendant du profil.
+
+Sources consultées le 24 novembre 2026 :
+
+* [HAS, Santé sexuelle et reproductive, volet 1, juin 2026](https://www.has-sante.fr/upload/docs/application/pdf/2026-07/dir3/sante_sexuelle_et_reproductive_-_recommandations_volet_1_fertilite_et_sante_globale_2026-07-08_16-17-31_153.pdf), recommandation R28 : les méthodes de prédiction, dont les applications de suivi menstruel, manquent de fiabilité pour prédire l’ovulation et guider les rapports sexuels. La recommandation finale a été consultée, distinctement de l’avis de lecture préparatoire.
+* [Assurance Maladie, Comprendre la contraception d’urgence](https://www.ameli.fr/assure/sante/themes/contraception-urgence/comprendre-contraception-urgence), section sur le cycle : la date d’ovulation ne se calcule pas précisément, même pour un cycle régulier. La description biologique évoque quelques jours avant et jusqu’à 24 heures après l’ovulation ; elle ne valide pas une fenêtre individuelle obtenue avec une date prédite.
+* [ASRM, Optimizing natural fertility, 2022](https://integration.reproductivefacts.org/globalassets/_asrm/practice-guidance/practice-guidelines/pdf/optimizing_natural_fertility.pdf), sections The fertile window et Fertility-awareness methods : fenêtre de six jours se terminant le jour de l’ovulation et description des hypothèses de calendrier. Cette source américaine n’est pas retenue comme validation du calendrier du prototype. Recherche exhaustive de ses mises à jour non réalisée.
+
+Analyse informatique : la fenêtre proposée dans le cadrage, de J-5 à J+1 inclus, couvre sept dates civiles. Elle ne doit pas être confondue avec six jours se terminant à l’ovulation. En outre, DDR + 28 jours - 14 jours donne le jour 15 du cycle lorsque la DDR est le jour 1 ; ce calcul ne peut pas être présenté comme le jour 14. Les conventions de date et d’indexation doivent être explicites.
+
+Décision produit après revue : conserver l’explication générale de la fertilité et réserver l’illustration chiffrée à un exemple fictif indépendant du profil et du calendrier de suivi. Ne pas présenter cette illustration comme une prédiction individuelle ou une méthode contraceptive. Le cadrage consigne cette décision.
+
+Aucun texte de ces sources n’est ajouté au corpus actif ni à l’interface par cette revue. Les conditions de réutilisation du contenu destiné à l’affichage restent à examiner. Le simulateur affiche les liens dans cet ordre : HAS, Assurance Maladie, ASRM. La recette navigateur est consignée dans RECETTE_V1.md.
+
 ## Échographie du premier trimestre
 
 Date de revue : 2026-10-03.
@@ -1642,3 +1658,45 @@ Statut : information_insuffisante. Aucune conclusion rassurante n’est produite
 Verdict : conforme au comportement de prudence attendu.
 
 Bilan : résultats conformes sur les trois cas prévus. Les écarts des essais antérieurs restent conservés dans la revue. Ces observations ne valident pas une capacité de diagnostic, de triage ou de détection exhaustive des urgences.
+## Timeline grossesse · Déclaration de grossesse
+
+Source principale proposée, Service Public / DILA. La fiche a été vérifiée par l’éditeur le 30 octobre 2026 et consultée le 18 novembre 2026. Elle décrit le premier examen prénatal, la transmission en ligne par le professionnel et les démarches sur papier selon le régime. [Déclaration de grossesse](https://www.service-public.gouv.fr/particuliers/vosdroits/F968)
+
+La source situe la démarche avant la fin du troisième mois de grossesse. Pour l’envoi papier, elle emploie aussi un repère exprimé en semaines de grossesse. Le moteur de la timeline exige une fenêtre en jours SA révolus avec des bornes inclusives. La fiche F968 ne donne pas cette fenêtre sous la forme attendue par le moteur. Aucun calcul de date limite individuelle n’est retenu à ce stade.
+
+### Texte proposé pour la fiche
+
+**Quand ?** La démarche se fait en début de grossesse, avant la fin du troisième mois.
+
+**Pourquoi ?** La déclaration informe les organismes concernés et permet la prise en compte de la grossesse pour les droits liés au suivi et aux prestations familiales.
+
+**Comment ?** Le médecin ou la sage-femme peut transmettre la déclaration en ligne. Si un formulaire papier vous est remis, consultez les indications de Service Public pour votre régime.
+
+**Questions à poser**
+
+* La déclaration a-t-elle été transmise en ligne ?
+* Si un formulaire papier m’est remis, à quel organisme dois-je l’adresser ?
+
+### Conditions d’intégration
+
+Vérifier que la fiche F968 est couverte par les conditions de réutilisation du jeu de données concerné, puis consigner l’attribution applicable. Pour l’affichage, documenter une fenêtre SA sourcée ou permettre à la timeline d’afficher certaines démarches avec un repère textuel et sans classement calculé. [Mise à disposition des données de Service Public](https://www.service-public.gouv.fr/P10150)
+
+Le jeu de données DILA pour les particuliers est publié sous Licence Ouverte 2.0. La présence de F968 dans le flux XML n’a pas été contrôlée. L’interface retient à ce stade une notice d’orientation rédigée pour NurtureAI, avec attribution, date de vérification de la fiche officielle et lien direct. Elle reste accessible sans datation et ne participe pas au classement des étapes. [Jeu de données DILA pour les particuliers](https://www.data.gouv.fr/datasets/fiches-pratiques-et-ressources-de-service-public-gouv-fr-particuliers)
+
+## Timeline grossesse · Préparation à la naissance et à la parentalité
+
+La page de l’Assurance Maladie présente les séances et les distingue de l’entretien prénatal précoce. NurtureAI affiche une courte notice d’orientation et un lien direct, avec le calendrier des séances à discuter avec le professionnel. Cet usage se limite à la rédaction originale et au lien, dans la continuité des réserves de réutilisation déjà consignées pour Ameli. [Devenir parents](https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/preparation-parentalite)
+
+## EF-04 · Trois fiches hebdomadaires candidates
+
+Lot accepté par le porteur du projet. La fiche à 9 SA reste le premier repère du lot de quatre.
+
+| Semaine | Sujet proposé | Recoupement |
+| --- | --- | --- |
+| 20 SA | Premières perceptions sonores et développement de l’audition | [Pregnancy, Birth and Baby, semaine 20](https://www.pregnancybirthbaby.org.au/pregnancy/pregnancy-stages/pregnancy-at-week-20) décrit une audition en développement. Éviter la formulation plus catégorique de Better Health Channel sur la maturité de l’oreille. |
+| 24 SA | Lanugo et vernix, deux éléments qui recouvrent la peau au cours du développement | [Pregnancy, Birth and Baby, 21 à 24 semaines](https://www.pregnancybirthbaby.org.au/fertility-and-conception/conception/conception-and-fetal-development) décrit ces deux éléments. |
+| 32 SA | Les mouvements se poursuivent à mesure que le bébé grandit | [Pregnancy, Birth and Baby, semaine 32](https://www.pregnancybirthbaby.org.au/pregnancy/pregnancy-stages/pregnancy-at-week-32) confirme que les mouvements se poursuivent. Garder l’accent sur le développement, sans objectif chiffré ni interprétation individuelle. |
+
+La référence principale candidate est [Better Health Channel, Pregnancy - week by week](https://www.betterhealth.vic.gov.au/health/HealthyLiving/pregnancy-week-by-week), sections 20, 24 et 32. La revue de cette référence est ancienne, d’où le recoupement des affirmations retenues. Les [conditions de Better Health Channel](https://www.betterhealth.vic.gov.au/about/terms-of-use) permettent une rédaction originale avec l’attribution cliquable « Reference: www.betterhealth.vic.gov.au ». Les pages de recoupement servent à vérifier les faits. Le contenu proposé exclut les mesures de taille ou de poids et le calendrier de soins australien.
+
+L’affichage à la semaine révolue constitue un choix éditorial. Les développements décrits sont progressifs. Les fiches à 20 et 32 SA sont intégrées avec l’attribution prévue. La fiche à 24 SA est également intégrée. Le recoupement pointe vers la synthèse des semaines 21 à 24, qui décrit le lanugo et le vernix.

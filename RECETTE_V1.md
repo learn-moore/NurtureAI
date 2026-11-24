@@ -18,19 +18,27 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 | Lot | État initial | Critères concernés | Travail restant |
 | --- | --- | --- | --- |
 | Accueil et navigation | Vérifié sur les scénarios testés | CA-01, CA-25 | Premier accès, navigation et rubrique « À propos » vérifiés dans Safari et Chrome. Numéro de version applicative à renseigner. |
-| Conception | Partiel | CA-03, CA-04 | Jour du cycle, estimation des prochaines règles et avertissement vérifiés dans Safari et Chrome. Convention RM-04 à valider pour l’ovulation et la fenêtre fertile. |
+| Conception | Partiel | CA-03, CA-04 | Jour du cycle, estimation des prochaines règles et avertissement vérifiés dans Safari et Chrome. Simulateur RM-04 ajouté. Recette navigateur à jouer. |
 | Repères grossesse | Vérifié sur les scénarios testés | CA-05, CA-06 | Calcul à partir des dernières règles et conservation de la DPA vérifiés dans Safari et Chrome. |
-| Transitions et historique | Partiel | CA-07 à CA-11 | 	Comportements vérifiés dans Safari et Chrome avec les commandes actuelles. Les choix « Oui » et « Pas maintenant » décrits dans le cadrage restent à aligner avec l’interface. |
+| Transitions et historique | Vérifié sur les scénarios testés | CA-07 à CA-11 | Clôture et changement de parcours alignés sur les commandes vérifiées dans Safari et Chrome. Le refus d’écriture de la transition est vérifié par simulation. |
 | Persistance et échanges | Partiel | CA-02, CA-12 à CA-14, CA-23, CA-24 | Scénarios de stockage vérifiés dans Safari et Chrome ; retours tardifs vérifiés par simulation. |
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
 | Intentions et sécurité | Partiel | CA-17 à CA-19 | Classifier, orienter et fournir des réponses locales adaptées. |
 | Préparation IA des rendez-vous | Partiel | CA-20 | Parcours distant essayé sur des fiches fictives. Ajout après relecture confirmé lors du premier essai. Affichage des champs sélectionnés vérifié par tests automatisés. Fidélité irrégulière sur FID-08. |
-| Accessibilité et déploiement | À réaliser | CA-25, ENF-04, ENF-06, ENF-09 | Tester les navigateurs, les petits écrans, les performances et l’hébergement. |
+| Accessibilité et déploiement | Partiel | CA-25, ENF-04, ENF-06, ENF-09 | Navigation au clavier, zoom et fenêtre étroite vérifiés. Versions des navigateurs à confirmer pour ENF-09. Temps d’affichage dans le navigateur et hébergement à vérifier. |
+
+## Arbitrages actés le 19 novembre 2026
+
+* EF-02, RM-04, CA-03 : simulateur fictif retenu après revue. La convention est réservée à l’illustration.
+* EF-04 : lot de quatre fiches hebdomadaires retenu, comprenant la fiche existante à 9 SA et trois nouvelles à réaliser. Les semaines retenues sont 20, 24 et 32 SA. Vérifier le contenu, les sources affichées et les bornes d’affichage de chaque fiche. Vérifier aussi l’annonce de couverture partielle et l’indisponibilité sans génération de remplacement pour les semaines non couvertes. Le minimum de timeline reste à fixer.
+* EF-09, CA-20 : reformulation IA retenue pour l’exposition publique après correction et recette. FID-08 reste non conforme ; la décision ne clôture aucun essai. Conserver la relecture et la fiche manuelle.
+
+Le cadrage local et DECISIONS.md consignent ces choix. Aucun nouveau résultat navigateur, distant ou hébergé n’est ajouté par cet arbitrage.
 
 ## Décisions à finaliser
 
-* Couverture minimale des fiches hebdomadaires et de la timeline.
+* Couverture minimale de la timeline.
 * Questions effectivement couvertes par chacun des six thèmes du corpus.
 * Conventions de calcul destinées à la V1.
 * Stratégie de classification et traitement des demandes ambiguës.
@@ -392,6 +400,34 @@ Après confirmation de sauvegarde et rechargement, le parcours grossesse reste l
 
 Verdict : conforme dans les deux navigateurs pour ce scénario.
 
+Un test automatisé vérifie le préremplissage modifiable des dernières règles enregistrées, après confirmation de la sauvegarde de la transition. Le nouveau parcours commence sans repères validés. Après modification de la date proposée, le calcul utilise la nouvelle date et l’historique conception conserve les repères initiaux. Ce préremplissage a été vérifié dans Safari et Chrome le 24 novembre 2026 avec des données fictives, selon les retours ci-dessous.
+
+1. Démarrer un parcours conception, calculer puis enregistrer des repères en utilisant une date fictive de dernières règles.
+2. Confirmer « Changer de parcours » et attendre l’ouverture de « Grossesse en cours ». Vérifier que la date enregistrée est proposée, avec aucun calcul de grossesse affiché à ce stade.
+3. Modifier la date proposée et cliquer sur « Valider mes repères ». Vérifier que le résultat correspond à la date modifiée et que l’historique du parcours conception conserve la date initiale.
+
+#### Préremplissage : essai Safari du 24 novembre 2026
+
+Résultats rapportés par le porteur du projet sur l’instance locale, commit `994fdb8` avec les modifications locales en cours. Safari 27.0.1 (22625.1.29.11.28).
+
+* Date proposée après transition : 15/10/2026, conforme à la date du parcours conception du scénario.
+* Aucun calcul de grossesse affiché avant validation.
+* Après modification selon le scénario au 20/09/2026 et validation : 9 SA + 2 jours et 7 SG + 2 jours.
+* Conservation des anciennes données dans l’historique confirmée.
+
+Verdict : conforme pour les observations rapportées dans Safari. Aucun écart signalé. Cet essai ne vérifie pas un nouveau rechargement après enregistrement des repères de grossesse.
+
+#### Préremplissage : essai Chrome du 24 novembre 2026
+
+Résultats rapportés par le porteur du projet sur l’instance locale, commit `994fdb8` avec les modifications locales en cours. Chrome 155.0.8059.85 (Official Build) (arm64).
+
+* Date proposée après transition : 15/10/2026.
+* Aucun calcul de grossesse affiché avant validation.
+* Après modification selon le même scénario au 20/09/2026 et validation : 9 SA + 2 jours et 7 SG + 2 jours.
+* Conservation des anciennes données dans l’historique confirmée.
+
+Verdict : conforme pour les observations rapportées dans Chrome. Aucun écart signalé. La vérification navigateur du préremplissage CA-07 est terminée pour les scénarios prévus dans les deux navigateurs. Ces essais locaux ne constituent pas une vérification sur l’hébergement et ne rejouent pas le rechargement après enregistrement des nouveaux repères.
+
 ### CA-08 : transition de grossesse vers conception
 
 Essai réalisé dans Safari et Chrome via « Changer de parcours », avec un ancien parcours conception archivé.
@@ -400,7 +436,7 @@ La transition ne demande aucun motif médical. La grossesse est terminée et con
 
 Après sauvegarde confirmée et rechargement, ce nouveau parcours reste le seul actif, toujours sans estimation.
 
-Verdict : conforme dans les deux navigateurs sur ce chemin. Le choix « Oui » après clôture décrit dans le cadrage n’a pas été testé ; l’interface utilise « Changer de parcours ».
+Verdict conforme dans les deux navigateurs pour la transition prévue par CA-08. « Changer de parcours » clôture le suivi grossesse et ouvre un nouveau suivi conception après confirmation.
 
 ### CA-09 · Clôture sans reprise immédiate
 
@@ -446,7 +482,7 @@ Verdict conforme dans les deux navigateurs pour ce scénario.
 
 Essai réalisé dans Safari et Chrome avec un cycle fictif de 28 jours et une date de dernières règles située 11 jours avant le test. L’application affiche le jour 12 et estime les prochaines règles à 28 jours après la date saisie.
 
-Verdict conforme dans les deux navigateurs pour ces deux repères. Le volet ovulation et fenêtre fertile reste ouvert, dans l’attente de la validation de la convention RM-04.
+Verdict conforme dans les deux navigateurs pour ces deux repères. Le simulateur RM-04 fait l’objet d’une vérification séparée.
 
 ### CA-04 · Cycle irrégulier ou de régularité inconnue
 
@@ -467,3 +503,85 @@ Verdict conforme dans les deux navigateurs.
 Dans Safari et Chrome, la rubrique s’ouvre et se referme au clavier avant le démarrage d’un parcours. Les sections Calculs, Sources, Confidentialité et Limites sont lisibles dans les deux navigateurs.
 
 Le test automatisé confirme aussi que la rubrique est disponible pendant la lecture de la sauvegarde. Le libellé « Prototype en développement » est provisoire, en attendant un numéro de version applicative.
+
+### ENF-06 · Temps de mise à jour des repères
+
+Mesure locale du 18 novembre 2026 avec Streamlit AppTest, après ouverture de chaque écran. Le chronométrage couvre la relance du script après validation du formulaire, avec stockage navigateur simulé. Les repères sont présents après chaque validation et aucune exception n’est remontée.
+
+| Parcours | Essai 1 | Essai 2 | Essai 3 |
+| --- | ---: | ---: | ---: |
+| Projet de conception | 42 ms | 40 ms | 40 ms |
+| Grossesse en cours | 40 ms | 41 ms | 40 ms |
+
+Le seuil de 2 secondes reste à vérifier du clic jusqu’à l’affichage des repères dans un navigateur réel.
+
+
+### ENF-09 · Recette Safari et Chrome sur macOS
+
+Les essais de persistance et de rechargement (CA-02, CA-23 et CA-24), d’export et d’import (CA-12 et CA-13), ainsi que de rendu en fenêtre étroite et au zoom de 200 % (CA-25), sont documentés dans cette recette pour Safari et Chrome.
+
+Versions relevées sur le Mac le 18 novembre 2026. Le Mac utilise macOS 27.0.1, Safari 27.0.1 et Chrome 157.0.8103.79. Ces versions sont celles installées lors du relevé. Les versions employées lors des essais précédents restent à confirmer avant de clôturer ENF-09.
+
+Pour les essais de préremplissage CA-07 du 24 novembre 2026, le porteur du projet a fourni Safari 27.0.1 (22625.1.29.11.28) et Chrome 155.0.8059.85 (Official Build) (arm64). La version Chrome diffère du relevé du 18 novembre ; la cause de cet écart n’est pas établie. Ces versions sont rattachées uniquement aux essais CA-07 de ce jour et ne sont pas attribuées rétroactivement aux autres essais. ENF-09 reste ouvert pour la traçabilité des essais antérieurs.
+
+### ENF-04 · Installation et dépendances
+
+Vérification locale du 18 novembre 2026 avec Python 3.12.0. Les versions installées de Streamlit (1.64.0), pytest (9.1.1) et Groq (1.7.0) correspondent aux versions fixées dans `requirements.txt`. La commande `python -m pip check` confirme que les dépendances de cet environnement sont compatibles.
+
+Le README indique Python 3.12 et la procédure d’installation. La CI utilise la même branche de Python et le même fichier de dépendances. Une installation depuis `requirements.txt` dans un environnement virtuel vierge sur ce Mac a également réussi, suivie d’un contrôle `pip check` réussi. La suite de tests de l’environnement de développement compte 1 179 tests réussis.
+
+Les dépendances transitives peuvent varier entre deux installations. Le contrôle HTTPS sur l’hébergement cible reste ouvert.
+
+### ENF-04 · Validation des entrées et affichage
+
+Les tests ciblés des modèles, de la persistance, du corpus, des citations, de l’interface assistant et des fiches de rendez-vous ont donné 376 réussites. Ils couvrent notamment le refus de données invalides, la validation des passages et des URL du corpus, et le traitement des propositions de questions.
+
+La revue du code confirme que les notes de rendez-vous et les métadonnées des sources sont rendues en texte brut. La réponse documentaire est rendue en Markdown avec le HTML brut désactivé. Le rendu de contenus atypiques dans un navigateur réel reste à vérifier.
+
+### ENF-04 · Préparation du déploiement de démonstration
+
+Le 18 novembre 2026, `app.py` a démarré sans exception avec Streamlit AppTest depuis une archive du dépôt Git, sans fichier `.streamlit/secrets.toml`. Ce fichier est ignoré par Git. Le test couvre le démarrage à partir des fichiers versionnés avec les dépendances de l’environnement local.
+
+Streamlit Community Cloud reste la cible proposée par le cadrage. Sur l’instance de démonstration, vérifier l’ouverture en HTTPS, puis l’écriture et la restauration d’un profil fictif après rechargement sur l’adresse hébergée. Le démarrage local ne permet pas de conclure sur ces vérifications.
+
+### EF-04 · Couverture du calendrier et des contenus grossesse
+
+Inventaire du 18 novembre 2026. Le calendrier dispose de tests pour les rendez-vous, les règles déclarées et extrapolées, les prochaines règles estimées et la DPA. Les dates du simulateur RM-04 sont affichées dans le parcours conception, indépendamment du calendrier.
+
+La timeline versionnée contient trois étapes, une pour chaque échographie de trimestre. Les étapes administratives, la préparation à la naissance et le terme estimé restent à couvrir dans la timeline. La DPA est déjà traitée séparément dans le calendrier.
+
+Le fichier des fiches hebdomadaires contient une seule fiche, à 9 SA révolues. L’interface indique explicitement l’absence de fiche pour les autres semaines. La couverture minimale de la V1 reste à décider.
+
+Les 213 tests ciblés du calendrier, de la timeline et des fiches hebdomadaires réussissent. EF-04 reste partiel sur la couverture éditoriale.
+
+### RM-04 · Simulateur d’ovulation et de fenêtre fertile
+
+En navigateur, ouvrir le simulateur depuis le parcours conception. Pour 28 jours, vérifier le 25/09/2026 et la fenêtre du 20 au 25/09/2026 inclus. Pour 30 jours, vérifier le 27/09/2026 et la fenêtre du 22 au 27/09/2026 inclus. Vérifier les avertissements, les trois liens et la conservation des repères du profil en changeant de scénario.
+
+Un test AppTest vérifie les fenêtres à 28 et 30 jours, la présence de l’avertissement contraceptif et des liens, ainsi que la conservation du profil après changement de scénario.
+
+En saisie libre, vérifier l’absence de résultat sans date. Avec le 20/02/2024 et 30 jours, vérifier l’ovulation simulée au 06/03/2024 et la fenêtre du 01 au 06/03/2024 inclus. Avec 19 jours, vérifier le message d’indisponibilité et la disparition du résultat. Vérifier la lisibilité de l’explication sur la fertilité et la conservation du profil.
+
+Verdict rapporté par le porteur du projet sur l’instance locale, à partir de `994fdb8` et des modifications locales. Le scénario RM-04 est conforme dans Safari et Chrome, avec aucun écart signalé. Les versions de ces essais restent à renseigner. Après les essais, le lien Assurance Maladie a été placé en deuxième position, entre la HAS et l’ASRM.
+
+### EF-04 · Repère Déclaration de grossesse
+
+Dans « Grossesse en cours », ouvrir « Déclaration de grossesse » sans parcours actif. Vérifier la présence du lien officiel, de l’attribution et de la date de vérification. Rejouer avec des repères fictifs enregistrés. Le repère reste identique et indépendant des fenêtres d’échographie. Verdict rapporté par le porteur du projet : conforme dans Chrome et Safari, sans écart signalé. Versions non renseignées pour ces essais.
+
+### EF-02 et EF-03 · Métriques du parcours actif
+
+Enregistrer les repères d’un parcours fictif, puis consulter l’autre écran ou réinitialiser la saisie temporaire. Les métriques de « Mon parcours actif » restent visibles et correspondent aux repères enregistrés. En grossesse, la barre chronologique est disponible si l’âge et la durée de référence sont calculables. Vérifier aussi l’affichage après rechargement dans le navigateur.
+
+Verdict rapporté par le porteur du projet sur l’instance locale : conforme dans Chrome et Safari, sans écart signalé. Le scénario couvrait le jour du cycle et les prochaines règles estimées en conception, ainsi que les SA, SG, le trimestre, la DPA et la progression à 50 % en grossesse. Il incluait le changement d’écran, la réinitialisation de la saisie temporaire en grossesse et le rechargement. Versions des navigateurs non renseignées pour ces essais.
+
+### EF-04 · Repère Préparation à la naissance et à la parentalité
+
+Dans « Grossesse en cours », ouvrir le repère avant puis après l’enregistrement d’un suivi fictif. Vérifier que le lien ouvre la page « Devenir parents » de l’Assurance Maladie. Le repère reste textuel et indépendant du classement des échographies.
+
+Verdict rapporté par le porteur du projet sur l’instance locale : conforme dans Chrome et Safari, sans écart signalé. Le scénario couvre l’ouverture du lien et la présence du repère avant et après l’enregistrement du suivi. Versions des navigateurs non renseignées pour cet essai.
+
+### EF-04 · Lot hebdomadaire à 9, 20, 24 et 32 SA
+
+Les quatre fiches sont intégrées. La sélection de la fiche à 24 SA a été vérifiée localement des jours 168 à 174, avec absence de fiche aux jours 167 et 175. En navigateur, vérifier le contenu et la référence à chaque semaine couverte, puis le message d’indisponibilité à une semaine voisine non couverte.
+
+Verdict rapporté par le porteur du projet sur l’instance locale : conforme dans Chrome et Safari, sans écart signalé, pour le scénario à 24 SA. Il couvre l’affichage à 24 SA + 0 et 24 SA + 6, l’indisponibilité à 25 SA et l’ouverture du lien de référence. Versions des navigateurs non renseignées pour ces essais. Les bornes des quatre fiches ont été contrôlées localement.

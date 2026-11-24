@@ -394,6 +394,8 @@ def test_transition_ouvre_ecran_du_nouveau_parcours(simuler_stockage_navigateur,
 
     assert not app.exception
     assert app.radio(key="ecran_consulte").value == "Grossesse en cours"
+    assert app.date_input(key="date_regles_grossesse").value is None
+    assert app.session_state["suivi_grossesse"] is None
 
     # Revenir à un nouveau parcours conception.
     app.checkbox(key="confirmer_changement_parcours").check().run()
@@ -453,6 +455,21 @@ def test_reperes_conception_conserves_apres_transition(simuler_stockage_navigate
     assert nouveau.status == "active"
     assert nouveau.details is None
     assert profil.active_journey_id == nouveau.id
+    assert app.date_input(key="date_regles_grossesse").value == dernieres_regles
+    assert app.session_state["suivi_grossesse"] is None
+
+    date_modifiee = date.today() - timedelta(days=65)
+    app.date_input(key="date_regles_grossesse").set_value(date_modifiee)
+    validation = next(
+        bouton for bouton in app.button if bouton.label == "Valider mes repères"
+    )
+    validation.click().run()
+
+    assert not app.exception
+    assert app.metric[0].value == "9 SA + 2 jours"
+    ancien_apres_validation = app.session_state["profil"].journeys[0]
+    assert ancien_apres_validation.details == reperes
+
 
 @pytest.mark.parametrize(
     "methode_formulaire, cle_date, decalage, methode_modele",
@@ -564,9 +581,10 @@ def test_reprendre_reperes_grossesse(methode, cle_date, decalage):
     assert app.radio(key="methode_datation_grossesse").value == methode
     assert app.date_input(key=cle_date).value == date_saisie
 
-    # La reprise ne valide pas automatiquement le formulaire.
+    # Les métriques affichées proviennent uniquement du parcours enregistré.
     assert app.session_state["suivi_grossesse"] is None
-    assert len(app.metric) == 0
+    assert app.metric
+    assert all("(suivi actif)" in mesure.label for mesure in app.metric)
 
     # Le profil enregistré reste inchangé.
     assert app.session_state["profil"] == profil_enregistre
@@ -3177,3 +3195,66 @@ def test_transition_refusee_preserve_profil_actif(simuler_stockage_navigateur):
     assert not app.exception
     assert erreur in [element.value for element in app.error]
     assert app.session_state["profil"] == profil_avant
+
+def test_simulateur_cycle_fictif_independant_du_profil():
+    app = AppTest.from_file("../app.py").run()
+    profil_initial = app.session_state["profil"]
+    simulateur = next(bloc for bloc in app.expander if bloc.label == "Simulateur d’ovulation et de fenêtre fertile")
+
+    assert any("du 20/09/2026 au 25/09/2026 inclus" in m.value for m in simulateur.markdown)
+    assert any("méthode contraceptive" in w.value for w in simulateur.warning)
+    assert any("has-sante.fr" in m.value and "doi.org" in m.value for m in simulateur.markdown)
+
+    app.selectbox(key="simulateur_duree_cycle_fictif").set_value(30).run()
+    assert not app.exception
+    assert any("du 22/09/2026 au 27/09/2026 inclus" in m.value for m in app.markdown)
+    assert app.session_state["profil"] == profil_initial
+
+
+def test_simulateur_saisie_libre_et_cycle_trop_court():
+    app = AppTest.from_file("../app.py").run()
+    profil_initial = app.session_state["profil"]
+    app.radio(key="simulateur_mode").set_value("Saisie libre").run()
+    assert not any("Ovulation simulée" in m.value for m in app.markdown)
+
+    app.date_input(key="simulateur_date_regles").set_value(date(2024, 2, 20))
+    app.number_input(key="simulateur_duree_cycle").set_value(30).run()
+    assert not app.exception
+    assert any("du 01/03/2024 au 06/03/2024 inclus" in m.value for m in app.markdown)
+    assert app.session_state["profil"] == profil_initial
+
+    app.number_input(key="simulateur_duree_cycle").set_value(19).run()
+    assert not any("Ovulation simulée" in m.value for m in app.markdown)
+    assert any("Aucune date" in info.value for info in app.info)
+
+
+@pytest.mark.parametrize("type_actif", ["conception", "pregnancy"])
+def test_metriques_actives_visibles_depuis_autre_ecran(type_actif):
+    origine = date.today() - timedelta(days=11)
+    if type_actif == "conception":
+        reperes = ConceptionJourney(last_period_date=origine)
+        ecran = "Grossesse en cours"
+        attendu = {"Jour du cycle (suivi actif)": "12"}
+    else:
+        reperes = PregnancyJourney(
+            dating_method="last_period",
+            last_period_date=origine,
+            term_reference_days=280,
+            dating_rule_version="sa-reference-v1",
+        )
+        ecran = "Projet de conception"
+        attendu = {
+            "Âge estimé (suivi actif)": "1 SA + 4 jours",
+            "DPA (suivi actif)": (origine + timedelta(days=280)).strftime("%d/%m/%Y"),
+        }
+
+    app = AppTest.from_file("../app.py").run()
+    profil = UserProfile().demarrer_parcours(type_actif, date.today())
+    app.session_state["profil"] = profil.renseigner_reperes_actifs(reperes)
+    app.radio(key="ecran_consulte").set_value(ecran).run()
+
+    assert not app.exception
+    mesures = {mesure.label: mesure.value for mesure in app.metric}
+    assert attendu.items() <= mesures.items()
+    if type_actif == "pregnancy":
+        assert app.get("progress")[0].proto.text.endswith("4%")

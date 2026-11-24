@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from etat_session import (
     initialiser_session, effacer_reperes_grossesse, effacer_reperes_conception, terminer_parcours_actif, changer_parcours_actif,
@@ -125,7 +125,20 @@ if transition is not None:
     st.session_state.pop("transition_en_attente", None)
 
     if etat == "confirmee":
+        profil_precedent = st.session_state["profil"]
+        ancien_parcours = next(
+            (parcours for parcours in profil_precedent.journeys
+             if parcours.id == profil_precedent.active_journey_id),
+            None,
+        )
         remplacer_profil_session(candidat)
+
+        if ancien_parcours is not None and isinstance(
+            ancien_parcours.details, ConceptionJourney
+        ):
+            date_suggeree = ancien_parcours.details.last_period_date
+            if date_suggeree is not None and date_suggeree <= date.today():
+                st.session_state["date_regles_grossesse"] = date_suggeree
     else:
         st.session_state["erreur_transition"] = (
             retour.get("erreur_operation")
@@ -300,6 +313,88 @@ if parcours == "Projet de conception":
         )
 
         st.caption("Cette action remplace les champs du formulaire par les repères du parcours actif.")
+
+    with st.expander("Simulateur d’ovulation et de fenêtre fertile"):
+        st.warning(
+            "Simulation à visée pédagogique. Un calendrier ne permet pas de "
+            "prédire de façon fiable votre ovulation, même si vos cycles sont réguliers. "
+            "N’utilisez pas ce simulateur pour guider vos rapports sexuels ou comme "
+            "méthode contraceptive."
+        )
+        st.write(
+            "L’ovulation correspond à la libération d’un ovule par un ovaire. "
+            "Les spermatozoïdes peuvent survivre plusieurs jours, ce qui rend "
+            "une fécondation possible après un rapport précédant l’ovulation. "
+            "L’ovule reste fécondable environ 24 heures après sa libération. "
+            "Les dates affichées ne permettent pas d’identifier des jours sans risque de grossesse."
+        )
+        mode = st.radio(
+            "Mode du simulateur",
+            ("Exemple fictif", "Saisie libre"),
+            key="simulateur_mode",
+        )
+        if mode == "Exemple fictif":
+            debut_simule = date(2026, 9, 12)
+            duree_simulee = st.selectbox(
+                "Durée du cycle fictif",
+                (28, 30, 32),
+                format_func=lambda duree: f"{duree} jours",
+                key="simulateur_duree_cycle_fictif",
+            )
+        else:
+            debut_simule = st.date_input(
+                "Premier jour des dernières règles à simuler",
+                value=None,
+                min_value=date(1900, 1, 1),
+                max_value=date.today(),
+                format="DD/MM/YYYY",
+                key="simulateur_date_regles",
+            )
+            duree_simulee = st.number_input(
+                "Durée du cycle à simuler (jours)",
+                min_value=1,
+                value=28,
+                step=1,
+                key="simulateur_duree_cycle",
+            )
+        jour_ovulation_simule = duree_simulee - 14
+        if debut_simule is None:
+            st.info("Saisissez une date pour afficher la simulation.")
+        elif jour_ovulation_simule < 6:
+            st.info(
+                "La convention ne peut pas placer ses six jours dans ce cycle. "
+                "Aucune date n’est affichée pour cette durée."
+            )
+        else:
+            try:
+                ovulation_simulee = debut_simule + timedelta(days=jour_ovulation_simule - 1)
+            except OverflowError:
+                st.info("La durée saisie dépasse la plage de dates du simulateur.")
+            else:
+                debut_fenetre = ovulation_simulee - timedelta(days=5)
+                st.write(f"Premier jour du cycle simulé : {debut_simule:%d/%m/%Y}")
+                st.write(
+                    f"Ovulation simulée : {ovulation_simulee:%d/%m/%Y} "
+                    f"(jour {jour_ovulation_simule})"
+                )
+                st.write(
+                    f"Fenêtre fertile simulée : du {debut_fenetre:%d/%m/%Y} "
+                    f"au {ovulation_simulee:%d/%m/%Y} inclus."
+                )
+        st.caption(
+            "Le premier jour des règles compte comme jour 1. La simulation place "
+            "l’ovulation au jour égal à la durée du cycle moins 14 et affiche les "
+            "cinq jours précédents ainsi que ce jour. Ces six dates sont une convention "
+            "de calcul. Les saisies restent dans le simulateur."
+        )
+        st.markdown(
+            "[HAS, limites des méthodes de prédiction (R28)]"
+            "(https://www.has-sante.fr/jcms/p_3632767/fr/sante-sexuelle-et-reproductive-volet-1-fertilite-et-sante-globale-volet-2-infertilite-exploration-en-1ere-intention)"
+            " · [Assurance Maladie, ovulation et fécondité]"
+            "(https://www.ameli.fr/assure/sante/themes/contraception-urgence/comprendre-contraception-urgence)"
+            " · [ASRM, convention illustrée et fenêtre de six jours]"
+            "(https://doi.org/10.1016/j.fertnstert.2021.10.007)"
+        )
 
     with st.expander("Réinitialiser la saisie conception"):
         confirmation_effacement = st.checkbox(
@@ -619,6 +714,29 @@ else:
 
     st.subheader("Les étapes de mon suivi grossesse")
 
+    with st.expander("Déclaration de grossesse"):
+        st.write(
+            "La déclaration est une démarche de début de grossesse. "
+            "Demandez lors du premier rendez-vous prénatal si elle sera transmise "
+            "en ligne ou si un formulaire vous sera remis."
+        )
+        st.markdown(
+            "[Consulter les démarches selon votre régime]"
+            "(https://www.service-public.gouv.fr/particuliers/vosdroits/F968)"
+        )
+        st.caption("Source : Service Public / DILA, fiche vérifiée le 30 octobre 2026.")
+
+    with st.expander("Préparation à la naissance et à la parentalité"):
+        st.write(
+            "Les séances permettent d’aborder la naissance et les premiers jours avec le bébé. "
+            "Lors du suivi, demandez à votre sage-femme ou à votre médecin quels thèmes "
+            "seront abordés et comment organiser les séances."
+        )
+        st.markdown(
+            "[Consulter le guide de l’Assurance Maladie sur la préparation à la naissance]"
+            "(https://www.ameli.fr/assure/sante/devenir-parent/grossesse/grossesse-en-bonne-sante/grossesse/preparation-parentalite)"
+        )
+
     profil_timeline = st.session_state["profil"]
     grossesse_active = next(
         (
@@ -735,6 +853,7 @@ else:
                         )
 
     st.subheader("Ma fiche de la semaine")
+    st.caption("Couverture partielle : fiches à 9, 20, 24 et 32 SA révolues.")
 
     if grossesse_active is None:
         st.info("Démarrez un parcours grossesse pour consulter les fiches hebdomadaires.")
@@ -847,6 +966,69 @@ else:
                 "Suivi commencé le :",
                 journey.start_date.strftime("%d/%m/%Y"),
             )
+
+            reperes_actifs = journey.details
+            aujourd_hui = date.today()
+
+            if isinstance(reperes_actifs, ConceptionJourney):
+                ddr = reperes_actifs.last_period_date
+                if ddr is not None and ddr <= aujourd_hui:
+                    jour_cycle = calculer_jour_cycle(ddr, aujourd_hui)
+                    prochaines_regles = estimer_prochaines_regles(
+                        ddr, reperes_actifs.average_cycle_length
+                    )
+                    st.metric("Jour du cycle (suivi actif)", jour_cycle)
+                    st.metric(
+                        "Prochaines règles estimées (suivi actif)",
+                        prochaines_regles.strftime("%d/%m/%Y"),
+                    )
+                    if prochaines_regles < aujourd_hui:
+                        st.caption("La date estimée est passée. Actualisez les repères si de nouvelles règles ont commencé.")
+
+            elif isinstance(reperes_actifs, PregnancyJourney):
+                dpa = reperes_actifs.estimated_due_date
+                if (
+                    reperes_actifs.dating_method == "last_period"
+                    and reperes_actifs.last_period_date is not None
+                    and reperes_actifs.term_reference_days is not None
+                ):
+                    dpa = estimer_dpa(
+                        reperes_actifs.last_period_date,
+                        terme_reference_jours=reperes_actifs.term_reference_days,
+                    )
+                if dpa is not None:
+                    st.metric("DPA (suivi actif)", dpa.strftime("%d/%m/%Y"))
+
+                try:
+                    jours_sa = calculer_jours_sa_timeline(reperes_actifs, aujourd_hui)
+                except ValueError as erreur:
+                    st.warning(str(erreur))
+                else:
+                    if jours_sa is not None:
+                        semaines, jours = divmod(jours_sa, 7)
+                        st.metric("Âge estimé (suivi actif)", f"{semaines} SA + {jours} jours")
+                        age_sg = convertir_sa_en_sg(semaines, jours)
+                        if age_sg is not None:
+                            st.metric(
+                                "Semaines de grossesse estimées (suivi actif)",
+                                f"{age_sg[0]} SG + {age_sg[1]} jours",
+                            )
+                        trimestre = determiner_trimestre(
+                            jours_sa, debut_deuxieme=14 * 7, debut_troisieme=28 * 7
+                        )
+                        st.metric("Trimestre estimé (suivi actif)", trimestre)
+                        terme = reperes_actifs.term_reference_days
+                        if terme is not None:
+                            progression = calculer_progression_grossesse(
+                                jours_sa, terme_reference_jours=terme
+                            )
+                            st.progress(
+                                progression,
+                                text=f"Progression chronologique du suivi actif : {progression:.0%}",
+                            )
+                            st.caption("Repère indicatif fondé sur la durée de référence. Il ne mesure pas l’état de santé.")
+                    else:
+                        st.caption("Les SA nécessitent une durée de référence enregistrée.")
 
             with st.expander("Terminer ce parcours"):
                 confirmation_fin = st.checkbox(

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2026-10-05",
+  "content_version": "2026-11-24",
   "fiches": [
     {
       "id": "developpement_9_sa",
@@ -52,6 +52,120 @@
         "url": "https://www.betterhealth.vic.gov.au/"
       },
       "reviewed_at": "2026-10-05"
+    },
+    {
+      "id": "developpement_20_sa",
+      "week_sa": 20,
+      "title": "Autour de 20 SA : une audition en développement",
+      "body": "L’audition se développe progressivement. Autour de cette période, le bébé peut commencer à percevoir certains sons qui lui parviennent de l’extérieur.\n\nCette fiche présente un repère général de développement autour de cette semaine.",
+      "editorial_status": "approved",
+      "source": {
+        "name": "Better Health Channel, État de Victoria, Australie",
+        "title": "Pregnancy - week by week",
+        "url": "https://www.betterhealth.vic.gov.au/health/HealthyLiving/pregnancy-week-by-week",
+        "section": "Pregnancy week 20.",
+        "publication_date": null,
+        "displayed_date": "2012-02-28",
+        "retrieved_at": "2026-11-24",
+        "reuse_status": "approved"
+      },
+      "secondary_sources": [
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "Pregnancy, Birth and Baby, Australie",
+          "title": "Pregnancy at week 20",
+          "url": "https://www.pregnancybirthbaby.org.au/pregnancy/pregnancy-stages/pregnancy-at-week-20",
+          "section": "Your baby.",
+          "publication_date": null,
+          "displayed_date": null,
+          "retrieved_at": "2026-11-24",
+          "reuse_status": "to_review",
+          "terms_url": "https://about.healthdirect.gov.au/terms-of-use"
+        }
+      ],
+      "attribution": {
+        "mode": "reference",
+        "text": "Reference: www.betterhealth.vic.gov.au",
+        "url": "https://www.betterhealth.vic.gov.au/"
+      },
+      "reviewed_at": "2026-11-24"
+    },
+    {
+      "id": "developpement_24_sa",
+      "week_sa": 24,
+      "title": "Autour de 24 SA : lanugo et vernix",
+      "body": "Autour de cette période, le bébé est recouvert d’un fin duvet appelé lanugo et d’une substance protectrice appelée vernix. Le lanugo est un duvet. Le vernix forme une couche qui protège la peau.\n\nCette fiche présente un repère général de développement autour de cette semaine.",
+      "editorial_status": "approved",
+      "source": {
+        "name": "Better Health Channel, État de Victoria, Australie",
+        "title": "Pregnancy - week by week",
+        "url": "https://www.betterhealth.vic.gov.au/health/HealthyLiving/pregnancy-week-by-week",
+        "section": "Pregnancy week 24.",
+        "publication_date": null,
+        "displayed_date": "2012-02-28",
+        "retrieved_at": "2026-11-24",
+        "reuse_status": "approved"
+      },
+      "secondary_sources": [
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "Pregnancy, Birth and Baby, Australie",
+          "title": "Conception and fetal development",
+          "url": "https://www.pregnancybirthbaby.org.au/fertility-and-conception/conception/conception-and-fetal-development",
+          "section": "Sixth month (weeks 21 to 24).",
+          "publication_date": null,
+          "displayed_date": null,
+          "retrieved_at": "2026-11-24",
+          "reuse_status": "to_review",
+          "terms_url": "https://about.healthdirect.gov.au/terms-of-use"
+        }
+      ],
+      "attribution": {
+        "mode": "reference",
+        "text": "Reference: www.betterhealth.vic.gov.au",
+        "url": "https://www.betterhealth.vic.gov.au/"
+      },
+      "reviewed_at": "2026-11-24"
+    },
+    {
+      "id": "developpement_32_sa",
+      "week_sa": 32,
+      "title": "Autour de 32 SA : des mouvements qui se poursuivent",
+      "body": "À mesure que le bébé grandit, il continue à bouger. La nature des mouvements peut évoluer au fil de la grossesse.\n\nCette fiche présente un repère général de développement autour de cette semaine.",
+      "editorial_status": "approved",
+      "source": {
+        "name": "Better Health Channel, État de Victoria, Australie",
+        "title": "Pregnancy - week by week",
+        "url": "https://www.betterhealth.vic.gov.au/health/HealthyLiving/pregnancy-week-by-week",
+        "section": "Pregnancy week 32.",
+        "publication_date": null,
+        "displayed_date": "2012-02-28",
+        "retrieved_at": "2026-11-24",
+        "reuse_status": "approved"
+      },
+      "secondary_sources": [
+        {
+          "role": "secondary",
+          "usage": "cross_check",
+          "name": "Pregnancy, Birth and Baby, Australie",
+          "title": "Pregnancy at week 32",
+          "url": "https://www.pregnancybirthbaby.org.au/pregnancy/pregnancy-stages/pregnancy-at-week-32",
+          "section": "Your baby.",
+          "publication_date": null,
+          "displayed_date": null,
+          "retrieved_at": "2026-11-24",
+          "reuse_status": "to_review",
+          "terms_url": "https://about.healthdirect.gov.au/terms-of-use"
+        }
+      ],
+      "attribution": {
+        "mode": "reference",
+        "text": "Reference: www.betterhealth.vic.gov.au",
+        "url": "https://www.betterhealth.vic.gov.au/"
+      },
+      "reviewed_at": "2026-11-24"
     }
   ]
 }
