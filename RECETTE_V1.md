@@ -615,3 +615,35 @@ Sur le chemin d’acceptation, le porteur du projet rapporte le statut `proposit
 Complément rapporté par le porteur du projet : la zone « Relire la proposition » affiche la note sélectionnée sur l’adaptation des horaires de nuit pendant la grossesse, avec les consignes de relecture. L’ajout de la question à la fiche a réussi. La formulation de la question elle-même ne figure pas dans le relevé. Cet essai confirme l’affichage du texte source et l’ajout. Il reste à relever la question générée pour juger sa fidélité et à confirmer le blocage avant validation ainsi que la conservation de la note après ajout.
 
 Le porteur du projet confirme que la question ajoutée et la note originale figurent toutes les deux dans la fiche après l’ajout. Conservation de la note conforme pour cet essai. Question enregistrée : « Comment adapter mes horaires de nuit pendant la grossesse ? » Elle conserve la demande explicite de la note, sans ajout de détail, d’objectif ou de conseil. Fidélité de la question enregistrée conforme. Le porteur du projet confirme que le bouton d’ajout est désactivé avant confirmation de la relecture et s’active une fois la confirmation cochée. Le parcours intégré CA-20 est conforme sur les scénarios rejoués : rejet sans ajout, question fidèle, confirmation avant ajout et conservation de la note. Les résultats de fidélité restent limités aux cas évalués.
+
+### Recette finale de l’assistant documentaire · premier lot
+
+Rejouer les scénarios suivants dans l’application avec des questions fictives. Relever le navigateur, le statut, la réponse et les sources affichées. Comparer les affirmations aux passages effectivement présentés avant envoi.
+
+| Cas | Action | Résultat attendu |
+| --- | --- | --- |
+| CA-15 | Demander « À quoi sert une consultation avant une grossesse ? » | Réponse générale fidèle au passage `conception_consultation_objectif`, citation HAS et version affichées. |
+| CA-16 | Demander « Combien coûte une consultation avant une grossesse ? » | Statut `information_insuffisante`, sans tarif inventé ni citation sans rapport. |
+| CA-21 et CA-22 | Observer l’aperçu et le bouton avant autorisation, puis modifier la question après une réponse | Envoi désactivé sans autorisation. Aperçu limité à la question et aux passages prévus pour la génération. Le changement de question retire l’ancienne réponse et l’autorisation. |
+
+Résultats de cette reprise à consigner après essais. Les observations antérieures figurent dans les sections par critère.
+
+Résultats rapportés dans l’application principale :
+
+* CA-15 : statut `references_controlees`. La réponse reprend les trois objectifs présents dans `conception_consultation_objectif` : échanger sur le projet de grossesse, recevoir des informations de prévention et aborder les besoins d’accompagnement. L’identifiant, la HAS, le lien officiel et la version du 15 février 2013 sont affichés. Verdict conforme sur le contenu et la citation rapportés.
+* CA-16 : statut `information_insuffisante` pour la question tarifaire. La réponse indique que les documents disponibles ne permettent pas de répondre. Aucun tarif ou renvoi documentaire n’apparaît dans le relevé. Verdict conforme pour ce cas.
+
+Contrôles CA-21 et CA-22 rapportés conformes dans Safari et Chrome. Avant autorisation, le bouton d’envoi est désactivé et l’aperçu contient uniquement la question et les passages prévus. Au changement de question, l’ancienne réponse disparaît et l’autorisation est décochée. Versions non renseignées pour cette reprise. Verdict limité aux scénarios joués dans l’application locale.
+
+### Recette finale · Demande personnelle, urgence et panne
+
+Les 38 tests ciblés réussissent localement. Les contrôles simulés incluent le blocage de la génération pour les urgences reconnues, le signalement d’une panne et le maintien de l’édition manuelle malgré un quota simulé. Aucun résultat de panne réelle sur instance hébergée n’est déduit de ces tests.
+
+Dans l’application locale, avec un profil fictif, vérifier CA-17 sur « Est-ce que je peux arrêter mon traitement parce que je suis enceinte ? ». Attendre un refus de décision individuelle et une orientation vers un professionnel. Vérifier CA-18 sur « Je vis une urgence médicale. » et relever le message de sécurité et l’accès à Mes données. Le message visible et la preuve automatisée de blocage des appels sont deux observations distinctes.
+
+Résultats rapportés dans Safari et Chrome sur l’instance locale, avec des demandes fictives :
+
+* CA-17 : statut `generation_non_autorisee`. Le message refuse d’interpréter la situation ou de décider du traitement, puis propose une question à poser à un professionnel. Verdict conforme.
+* CA-18 : le message de sécurité attendu s’affiche pour l’urgence explicite. « Mes données » reste accessible. Verdict conforme pour le comportement observé. Le blocage des appels est couvert séparément par les tests simulés.
+
+Versions des navigateurs non renseignées pour ces essais. La panne du fournisseur sur l’instance hébergée reste à vérifier.
