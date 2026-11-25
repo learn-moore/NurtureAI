@@ -25,7 +25,7 @@ Un test automatisé réussi ne remplace pas une recette navigateur ni une revue 
 | Calendrier et contenus | Partiel | EF-04 | Compléter les événements, la timeline et les fiches selon la couverture retenue. |
 | Assistant documentaire | Partiel | CA-15, CA-16, CA-21, CA-22 | Compléter la couverture et les réserves du corpus, puis intégrer le parcours documentaire dans l’application de suivi. |
 | Intentions et sécurité | Partiel | CA-17 à CA-19 | Classifier, orienter et fournir des réponses locales adaptées. |
-| Préparation IA des rendez-vous | Partiel | CA-20 | Parcours distant essayé sur des fiches fictives. Ajout après relecture confirmé lors du premier essai. Affichage des champs sélectionnés vérifié par tests automatisés. Fidélité irrégulière sur FID-08. |
+| Préparation IA des rendez-vous | Vérifié sur les scénarios rejoués | CA-20 | Après révision de la consigne, cinq rejets conformes de FID-08 en laboratoire et parcours intégré de rejet et d’ajout après relecture vérifiés sur des fiches fictives. |
 | Accessibilité et déploiement | Partiel | CA-25, ENF-04, ENF-06, ENF-09 | Navigation au clavier, zoom et fenêtre étroite vérifiés. Versions des navigateurs à confirmer pour ENF-09. Temps d’affichage dans le navigateur et hébergement à vérifier. |
 
 ## Arbitrages actés le 19 novembre 2026
@@ -585,3 +585,33 @@ Verdict rapporté par le porteur du projet sur l’instance locale : conforme da
 Les quatre fiches sont intégrées. La sélection de la fiche à 24 SA a été vérifiée localement des jours 168 à 174, avec absence de fiche aux jours 167 et 175. En navigateur, vérifier le contenu et la référence à chaque semaine couverte, puis le message d’indisponibilité à une semaine voisine non couverte.
 
 Verdict rapporté par le porteur du projet sur l’instance locale : conforme dans Chrome et Safari, sans écart signalé, pour le scénario à 24 SA. Il couvre l’affichage à 24 SA + 0 et 24 SA + 6, l’indisponibilité à 25 SA et l’ouverture du lien de référence. Versions des navigateurs non renseignées pour ces essais. Les bornes des quatre fiches ont été contrôlées localement.
+
+### CA-20 · Consigne d’évaluation des objectifs ajoutés
+
+La consigne commune à l’application et au laboratoire demande de comparer l’intention de chaque question à celle du texte sélectionné. Un exemple oppose le souhait de discuter d’horaires de travail à celui de les réduire. Il couvre aussi le cas où la réduction est explicitement demandée.
+
+Rejouer FID-08 cinq fois avec les mêmes données fictives et le même modèle, sans régénérer la question. Attendre cinq verdicts NON_FIDELE, relever chaque résultat et distinguer les erreurs techniques des verdicts. Rejouer aussi FID-02 et FID-03 pour vérifier que les reformulations fidèles restent acceptées. Ces essais distants restent à effectuer. CA-20 reste partiel.
+
+Résultats rapportés après modification de la consigne, dans le laboratoire, sur les cas fictifs à entrée fixe avec Groq et le modèle openai/gpt-oss-20b :
+
+| Cas | Verdict attendu | Verdicts observés |
+| --- | --- | --- |
+| FID-08 | NON_FIDELE | NON_FIDELE, NON_FIDELE, NON_FIDELE, NON_FIDELE, NON_FIDELE |
+| FID-02 | FIDELE | FIDELE |
+| FID-03 | FIDELE | FIDELE |
+
+Les sept essais sont conformes, sans acceptation indue ni erreur technique signalée. Pour FID-08, le nombre d’acceptations indues observées passe de 2 sur 5 avec l’ancienne consigne à 0 sur 5 avec la nouvelle. Ce résultat porte sur un seul cas répété. Le texte affiché sous le résultat est le motif de référence du jeu de données. CA-20 reste partiel jusqu’au nouvel essai intégré avec génération et relecture.
+
+### CA-20 · Nouvel essai intégré après modification de la consigne
+
+Note fictive sélectionnée : « Je souhaite parler de mon sommeil pendant la grossesse. »
+
+Résultat rapporté par le porteur du projet : statut `proposition_non_fidele`. L’application indique que la fidélité n’a pas été confirmée, que la fiche reste inchangée et que la préparation manuelle est disponible. Verdict conforme pour le comportement de rejet observé. La question générée n’a pas été communiquée, donc le motif précis du rejet ne peut pas être vérifié à partir de cet essai.
+
+Reste à rejouer le chemin d’acceptation dans l’application avec une note fictive explicite. Vérifier la fidélité de la question affichée, puis confirmer que l’ajout requiert une relecture et conserve la note originale.
+
+Sur le chemin d’acceptation, le porteur du projet rapporte le statut `proposition_disponible` et le message invitant à relire et à modifier la proposition avant enregistrement. L’affichage de l’invitation à relire est conforme. Le texte proposé et le résultat de l’ajout restent à relever pour vérifier la fidélité, la confirmation explicite et la conservation de la note originale. CA-20 reste partiel.
+
+Complément rapporté par le porteur du projet : la zone « Relire la proposition » affiche la note sélectionnée sur l’adaptation des horaires de nuit pendant la grossesse, avec les consignes de relecture. L’ajout de la question à la fiche a réussi. La formulation de la question elle-même ne figure pas dans le relevé. Cet essai confirme l’affichage du texte source et l’ajout. Il reste à relever la question générée pour juger sa fidélité et à confirmer le blocage avant validation ainsi que la conservation de la note après ajout.
+
+Le porteur du projet confirme que la question ajoutée et la note originale figurent toutes les deux dans la fiche après l’ajout. Conservation de la note conforme pour cet essai. Question enregistrée : « Comment adapter mes horaires de nuit pendant la grossesse ? » Elle conserve la demande explicite de la note, sans ajout de détail, d’objectif ou de conseil. Fidélité de la question enregistrée conforme. Le porteur du projet confirme que le bouton d’ajout est désactivé avant confirmation de la relecture et s’active une fois la confirmation cochée. Le parcours intégré CA-20 est conforme sur les scénarios rejoués : rejet sans ajout, question fidèle, confirmation avant ajout et conservation de la note. Les résultats de fidélité restent limités aux cas évalués.
