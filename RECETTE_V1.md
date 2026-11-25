@@ -647,3 +647,19 @@ Résultats rapportés dans Safari et Chrome sur l’instance locale, avec des de
 * CA-18 : le message de sécurité attendu s’affiche pour l’urgence explicite. « Mes données » reste accessible. Verdict conforme pour le comportement observé. Le blocage des appels est couvert séparément par les tests simulés.
 
 Versions des navigateurs non renseignées pour ces essais. La panne du fournisseur sur l’instance hébergée reste à vérifier.
+
+### Recette sur Streamlit Community Cloud
+
+Configuration de recette proposée : dépôt GitHub du projet, branche `main`, entrée `app.py`, Python 3.12. Sélectionner la version dans « Advanced settings ». Relever le commit servi et utiliser des données fictives. Démarrer sans secret Groq pour vérifier le parcours de repli, puis configurer `GROQ_API_KEY` dans les secrets de l’application pour rejouer les scénarios distants. Le premier essai couvre une absence de configuration. Une panne réelle du fournisseur reste un scénario distinct.
+
+| Contrôle | Observation attendue |
+| --- | --- |
+| ENF-04 | L’adresse `streamlit.app` s’ouvre en HTTPS et l’application démarre sans exception. |
+| CA-02 et ENF-09 | Sur un profil navigateur de test, enregistrer un parcours et une fiche fictifs. Recharger à la même adresse et vérifier que les données sont restaurées. Rejouer dans Safari et Chrome, versions à noter. |
+| ENF-06 | Après démarrage, mesurer du clic de validation à l’affichage des repères pour les deux parcours. Noter trois mesures par parcours et navigateur, avec la cible de deux secondes. |
+| ENF-10 | Sans clé Groq, vérifier l’état de l’IA et le maintien du suivi et de la fiche manuelle. Après configuration, rejouer une question documentaire de référence avec consentement. |
+| ENF-08 | Depuis « Manage app », examiner les traces de démarrage et du scénario sans IA. Vérifier qu’elles ne contiennent ni la question, ni les notes, ni le secret. |
+
+Sources : [Déployer une application](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy), [Gérer les secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management), [Consulter les logs](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app).
+
+Contrôle de préparation : Python 3.12.0 et `pip check` local conforme. Résultats hébergés à consigner après création de l’instance.
