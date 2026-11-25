@@ -663,3 +663,32 @@ Configuration de recette proposée : dépôt GitHub du projet, branche `main`, e
 Sources : [Déployer une application](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy), [Gérer les secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management), [Consulter les logs](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app).
 
 Contrôle de préparation : Python 3.12.0 et `pip check` local conforme. Résultats hébergés à consigner après création de l’instance.
+
+Instance communiquée par le porteur du projet : [NurtureAI sur Streamlit Community Cloud](https://nurture-ai.streamlit.app). Le contrôle HTTP hors navigateur a validé TLS et reçu une redirection HTTP 303 vers la connexion Streamlit. Les observations navigateur et le commit servi sont consignés ci-dessous.
+
+Verdict rapporté par le porteur du projet : le parcours et la fiche fictifs enregistrés sur l’instance hébergée sont restaurés après rechargement dans Safari et Chrome. CA-02 est conforme sur ce scénario hébergé. Les versions des navigateurs et l’accès hors session Streamlit restent à confirmer.
+
+Le porteur du projet confirme que Streamlit n’a pas demandé de connexion à l’ouverture de l’application. Ce résultat concerne l’ouverture dans son navigateur. L’état de la session et l’usage d’une fenêtre privée n’ont pas été précisés.
+
+Commit effectivement servi par Streamlit, confirmé par le porteur du projet : `be355c3b8311ded4810559a2abe7b3e8927fdd88`.
+
+
+Ordre de reprise de la recette hébergée :
+
+1. Ouvrir l’URL dans une fenêtre privée et relever si l’interface apparaît directement. Pour la mesure et les essais IA, utiliser ensuite un profil fictif dans une fenêtre normale.
+2. Après chargement complet, chronométrer du clic « Calculer mes repères » ou « Valider mes repères » jusqu’à l’apparition du résultat. Faire trois essais par parcours et navigateur. Une courte capture vidéo permet de relire l’intervalle. Relever les six temps par navigateur et sa version.
+3. Vérifier l’état actuel de l’IA avec « À quoi sert une consultation avant une grossesse ? » et autorisation explicite. Si l’instance répond « Le service IA n’est pas configuré. », vérifier immédiatement que le suivi et l’ajout manuel d’une question fonctionnent. Si Groq répond, consigner le résultat et réserver le contrôle sans clé à une instance de recette sans secret ou à une configuration dédiée.
+4. Dans « Manage app », relever la présence éventuelle d’une exception et vérifier si les textes fictifs apparaissent dans les journaux. Noter le verdict sans copier de secret.
+
+Le porteur du projet rapporte que l’ouverture en navigation privée ne déclenche aucune demande de connexion. Pour ENF-06, le délai d’affichage observé est estimé à moins de deux secondes. Les mesures chronométrées et leur détail par parcours et navigateur ne sont pas disponibles. Le constat est favorable et la mesure reste à documenter.
+
+ENF-10, instance hébergée : après l’essai de la question documentaire de référence, le porteur du projet rapporte le message « Le service IA n’est pas configuré. » Le comportement correspond au scénario d’absence de configuration Groq. Le porteur du projet confirme que, dans la même session, les repères du suivi restent visibles et qu’une question fictive peut être ajoutée et enregistrée manuellement dans une fiche de rendez-vous. Verdict conforme pour le repli sans clé sur l’instance hébergée. Ce scénario est distinct d’une panne d’un fournisseur configuré.
+
+ENF-08, instance hébergée : le porteur du projet ne signale aucune exception dans les journaux examinés après l’essai sans clé. La présence éventuelle de la question ou de la note fictive dans les traces n’a pas été renseignée.
+
+Essais IA hébergés après configuration de Groq, résultats rapportés par le porteur du projet :
+
+* CA-15 : statut `references_controlees` sur la consultation avant grossesse. La réponse reprend les objectifs, les professionnels et la limite d’usage présents dans le passage `conception_consultation_objectif`. La référence HAS, le lien et la version du 15 février 2013 sont affichés. Verdict conforme pour ce cas.
+* CA-20 : statut `proposition_disponible` sur la note fictive concernant l’adaptation des horaires de nuit pendant la grossesse. La note sélectionnée est visible pendant la relecture. La proposition « Comment adapter mes horaires de nuit pendant la grossesse ? » conserve la demande. L’ajout à la fiche après confirmation est confirmé. Verdict conforme pour ce cas.
+
+Les deux fonctions IA dialoguent avec Groq sur l’instance hébergée pour les cas testés. Le repli sans clé a été vérifié séparément. Pour ENF-08, le porteur du projet confirme qu’aucune exception, question fictive ou note fictive n’apparaît dans les journaux visibles dans « Manage app » après ces essais. Verdict conforme pour les traces visibles lors des scénarios hébergés testés.
