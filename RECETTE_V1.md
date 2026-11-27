@@ -706,3 +706,15 @@ Utiliser un profil fictif et conserver la même largeur de fenêtre et le même 
 3. **Assistant.** Poser « À quoi sert une consultation avant une grossesse ? ». Après autorisation, capturer la réponse et la référence HAS. Vérifier la fidélité au passage affiché.
 
 Profiter du parcours de capture pour mesurer l’affichage des résultats à chaud. Relever les intervalles du clic au résultat séparément des temps de réponse IA. Captures et mesures à effectuer sur la version déployée qui porte le nouveau libellé.
+
+Captures réalisées le 27 novembre 2026 sur [l’instance hébergée](https://nurture-ai.streamlit.app), avec Chrome 158.0.8127.89 en profil isolé et des données fictives. Le libellé « Version de démonstration V1 » était présent. Le SHA de cette prise de mesures n’a pas été relevé. Captures : [conception](docs/captures-v1/01-conception.png), [grossesse à 24 SA](docs/captures-v1/02-grossesse.png), [réponse documentaire et référence HAS](docs/captures-v1/03-assistant.png).
+
+Mesure à chaud dans le navigateur, via une horloge monotone. Le point de départ est le clic déclenché sur le bouton dans la page. La fin est l’apparition du résultat attendu dans le DOM.
+
+| Scénario | Intervalles observés |
+| --- | --- |
+| ENF-06, conception | 208 ms, 305 ms, 278 ms |
+| ENF-06, grossesse depuis les dernières règles | 296 ms, 294 ms, 274 ms |
+| Assistant documentaire, envoi à Groq | 1 789 ms jusqu’au statut `references_controlees` |
+
+Les six essais de calcul respectent la cible de deux secondes dans Chrome. L’essai IA mesure l’attente de bout en bout après envoi. Safari dispose d’un constat favorable sans chronométrage détaillé.
