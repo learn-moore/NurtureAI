@@ -6,6 +6,14 @@ L’application fournit des informations générales et des estimations. Elle ne
 
 [Ouvrir la démo NurtureAI](https://nurture-ai.streamlit.app). Utiliser des données fictives pour découvrir les parcours.
 
+## Aperçu de la démo
+
+Captures réalisées sur l’instance hébergée avec un profil fictif.
+
+* [Suivi conception au jour 12](docs/captures-v1/01-conception.png)
+* [Suivi grossesse à 24 SA et fiche hebdomadaire](docs/captures-v1/02-grossesse.png)
+* [Réponse de l’assistant documentaire avec sa référence HAS](docs/captures-v1/03-assistant.png)
+
 ## État actuel
 
 Le prototype permet de :
