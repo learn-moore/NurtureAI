@@ -4,6 +4,8 @@ Prototype pédagogique de suivi du projet de conception et de la grossesse, dév
 
 L’application fournit des informations générales et des estimations. Elle ne fournit ni diagnostic ni recommandation médicale personnalisée.
 
+[Ouvrir la démo NurtureAI](https://nurture-ai.streamlit.app). Utiliser des données fictives pour découvrir les parcours.
+
 ## État actuel
 
 Le prototype permet de :
@@ -17,8 +19,9 @@ Le prototype permet de :
 * Créer, modifier et supprimer des fiches de rendez-vous avec date facultative, thèmes, notes et questions.
 * Télécharger une fiche de rendez-vous au format texte.
 * Consulter un calendrier mensuel des rendez-vous et des repères du parcours, en distinguant les dates déclarées des estimations.
-* Consulter trois fiches sourcées consacrées aux échographies de grossesse.
-* Consulter une fiche hebdomadaire autour de 9 SA, sélectionnée à partir des repères enregistrés, avec référence documentaire et attribution.
+* Consulter les trois repères d’échographie et les notices sur la déclaration de grossesse et la préparation à la naissance.
+* Consulter quatre fiches hebdomadaires sourcées à 9, 20, 24 et 32 SA.
+* Explorer un simulateur pédagogique d’ovulation et de fenêtre fertile, séparé du profil et du calendrier personnel.
 * Identifier la période actuelle ou la prochaine période parmi les fiches disponibles, à partir des repères enregistrés.
 * Enregistrer les repères dans le parcours actif et les reprendre dans les formulaires.
 * Exporter et importer le profil au format JSON, avec validation et confirmation du remplacement.
@@ -32,15 +35,11 @@ Une erreur ou un conflit suspend les tentatives automatiques. Un remplacement pa
 
 Les écritures et suppressions utilisent un verrou partagé entre les onglets de l’application et vérifient que la sauvegarde n’a pas changé depuis sa lecture. Si ce verrou est indisponible, aucune modification du stockage n’est effectuée ; l’export JSON reste disponible.
 
-La timeline couvre actuellement les trois échographies. Elle ne représente pas encore l’ensemble du suivi de grossesse. Une période passée ne signifie pas qu’un examen a été réalisé.
+La timeline présente une sélection de repères. Une période passée ne signifie pas qu’un examen a été réalisé. Pour les semaines sans fiche, l’application affiche un message d’indisponibilité.
 
-Une première fiche hebdomadaire est disponible entre 9 SA et 9 SA + 6 jours. Pour les semaines sans contenu approuvé, l’application indique qu’aucune fiche n’est disponible. Les repères décrits sont généraux et ne permettent pas d’interpréter une échographie individuelle.
+L’assistant documentaire recherche des passages dans un corpus sourcé, classe la demande selon son intention et utilise Groq après aperçu et autorisation explicite. La préparation de rendez-vous peut aussi proposer des reformulations contrôlées, à relire avant ajout. Le suivi et l’édition manuelle fonctionnent sans service IA.
 
-Un premier moteur de recherche documentaire est développé et testé sur des passages fictifs. Il valide les fichiers JSON et les métadonnées, exclut les passages non autorisés pour le RAG et classe les résultats selon les mots communs avec leur titre et leur contenu.
-
-Un assistant documentaire est désormais accessible dans l’application de suivi. Il utilise le corpus médical, la classification des intentions et la génération via Groq, après aperçu local et autorisation explicite. Les laboratoires indépendants restent disponibles pour les essais.
-
-La préparation des rendez-vous repose encore sur les informations saisies par l’utilisateur ; elle n’utilise pas encore l’IA.
+La recette hébergée a vérifié la restauration d’un profil fictif dans Safari et Chrome, le repli sans clé Groq et des cas de référence pour les deux fonctions IA. Les scénarios et leurs limites figurent dans [la recette V1](RECETTE_V1.md).
 
 La démonstration documentaire charge un corpus fictif depuis JSON. Le moteur valide les métadonnées, les dates, les statuts et l’unicité des identifiants avant de filtrer les autorisations et, si demandé, le thème. Il classe les passages par mots communs dans leur titre et leur contenu, avec une explication du score. Un rapport texte peut être produit à partir des résultats retenus. Aucun LLM ni service externe n’est utilisé dans cette démonstration.
 
