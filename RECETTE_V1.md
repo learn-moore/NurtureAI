@@ -692,3 +692,7 @@ Essais IA hébergés après configuration de Groq, résultats rapportés par le 
 * CA-20 : statut `proposition_disponible` sur la note fictive concernant l’adaptation des horaires de nuit pendant la grossesse. La note sélectionnée est visible pendant la relecture. La proposition « Comment adapter mes horaires de nuit pendant la grossesse ? » conserve la demande. L’ajout à la fiche après confirmation est confirmé. Verdict conforme pour ce cas.
 
 Les deux fonctions IA dialoguent avec Groq sur l’instance hébergée pour les cas testés. Le repli sans clé a été vérifié séparément. Pour ENF-08, le porteur du projet confirme qu’aucune exception, question fictive ou note fictive n’apparaît dans les journaux visibles dans « Manage app » après ces essais. Verdict conforme pour les traces visibles lors des scénarios hébergés testés.
+
+### Périmètre grossesse retenu pour la démo V1
+
+Le porteur du projet valide la timeline actuelle, avec les trois échographies, les deux notices textuelles sur la déclaration et la préparation à la naissance, et la DPA dans le résumé et le calendrier lorsqu’elle est disponible. Les fiches couvrent 9, 20, 24 et 32 SA. Les conventions de calcul sont le choix explicite de 40 ou 41 SA, la conservation de la DPA saisie et les seuils pédagogiques de trimestre à 14 et 28 SA. Après mise à jour des libellés, vérifier en navigateur que ces choix et leurs limites restent compréhensibles.

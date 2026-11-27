@@ -462,7 +462,7 @@ else:
             )
 
         duree_reference = st.selectbox(
-            "Durée de référence du terme, si connue",
+            "Convention de calcul du terme (40 ou 41 SA)",
             options=[None, 280, 287],
             format_func=lambda valeur: {
                 None: "Je ne sais pas",
@@ -471,7 +471,7 @@ else:
             }[valeur],
             key="terme_reference_grossesse",
             help=(
-                "Renseignez la convention indiquée pour votre suivi. Si elle est inconnue, conservez « Je ne sais pas » sans choisir au hasard."
+                "Choix explicite pour simuler les repères. Si la convention de votre suivi est inconnue, gardez « Je ne sais pas ». Une DPA saisie est conservée telle quelle."
             ),
         )
 
@@ -1017,6 +1017,7 @@ else:
                             jours_sa, debut_deuxieme=14 * 7, debut_troisieme=28 * 7
                         )
                         st.metric("Trimestre estimé (suivi actif)", trimestre)
+                        st.caption("Convention pédagogique : début des deuxième et troisième trimestres à 14 et 28 SA, selon l’ACOG.")
                         terme = reperes_actifs.term_reference_days
                         if terme is not None:
                             progression = calculer_progression_grossesse(
