@@ -696,3 +696,13 @@ Les deux fonctions IA dialoguent avec Groq sur l’instance hébergée pour les 
 ### Périmètre grossesse retenu pour la démo V1
 
 Le porteur du projet valide la timeline actuelle, avec les trois échographies, les deux notices textuelles sur la déclaration et la préparation à la naissance, et la DPA dans le résumé et le calendrier lorsqu’elle est disponible. Les fiches couvrent 9, 20, 24 et 32 SA. Les conventions de calcul sont le choix explicite de 40 ou 41 SA, la conservation de la DPA saisie et les seuils pédagogiques de trimestre à 14 et 28 SA. Après mise à jour des libellés, vérifier en navigateur que ces choix et leurs limites restent compréhensibles.
+
+### Captures de la démo V1
+
+Utiliser un profil fictif et conserver la même largeur de fenêtre et le même zoom pour les trois captures.
+
+1. **Conception.** Enregistrer un cycle fictif de 28 jours avec des dernières règles à J−11. Capturer « Mon parcours actif » avec le jour 12 et les prochaines règles estimées.
+2. **Grossesse.** Enregistrer des dernières règles fictives à J−168, avec une convention de 40 SA. Capturer le suivi à 24 SA et sa fiche hebdomadaire avec l’attribution visible. La capture peut se faire après la transition depuis conception pour conserver un historique fictif.
+3. **Assistant.** Poser « À quoi sert une consultation avant une grossesse ? ». Après autorisation, capturer la réponse et la référence HAS. Vérifier la fidélité au passage affiché.
+
+Profiter du parcours de capture pour mesurer l’affichage des résultats à chaud. Relever les intervalles du clic au résultat séparément des temps de réponse IA. Captures et mesures à effectuer sur la version déployée qui porte le nouveau libellé.

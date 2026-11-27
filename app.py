@@ -28,7 +28,7 @@ st.title("NurtureAI")
 st.write("Votre compagnon d'information sur la conception et la grossesse.")
 
 with st.expander("À propos de NurtureAI"):
-    st.caption("Prototype en développement.")
+    st.caption("Version de démonstration V1 · Prototype pédagogique.")
 
     st.markdown(
         "**Calculs.** Les repères de conception sont estimés à partir des dates et durées saisies. Les repères de grossesse utilisent "
